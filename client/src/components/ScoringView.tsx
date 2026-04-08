@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Player, RoundState } from "@dad-golf/shared";
+import type { Player, RoundState, User } from "@dad-golf/shared";
 import {
   stablefordPoints,
   strokesReceived,
@@ -9,8 +9,10 @@ import {
 interface Props {
   state: RoundState;
   activePlayer: Player | null;
+  viewer: User | null;
   onSelectPlayer: (id: string) => void;
-  onJoin: (name: string, handicap: number) => Promise<void>;
+  onJoinAsUser: () => Promise<void>;
+  onJoinAsGuest: (name: string, handicap: number) => Promise<void>;
   onScore: (holeNumber: number, strokes: number) => Promise<void>;
   onClearScore: (holeNumber: number) => Promise<void>;
   onSetCurrentHole: (holeNumber: number) => Promise<void>;
@@ -19,8 +21,10 @@ interface Props {
 export default function ScoringView({
   state,
   activePlayer,
+  viewer,
   onSelectPlayer,
-  onJoin,
+  onJoinAsUser,
+  onJoinAsGuest,
   onScore,
   onClearScore,
   onSetCurrentHole,
@@ -42,33 +46,51 @@ export default function ScoringView({
     onSetCurrentHole(n).catch(() => {});
   }
 
+  function joinControls() {
+    if (viewer) {
+      return (
+        <div className="form-inline">
+          <div>
+            Join as <strong>{viewer.displayName}</strong> (HCP {viewer.handicap})
+          </div>
+          <button className="btn btn-primary" onClick={onJoinAsUser}>
+            Join
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="form-inline">
+        <input
+          placeholder="Your name"
+          value={joinName}
+          onChange={(e) => setJoinName(e.target.value)}
+        />
+        <input
+          type="number"
+          min={0}
+          max={54}
+          value={joinHcp}
+          onChange={(e) => setJoinHcp(Number(e.target.value))}
+          style={{ width: 80 }}
+        />
+        <button
+          className="btn btn-primary"
+          disabled={!joinName.trim()}
+          onClick={() => onJoinAsGuest(joinName.trim(), joinHcp)}
+        >
+          Join as guest
+        </button>
+      </div>
+    );
+  }
+
   if (state.players.length === 0) {
     return (
       <section className="section">
         <h2>No players yet</h2>
         <p className="muted">Add yourself to start scoring.</p>
-        <div className="form-inline">
-          <input
-            placeholder="Your name"
-            value={joinName}
-            onChange={(e) => setJoinName(e.target.value)}
-          />
-          <input
-            type="number"
-            min={0}
-            max={54}
-            value={joinHcp}
-            onChange={(e) => setJoinHcp(Number(e.target.value))}
-            style={{ width: 80 }}
-          />
-          <button
-            className="btn btn-primary"
-            disabled={!joinName.trim()}
-            onClick={() => onJoin(joinName.trim(), joinHcp)}
-          >
-            Join
-          </button>
-        </div>
+        {joinControls()}
       </section>
     );
   }
@@ -92,28 +114,7 @@ export default function ScoringView({
         </ul>
         <div className="section">
           <h3>Or join as a new player</h3>
-          <div className="form-inline">
-            <input
-              placeholder="Your name"
-              value={joinName}
-              onChange={(e) => setJoinName(e.target.value)}
-            />
-            <input
-              type="number"
-              min={0}
-              max={54}
-              value={joinHcp}
-              onChange={(e) => setJoinHcp(Number(e.target.value))}
-              style={{ width: 80 }}
-            />
-            <button
-              className="btn btn-primary"
-              disabled={!joinName.trim()}
-              onClick={() => onJoin(joinName.trim(), joinHcp)}
-            >
-              Join
-            </button>
-          </div>
+          {joinControls()}
         </div>
       </section>
     );

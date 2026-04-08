@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import type { Hole } from "@dad-golf/shared";
+import { useAuth } from "../AuthContext.js";
 
 function defaultHoles(count: 9 | 18): Hole[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -13,6 +14,7 @@ function defaultHoles(count: 9 | 18): Hole[] {
 
 export default function NewCoursePage() {
   const nav = useNavigate();
+  const { user, loading } = useAuth();
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [holeCount, setHoleCount] = useState<9 | 18>(18);
@@ -55,6 +57,29 @@ export default function NewCoursePage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="muted">Loading…</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="page">
+        <h1>New course</h1>
+        <p className="muted">You need to log in to create a course.</p>
+        <Link
+          to={`/login?next=${encodeURIComponent("/courses/new")}`}
+          className="btn btn-primary"
+        >
+          Log in
+        </Link>
+      </div>
+    );
   }
 
   return (

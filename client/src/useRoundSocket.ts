@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { RoundState, WsServerMessage } from "@dad-golf/shared";
+import { getAuthToken } from "./authStore.js";
 
 export function useRoundSocket(
   roomCode: string | null,
@@ -22,7 +23,9 @@ export function useRoundSocket(
     function connect() {
       if (cancelled) return;
       const proto = location.protocol === "https:" ? "wss:" : "ws:";
-      const url = `${proto}//${location.host}/ws/${roomCode}`;
+      const token = getAuthToken();
+      const qs = token ? `?token=${encodeURIComponent(token)}` : "";
+      const url = `${proto}//${location.host}/ws/${roomCode}${qs}`;
       const ws = new WebSocket(url);
       socketRef.current = ws;
       ws.onopen = () => {

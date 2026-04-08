@@ -1,12 +1,15 @@
 import type {
   Course,
   Group,
+  GroupInvite,
   GroupMember,
   Hole,
   Player,
   RoundState,
   Score,
+  User,
 } from "@dad-golf/shared";
+import { getAuthToken } from "./authStore.js";
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -22,12 +25,61 @@ async function json<T>(res: Response): Promise<T> {
   return (await res.json()) as T;
 }
 
+function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = { ...extra };
+  if (token) headers["authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
+function jsonHeaders(): Record<string, string> {
+  return authHeaders({ "content-type": "application/json" });
+}
+
 export const api = {
+  // auth
+  register: (payload: {
+    username: string;
+    password: string;
+    displayName: string;
+    handicap: number;
+  }) =>
+    fetch("/api/auth/register", {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
+    }).then((r) => json<{ user: User; token: string }>(r)),
+  login: (username: string, password: string) =>
+    fetch("/api/auth/login", {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ username, password }),
+    }).then((r) => json<{ user: User; token: string }>(r)),
+  logout: () =>
+    fetch("/api/auth/logout", {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  me: () =>
+    fetch("/api/auth/me", {
+      headers: authHeaders(),
+    }).then((r) => json<{ user: User }>(r)),
+  updateProfile: (displayName: string, handicap: number) =>
+    fetch("/api/auth/me", {
+      method: "PATCH",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ displayName, handicap }),
+    }).then((r) => json<{ user: User }>(r)),
+
   // courses
   listCourses: () =>
-    fetch("/api/courses").then((r) => json<{ courses: Course[] }>(r)),
+    fetch("/api/courses", { headers: authHeaders() }).then((r) =>
+      json<{ courses: Course[] }>(r),
+    ),
   getCourse: (id: string) =>
-    fetch(`/api/courses/${id}`).then((r) => json<{ course: Course }>(r)),
+    fetch(`/api/courses/${id}`, { headers: authHeaders() }).then((r) =>
+      json<{ course: Course }>(r),
+    ),
   createCourse: (payload: {
     name: string;
     location: string | null;
@@ -35,37 +87,58 @@ export const api = {
   }) =>
     fetch("/api/courses", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
+    }).then((r) => json<{ course: Course }>(r)),
+  updateCourse: (
+    id: string,
+    payload: { name: string; location: string | null; holes: Hole[] },
+  ) =>
+    fetch(`/api/courses/${id}`, {
+      method: "PATCH",
+      headers: jsonHeaders(),
       body: JSON.stringify(payload),
     }).then((r) => json<{ course: Course }>(r)),
   deleteCourse: (id: string) =>
-    fetch(`/api/courses/${id}`, { method: "DELETE" }).then((r) =>
-      json<{ ok: boolean }>(r),
-    ),
+    fetch(`/api/courses/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  favoriteCourse: (id: string) =>
+    fetch(`/api/courses/${id}/favorite`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ course: Course }>(r)),
+  unfavoriteCourse: (id: string) =>
+    fetch(`/api/courses/${id}/favorite`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ course: Course }>(r)),
 
   // groups
   listGroups: () =>
-    fetch("/api/groups").then((r) =>
+    fetch("/api/groups", { headers: authHeaders() }).then((r) =>
       json<{ groups: Array<Group & { members: GroupMember[] }> }>(r),
     ),
   getGroup: (id: string) =>
-    fetch(`/api/groups/${id}`).then((r) =>
+    fetch(`/api/groups/${id}`, { headers: authHeaders() }).then((r) =>
       json<{ group: Group; members: GroupMember[] }>(r),
     ),
   createGroup: (name: string) =>
     fetch("/api/groups", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: jsonHeaders(),
       body: JSON.stringify({ name }),
     }).then((r) => json<{ group: Group; members: GroupMember[] }>(r)),
   deleteGroup: (id: string) =>
-    fetch(`/api/groups/${id}`, { method: "DELETE" }).then((r) =>
-      json<{ ok: boolean }>(r),
-    ),
+    fetch(`/api/groups/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
   addGroupMember: (groupId: string, name: string, handicap: number) =>
     fetch(`/api/groups/${groupId}/members`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: jsonHeaders(),
       body: JSON.stringify({ name, handicap }),
     }).then((r) => json<{ member: GroupMember }>(r)),
   updateGroupMember: (
@@ -76,34 +149,63 @@ export const api = {
   ) =>
     fetch(`/api/groups/${groupId}/members/${memberId}`, {
       method: "PATCH",
-      headers: { "content-type": "application/json" },
+      headers: jsonHeaders(),
       body: JSON.stringify({ name, handicap }),
     }).then((r) => json<{ ok: boolean }>(r)),
   removeGroupMember: (groupId: string, memberId: string) =>
     fetch(`/api/groups/${groupId}/members/${memberId}`, {
       method: "DELETE",
+      headers: authHeaders(),
     }).then((r) => json<{ ok: boolean }>(r)),
+
+  // group invites
+  listGroupInvites: (groupId: string) =>
+    fetch(`/api/groups/${groupId}/invites`, { headers: authHeaders() }).then(
+      (r) => json<{ invites: GroupInvite[] }>(r),
+    ),
+  createGroupInvite: (groupId: string) =>
+    fetch(`/api/groups/${groupId}/invites`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ invite: GroupInvite }>(r)),
+  deleteGroupInvite: (groupId: string, inviteId: string) =>
+    fetch(`/api/groups/${groupId}/invites/${inviteId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  getInvite: (token: string) =>
+    fetch(`/api/group-invites/${token}`).then((r) =>
+      json<{ invite: GroupInvite; group: Group; memberCount: number }>(r),
+    ),
+  acceptInvite: (token: string) =>
+    fetch(`/api/group-invites/${token}/accept`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ group: Group; member: GroupMember }>(r)),
 
   // rounds
   createRound: (payload: {
     courseId: string;
     groupId: string | null;
-    importGroupMembers: boolean;
+    memberIds: string[];
   }) =>
     fetch("/api/rounds", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: jsonHeaders(),
       body: JSON.stringify(payload),
     }).then((r) => json<{ state: RoundState }>(r)),
   getRound: (code: string) =>
-    fetch(`/api/rounds/${code}`).then((r) =>
+    fetch(`/api/rounds/${code}`, { headers: authHeaders() }).then((r) =>
       json<{ state: RoundState }>(r),
     ),
-  joinRound: (code: string, name: string, handicap: number) =>
+  joinRound: (
+    code: string,
+    payload: { name?: string; handicap?: number } = {},
+  ) =>
     fetch(`/api/rounds/${code}/players`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name, handicap }),
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
     }).then((r) => json<{ player: Player; state: RoundState }>(r)),
   updateRoundPlayer: (
     code: string,
@@ -113,25 +215,28 @@ export const api = {
   ) =>
     fetch(`/api/rounds/${code}/players/${playerId}`, {
       method: "PATCH",
-      headers: { "content-type": "application/json" },
+      headers: jsonHeaders(),
       body: JSON.stringify({ name, handicap }),
     }).then((r) => json<{ ok: boolean; state: RoundState }>(r)),
   removeRoundPlayer: (code: string, playerId: string) =>
     fetch(`/api/rounds/${code}/players/${playerId}`, {
       method: "DELETE",
+      headers: authHeaders(),
     }).then((r) => json<{ ok: boolean }>(r)),
   startRound: (code: string) =>
-    fetch(`/api/rounds/${code}/start`, { method: "POST" }).then((r) =>
-      json<{ state: RoundState }>(r),
-    ),
+    fetch(`/api/rounds/${code}/start`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ state: RoundState }>(r)),
   completeRound: (code: string) =>
-    fetch(`/api/rounds/${code}/complete`, { method: "POST" }).then((r) =>
-      json<{ state: RoundState }>(r),
-    ),
+    fetch(`/api/rounds/${code}/complete`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ state: RoundState }>(r)),
   setCurrentHole: (code: string, holeNumber: number) =>
     fetch(`/api/rounds/${code}/current-hole`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: jsonHeaders(),
       body: JSON.stringify({ holeNumber }),
     }).then((r) => json<{ state: RoundState }>(r)),
   submitScore: (
@@ -142,13 +247,13 @@ export const api = {
   ) =>
     fetch(`/api/rounds/${code}/scores`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: jsonHeaders(),
       body: JSON.stringify({ playerId, holeNumber, strokes }),
     }).then((r) => json<{ score: Score; state: RoundState }>(r)),
   clearScore: (code: string, playerId: string, holeNumber: number) =>
     fetch(`/api/rounds/${code}/scores`, {
       method: "DELETE",
-      headers: { "content-type": "application/json" },
+      headers: jsonHeaders(),
       body: JSON.stringify({ playerId, holeNumber }),
     }).then((r) => json<{ ok: boolean }>(r)),
 };

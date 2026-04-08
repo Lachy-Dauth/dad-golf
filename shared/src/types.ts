@@ -4,12 +4,24 @@ export interface Hole {
   strokeIndex: number;
 }
 
+export interface User {
+  id: string;
+  username: string;
+  displayName: string;
+  handicap: number;
+  createdAt: string;
+}
+
 export interface Course {
   id: string;
   name: string;
   location: string | null;
   holes: Hole[];
   createdAt: string;
+  createdByUserId: string | null;
+  createdByName: string | null;
+  favoriteCount: number;
+  isFavorite: boolean;
 }
 
 export type RoundStatus = "waiting" | "in_progress" | "complete";
@@ -24,14 +36,18 @@ export interface Round {
   createdAt: string;
   startedAt: string | null;
   completedAt: string | null;
+  leaderUserId: string | null;
+  leaderName: string | null;
 }
 
 export interface Player {
   id: string;
   roundId: string;
+  userId: string | null;
   name: string;
   handicap: number;
   joinedAt: string;
+  isGuest: boolean;
 }
 
 export interface Score {
@@ -47,13 +63,23 @@ export interface Group {
   id: string;
   name: string;
   createdAt: string;
+  ownerUserId: string | null;
+  ownerName: string | null;
 }
 
 export interface GroupMember {
   id: string;
   groupId: string;
+  userId: string | null;
   name: string;
   handicap: number;
+  createdAt: string;
+}
+
+export interface GroupInvite {
+  id: string;
+  groupId: string;
+  token: string;
   createdAt: string;
 }
 

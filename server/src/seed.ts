@@ -1,5 +1,11 @@
 import type { Hole } from "@dad-golf/shared";
-import { createCourse, listCourses } from "./db.js";
+import {
+  createCourse,
+  createUser,
+  db,
+  getUserByUsername,
+  listCourses,
+} from "./db.js";
 
 const SEED_COURSES: Array<{
   name: string;
@@ -56,11 +62,21 @@ const SEED_COURSES: Array<{
   },
 ];
 
+const SEED_USERNAME = "stableford";
+
 export function seedIfEmpty(): void {
-  const existing = listCourses();
+  const existing = listCourses(null);
   if (existing.length > 0) return;
+
+  let seedUser = getUserByUsername(SEED_USERNAME);
+  if (!seedUser) {
+    createUser(SEED_USERNAME, "stableford", "Stableford", 18);
+    seedUser = getUserByUsername(SEED_USERNAME);
+  }
+  if (!seedUser) return;
+
   for (const c of SEED_COURSES) {
-    createCourse(c.name, c.location, c.holes);
+    createCourse(c.name, c.location, c.holes, seedUser.id);
   }
   console.log(`Seeded ${SEED_COURSES.length} courses`);
 }

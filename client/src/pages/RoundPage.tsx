@@ -9,6 +9,7 @@ import {
   getActivePlayerId,
   setActivePlayerId,
 } from "../localStore.js";
+import { useAuth } from "../AuthContext.js";
 import LobbyView from "../components/LobbyView.js";
 import ScoringView from "../components/ScoringView.js";
 import LeaderboardView from "../components/LeaderboardView.js";
@@ -19,6 +20,7 @@ type Tab = "scoring" | "leaderboard" | "players";
 export default function RoundPage() {
   const { code } = useParams<{ code: string }>();
   const roomCode = code ?? null;
+  const { user: viewer } = useAuth();
   const [initial, setInitial] = useState<RoundState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const { state, setState, connected } = useRoundSocket(roomCode, initial);
@@ -40,11 +42,20 @@ export default function RoundPage() {
         });
       })
       .catch((e: Error) => setLoadError(e.message));
-  }, [roomCode]);
+  }, [roomCode, viewer?.id]);
+
+  // Auto-bind active player to the signed in user when they're in the round
+  useEffect(() => {
+    if (!state || !viewer) return;
+    const me = state.players.find((p) => p.userId === viewer.id);
+    if (me && activePlayerId !== me.id) {
+      setActivePlayer(me.id);
+      if (roomCode) setActivePlayerId(roomCode, me.id);
+    }
+  }, [state, viewer, activePlayerId, roomCode]);
 
   useEffect(() => {
     if (!state || !roomCode) return;
-    // If we had stored an active player that's no longer in the round, clear
     if (activePlayerId && !state.players.some((p) => p.id === activePlayerId)) {
       setActivePlayer(null);
     }
@@ -54,6 +65,10 @@ export default function RoundPage() {
     if (!state || !activePlayerId) return null;
     return state.players.find((p) => p.id === activePlayerId) ?? null;
   }, [state, activePlayerId]);
+
+  const isLeader = !!(
+    state && viewer && state.round.leaderUserId === viewer.id
+  );
 
   if (loadError) {
     return (
@@ -86,25 +101,40 @@ export default function RoundPage() {
     if (roomCode) setActivePlayerId(roomCode, id);
   }
 
-  async function handleJoinAs(name: string, handicap: number) {
+  async function handleJoinAsUser() {
     if (!roomCode) return;
-    const res = await api.joinRound(roomCode, name, handicap);
+    const res = await api.joinRound(roomCode);
+    setState(res.state);
+    handleActivePlayer(res.player.id);
+  }
+
+  async function handleJoinAsGuest(name: string, handicap: number) {
+    if (!roomCode) return;
+    const res = await api.joinRound(roomCode, { name, handicap });
     setState(res.state);
     handleActivePlayer(res.player.id);
   }
 
   async function handleStart() {
     if (!roomCode) return;
-    const res = await api.startRound(roomCode);
-    setState(res.state);
-    setTab("scoring");
+    try {
+      const res = await api.startRound(roomCode);
+      setState(res.state);
+      setTab("scoring");
+    } catch (e) {
+      alert((e as Error).message);
+    }
   }
 
   async function handleComplete() {
     if (!roomCode) return;
     if (!confirm("End this round? Scores can still be edited after.")) return;
-    const res = await api.completeRound(roomCode);
-    setState(res.state);
+    try {
+      const res = await api.completeRound(roomCode);
+      setState(res.state);
+    } catch (e) {
+      alert((e as Error).message);
+    }
   }
 
   async function handleScore(holeNumber: number, strokes: number) {
@@ -121,7 +151,6 @@ export default function RoundPage() {
   async function handleClearScore(holeNumber: number) {
     if (!roomCode || !activePlayer) return;
     await api.clearScore(roomCode, activePlayer.id, holeNumber);
-    // WS will push the state update
   }
 
   async function handleSetCurrentHole(holeNumber: number) {
@@ -133,12 +162,18 @@ export default function RoundPage() {
   async function handleRemovePlayer(playerId: string) {
     if (!roomCode) return;
     if (!confirm("Remove this player from the round?")) return;
-    await api.removeRoundPlayer(roomCode, playerId);
-    if (playerId === activePlayerId) setActivePlayer(null);
+    try {
+      await api.removeRoundPlayer(roomCode, playerId);
+      if (playerId === activePlayerId) setActivePlayer(null);
+    } catch (e) {
+      alert((e as Error).message);
+    }
   }
 
   const showLobby = round.status === "waiting";
   const showSummary = round.status === "complete";
+  const canRemoveAnyPlayer = (playerUserId: string | null) =>
+    isLeader || (viewer != null && playerUserId === viewer.id);
 
   return (
     <div className="page round-page">
@@ -153,11 +188,16 @@ export default function RoundPage() {
                 const url = `${location.origin}/r/${round.roomCode}`;
                 navigator.clipboard?.writeText(url);
               }}
-              title="Copy share link"
+              title="Copy share link (anyone can join, no log-in required)"
             >
               copy link
             </button>
           </div>
+          {round.leaderName && (
+            <div className="round-meta muted">
+              Leader: {round.leaderName}
+            </div>
+          )}
         </div>
         <div className={`conn-dot ${connected ? "on" : "off"}`} title={connected ? "Live" : "Reconnecting…"} />
       </div>
@@ -166,8 +206,11 @@ export default function RoundPage() {
         <LobbyView
           state={state}
           activePlayerId={activePlayerId}
+          viewer={viewer}
+          isLeader={isLeader}
           onSetActivePlayer={handleActivePlayer}
-          onJoin={handleJoinAs}
+          onJoinAsUser={handleJoinAsUser}
+          onJoinAsGuest={handleJoinAsGuest}
           onStart={handleStart}
           onRemovePlayer={handleRemovePlayer}
         />
@@ -201,7 +244,9 @@ export default function RoundPage() {
               state={state}
               activePlayer={activePlayer}
               onSelectPlayer={handleActivePlayer}
-              onJoin={handleJoinAs}
+              onJoinAsUser={handleJoinAsUser}
+              onJoinAsGuest={handleJoinAsGuest}
+              viewer={viewer}
               onScore={handleScore}
               onClearScore={handleClearScore}
               onSetCurrentHole={handleSetCurrentHole}
@@ -220,15 +265,24 @@ export default function RoundPage() {
                   <li key={p.id}>
                     <div className="list-row">
                       <div>
-                        <div className="list-primary">{p.name}</div>
+                        <div className="list-primary">
+                          {p.name}
+                          {p.userId != null &&
+                            p.userId === round.leaderUserId && (
+                              <span className="badge">leader</span>
+                            )}
+                          {p.isGuest && <span className="badge">guest</span>}
+                        </div>
                         <div className="list-secondary">HCP {p.handicap}</div>
                       </div>
-                      <button
-                        className="btn-icon"
-                        onClick={() => handleRemovePlayer(p.id)}
-                      >
-                        ✕
-                      </button>
+                      {canRemoveAnyPlayer(p.userId) && (
+                        <button
+                          className="btn-icon"
+                          onClick={() => handleRemovePlayer(p.id)}
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -238,7 +292,7 @@ export default function RoundPage() {
 
           {showSummary && <SummaryView state={state} />}
 
-          {!showSummary && round.status === "in_progress" && (
+          {!showSummary && round.status === "in_progress" && isLeader && (
             <div className="form-actions" style={{ marginTop: 24 }}>
               <button className="btn" onClick={handleComplete}>
                 End round
