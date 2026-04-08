@@ -1,0 +1,21 @@
+{
+  "name": "dad-golf",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Real-time multi-player Stableford scoring app",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "postinstall": "npm run build --workspace=shared",
+    "dev": "npm run build --workspace=shared && (npm run dev --workspace=server & npm run dev --workspace=client)",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "build": "npm run build --workspace=shared && npm run build --workspace=server && npm run build --workspace=client",
+    "start": "npm run start --workspace=server",
+    "test": "npm run test --workspace=shared"
+  },
+  "license": "MIT"
+}
