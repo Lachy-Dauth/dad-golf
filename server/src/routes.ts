@@ -92,8 +92,26 @@ function validateHoles(holes: unknown): Hole[] {
 
 function validateHandicap(h: unknown): number {
   const n = Number(h);
-  if (!Number.isInteger(n) || n < 0 || n > 54) {
-    throw new Error("handicap must be integer 0-54");
+  if (!Number.isFinite(n) || n < 0 || n > 54) {
+    throw new Error("handicap must be a number between 0.0 and 54.0");
+  }
+  // Golf Australia handicaps are quoted to one decimal place. Round to 0.1
+  // so storage stays consistent regardless of how the client formats it.
+  return Math.round(n * 10) / 10;
+}
+
+function validateCourseRating(r: unknown): number {
+  const n = Number(r);
+  if (!Number.isFinite(n) || n < 50 || n > 90) {
+    throw new Error("course rating must be a number between 50.0 and 90.0");
+  }
+  return Math.round(n * 10) / 10;
+}
+
+function validateCourseSlope(s: unknown): number {
+  const n = Number(s);
+  if (!Number.isInteger(n) || n < 55 || n > 155) {
+    throw new Error("slope rating must be an integer between 55 and 155");
   }
   return n;
 }
@@ -236,7 +254,13 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   );
 
   app.post<{
-    Body: { name?: string; location?: string; holes?: unknown };
+    Body: {
+      name?: string;
+      location?: string;
+      rating?: number;
+      slope?: number;
+      holes?: unknown;
+    };
   }>("/api/courses", async (req, reply) => {
     const user = requireUser(req, reply);
     if (!user) return;
@@ -246,8 +270,17 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         typeof req.body?.location === "string"
           ? req.body.location.trim() || null
           : null;
+      const rating = validateCourseRating(req.body?.rating);
+      const slope = validateCourseSlope(req.body?.slope);
       const holes = validateHoles(req.body?.holes);
-      const course = createCourse(name, location, holes, user.id);
+      const course = createCourse(
+        name,
+        location,
+        rating,
+        slope,
+        holes,
+        user.id,
+      );
       return reply.code(201).send({ course });
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
@@ -256,7 +289,13 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
   app.patch<{
     Params: { id: string };
-    Body: { name?: string; location?: string; holes?: unknown };
+    Body: {
+      name?: string;
+      location?: string;
+      rating?: number;
+      slope?: number;
+      holes?: unknown;
+    };
   }>("/api/courses/:id", async (req, reply) => {
     const user = requireUser(req, reply);
     if (!user) return;
@@ -273,8 +312,10 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         typeof req.body?.location === "string"
           ? req.body.location.trim() || null
           : null;
+      const rating = validateCourseRating(req.body?.rating);
+      const slope = validateCourseSlope(req.body?.slope);
       const holes = validateHoles(req.body?.holes);
-      updateCourse(course.id, name, location, holes);
+      updateCourse(course.id, name, location, rating, slope, holes);
       const updated = getCourse(course.id, user.id);
       return { course: updated };
     } catch (e) {

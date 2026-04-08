@@ -16,6 +16,8 @@ export interface Course {
   id: string;
   name: string;
   location: string | null;
+  rating: number;
+  slope: number;
   holes: Hole[];
   createdAt: string;
   createdByUserId: string | null;
@@ -87,6 +89,7 @@ export interface LeaderboardRow {
   playerId: string;
   name: string;
   handicap: number;
+  dailyHandicap: number;
   holesPlayed: number;
   totalPoints: number;
   totalStrokes: number;

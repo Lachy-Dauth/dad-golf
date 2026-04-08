@@ -193,6 +193,9 @@ export default function RoundPage() {
               copy link
             </button>
           </div>
+          <div className="round-meta muted">
+            Rating {course.rating.toFixed(1)} · Slope {course.slope}
+          </div>
           {round.leaderName && (
             <div className="round-meta muted">
               Leader: {round.leaderName}
@@ -273,7 +276,9 @@ export default function RoundPage() {
                             )}
                           {p.isGuest && <span className="badge">guest</span>}
                         </div>
-                        <div className="list-secondary">HCP {p.handicap}</div>
+                        <div className="list-secondary">
+                          GA HCP {p.handicap.toFixed(1)}
+                        </div>
                       </div>
                       {canRemoveAnyPlayer(p.userId) && (
                         <button

@@ -17,6 +17,12 @@ export default function HelpPage() {
         </p>
         <ul className="help-list">
           <li>Give the course a name (and optional location).</li>
+          <li>
+            Enter the <strong>course rating</strong> (e.g. 72.4) and{" "}
+            <strong>slope rating</strong> (55–155, normally on the scorecard).
+            These come straight off the scorecard or the club's website and
+            are needed to convert your GA handicap into a daily handicap.
+          </li>
           <li>Choose 9 or 18 holes.</li>
           <li>
             For each hole, set the <strong>par</strong> (3, 4, 5 or 6) and{" "}
@@ -41,8 +47,9 @@ export default function HelpPage() {
         <ul className="help-list">
           <li>Give the group a name like "Saturday Regulars".</li>
           <li>
-            Add each member with their name and current handicap (0–54). Up
-            to 64 members per group.
+            Add each member with their name and current Golf Australia
+            handicap (0.0–54.0, one decimal place). Up to 64 members per
+            group.
           </li>
           <li>Edit or remove members any time — changes are saved.</li>
         </ul>
@@ -173,12 +180,31 @@ export default function HelpPage() {
           <li>Double bogey or worse: <strong>0 points</strong></li>
         </ul>
         <p>
-          Strokes received: if your handicap is <em>H</em>, you get at least{" "}
-          <code>floor(H/18)</code> strokes on every hole, plus one extra on
-          the holes whose stroke index is <code>≤ H mod 18</code>. So a
-          handicap-9 player gets a stroke on the nine hardest holes (SI 1–9);
-          a handicap-20 player gets one stroke on every hole plus an extra on
-          SI 1 and SI 2.
+          Strokes received: if your daily handicap is <em>D</em>, you get at
+          least <code>floor(D/18)</code> strokes on every hole, plus one
+          extra on the holes whose stroke index is <code>≤ D mod 18</code>.
+          So a daily handicap of 9 means a stroke on the nine hardest holes
+          (SI 1–9); a daily handicap of 20 means one stroke on every hole
+          plus an extra on SI 1 and SI 2.
+        </p>
+      </section>
+
+      <section className="section">
+        <h2>Daily handicap, in 30 seconds</h2>
+        <p>
+          Your <strong>Golf Australia handicap</strong> is quoted to one
+          decimal (e.g. <code>12.3</code>). Before each round it's converted
+          into a whole-number <strong>daily handicap</strong> for the
+          specific course you're playing:
+        </p>
+        <p>
+          <code>Daily Handicap = round(GA Handicap × Slope Rating ÷ 113)</code>
+        </p>
+        <p>
+          A neutral slope of 113 leaves your handicap untouched; a tougher
+          course (higher slope) gives you more strokes, an easier course
+          fewer. The daily handicap is what gets used for Stableford strokes
+          received.
         </p>
       </section>
 

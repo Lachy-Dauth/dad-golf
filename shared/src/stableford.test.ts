@@ -4,6 +4,7 @@ import {
   strokesReceived,
   stablefordPoints,
   computeLeaderboard,
+  calculateDailyHandicap,
 } from "./stableford.js";
 import type { Course, Player, Score } from "./types.js";
 
@@ -61,7 +62,7 @@ test("stableford points - unplayed hole returns 0", () => {
   assert.equal(stablefordPoints(0, 4, 10, 1), 0);
 });
 
-function makeCourse(): Course {
+function makeCourse(slope = 113): Course {
   const holes = Array.from({ length: 18 }, (_, i) => ({
     number: i + 1,
     par: i % 3 === 0 ? 5 : i % 3 === 1 ? 4 : 3,
@@ -71,10 +72,35 @@ function makeCourse(): Course {
     id: "c1",
     name: "Test",
     location: null,
+    rating: 72.0,
+    slope,
     holes,
     createdAt: new Date().toISOString(),
+    createdByUserId: null,
+    createdByName: null,
+    favoriteCount: 0,
+    isFavorite: false,
   };
 }
+
+test("calculateDailyHandicap - neutral slope 113 returns rounded GA handicap", () => {
+  assert.equal(calculateDailyHandicap(12.3, 113), 12);
+  assert.equal(calculateDailyHandicap(12.5, 113), 13);
+  assert.equal(calculateDailyHandicap(0, 113), 0);
+  assert.equal(calculateDailyHandicap(18.0, 113), 18);
+});
+
+test("calculateDailyHandicap - higher slope adds strokes", () => {
+  // 12.3 * 130 / 113 = 14.149… → 14
+  assert.equal(calculateDailyHandicap(12.3, 130), 14);
+  // 18.0 * 140 / 113 = 22.30… → 22
+  assert.equal(calculateDailyHandicap(18.0, 140), 22);
+});
+
+test("calculateDailyHandicap - lower slope removes strokes", () => {
+  // 18.0 * 100 / 113 = 15.929… → 16
+  assert.equal(calculateDailyHandicap(18.0, 100), 16);
+});
 
 test("leaderboard sort - higher points first, tie-break by net strokes", () => {
   const course = makeCourse();

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Player, RoundState, User } from "@dad-golf/shared";
 import {
+  calculateDailyHandicap,
   stablefordPoints,
   strokesReceived,
   computePlayerHoles,
@@ -34,7 +35,7 @@ export default function ScoringView({
   );
   const [submitting, setSubmitting] = useState(false);
   const [joinName, setJoinName] = useState("");
-  const [joinHcp, setJoinHcp] = useState(18);
+  const [joinHcp, setJoinHcp] = useState("18.0");
 
   const hole = state.course.holes.find((h) => h.number === currentHole);
   if (!hole) return <div className="muted">Invalid hole</div>;
@@ -51,7 +52,8 @@ export default function ScoringView({
       return (
         <div className="form-inline">
           <div>
-            Join as <strong>{viewer.displayName}</strong> (HCP {viewer.handicap})
+            Join as <strong>{viewer.displayName}</strong> (GA HCP{" "}
+            {viewer.handicap.toFixed(1)})
           </div>
           <button className="btn btn-primary" onClick={onJoinAsUser}>
             Join
@@ -68,16 +70,23 @@ export default function ScoringView({
         />
         <input
           type="number"
+          inputMode="decimal"
+          step="0.1"
           min={0}
           max={54}
           value={joinHcp}
-          onChange={(e) => setJoinHcp(Number(e.target.value))}
-          style={{ width: 80 }}
+          onChange={(e) => setJoinHcp(e.target.value)}
+          placeholder="GA HCP"
+          style={{ width: 96 }}
         />
         <button
           className="btn btn-primary"
           disabled={!joinName.trim()}
-          onClick={() => onJoinAsGuest(joinName.trim(), joinHcp)}
+          onClick={() => {
+            const n = Number(joinHcp);
+            if (!Number.isFinite(n) || n < 0 || n > 54) return;
+            onJoinAsGuest(joinName.trim(), Math.round(n * 10) / 10);
+          }}
         >
           Join as guest
         </button>
@@ -101,16 +110,21 @@ export default function ScoringView({
         <h2>Who are you?</h2>
         <p className="muted">Tap your name to score on this device.</p>
         <ul className="player-grid">
-          {state.players.map((p) => (
-            <li
-              key={p.id}
-              className="player-card"
-              onClick={() => onSelectPlayer(p.id)}
-            >
-              <div className="player-name">{p.name}</div>
-              <div className="player-hcp">HCP {p.handicap}</div>
-            </li>
-          ))}
+          {state.players.map((p) => {
+            const dh = calculateDailyHandicap(p.handicap, state.course.slope);
+            return (
+              <li
+                key={p.id}
+                className="player-card"
+                onClick={() => onSelectPlayer(p.id)}
+              >
+                <div className="player-name">{p.name}</div>
+                <div className="player-hcp">
+                  GA {p.handicap.toFixed(1)} · DH {dh}
+                </div>
+              </li>
+            );
+          })}
         </ul>
         <div className="section">
           <h3>Or join as a new player</h3>
@@ -120,10 +134,14 @@ export default function ScoringView({
     );
   }
 
+  const dailyHandicap = calculateDailyHandicap(
+    activePlayer.handicap,
+    state.course.slope,
+  );
   const holes = computePlayerHoles(state.course, activePlayer, state.scores);
   const holeResult = holes.find((h) => h.holeNumber === currentHole);
   const currentStrokes = holeResult?.strokes ?? null;
-  const received = strokesReceived(activePlayer.handicap, hole.strokeIndex);
+  const received = strokesReceived(dailyHandicap, hole.strokeIndex);
 
   async function handleStrokes(n: number) {
     setSubmitting(true);
@@ -153,8 +171,8 @@ export default function ScoringView({
         <div>
           <div className="scoring-name">{activePlayer.name}</div>
           <div className="scoring-sub">
-            HCP {activePlayer.handicap} · {played}/{state.course.holes.length}{" "}
-            holes · {totalPoints} pts
+            GA {activePlayer.handicap.toFixed(1)} · DH {dailyHandicap} ·{" "}
+            {played}/{state.course.holes.length} holes · {totalPoints} pts
           </div>
         </div>
         <button
@@ -196,7 +214,7 @@ export default function ScoringView({
           const pts = stablefordPoints(
             n,
             hole.par,
-            activePlayer.handicap,
+            dailyHandicap,
             hole.strokeIndex,
           );
           return (
