@@ -2,6 +2,8 @@
 
 A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 10 players join a round from their phones, enter scores hole-by-hole, and watch a live leaderboard update as the round progresses.
 
+**Live app:** https://golf-stableford-production.up.railway.app/
+
 ## What it does
 
 - **Set up a round** — one player creates a round and picks (or builds) a course
@@ -93,7 +95,7 @@ See `plan.md` for the rationale. Short version:
 
 ## Project status
 
-Pre-implementation. See `plan.md` for the detailed build plan.
+Live and deployed: [golf-stableford-production.up.railway.app](https://golf-stableford-production.up.railway.app/). See `plan.md` for the original build plan.
 
 ## Getting started
 
