@@ -17,6 +17,7 @@ export default function LeaderboardView({ state }: Props) {
         <span className="lb-pos">#</span>
         <span className="lb-name">Player</span>
         <span className="lb-num">Holes</span>
+        <span className="lb-num">Strokes</span>
         <span className="lb-num">Pts</span>
         <span className="lb-num">Back</span>
       </div>
@@ -32,6 +33,9 @@ export default function LeaderboardView({ state }: Props) {
           </span>
           <span className="lb-num">
             {row.holesPlayed}/{course.holes.length}
+          </span>
+          <span className="lb-num lb-strokes">
+            {row.totalStrokes > 0 ? row.totalStrokes : "–"}
           </span>
           <span className="lb-num lb-points">{row.totalPoints}</span>
           <span className="lb-num">

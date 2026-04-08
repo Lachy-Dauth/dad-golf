@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 export default function HelpPage() {
   return (
     <div className="page">
-      <h1>How to use Dad Golf</h1>
+      <h1>How to use Stableford</h1>
       <p className="muted">
         A quick guide to running a Stableford round from your phone.
       </p>
@@ -56,9 +56,9 @@ export default function HelpPage() {
         <ul className="help-list">
           <li>Pick the course.</li>
           <li>
-            Optionally pick a golf group. Leave{" "}
-            <em>Pre-add all group members as players</em> ticked to bring the
-            whole roster into the round in one go.
+            Optionally pick a golf group (you must be a member). Tap{" "}
+            <em>Add everyone</em> to pre-load the whole roster, or tap each
+            member individually to add them.
           </li>
           <li>
             Tap <strong>Create round</strong>. You'll land on the round page
@@ -94,9 +94,10 @@ export default function HelpPage() {
           </li>
         </ul>
         <p>
-          When the players look right, the host taps{" "}
-          <strong>Start round</strong>. Anyone can still join after the
-          start, as long as the round is not marked complete.
+          When the players look right, the round leader taps{" "}
+          <strong>Start round</strong>. Only the round leader can start or
+          end the round; anyone can still join after the start, as long as
+          the round is not marked complete.
         </p>
       </section>
 
@@ -137,8 +138,8 @@ export default function HelpPage() {
         </p>
         <ul className="help-list">
           <li>
-            Position, name, handicap, holes played, total Stableford points,
-            and points back from the leader.
+            Position, name, handicap, holes played, raw stroke count, total
+            Stableford points, and points back from the leader.
           </li>
           <li>
             Ties share a position — the next player below picks up after the

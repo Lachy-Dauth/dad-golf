@@ -732,10 +732,10 @@ select:focus {
 .lb-header,
 .lb-row {
   display: grid;
-  grid-template-columns: 40px 1fr 60px 60px 60px;
+  grid-template-columns: 32px 1fr 50px 60px 50px 50px;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 6px;
+  padding: 10px 12px;
 }
 .lb-header {
   font-size: 11px;
@@ -878,4 +878,63 @@ select:focus {
   .action-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---------- Auth & ownership additions ---------- */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  text-decoration: underline;
+}
+.btn-icon.fav {
+  font-size: 20px;
+  color: var(--text-dim);
+}
+.btn-icon.fav.active {
+  color: #f1c40f;
+}
+.badge {
+  display: inline-block;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.player-card.selectable {
+  cursor: pointer;
+  position: relative;
+}
+.player-toggle {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+.lb-strokes {
+  color: var(--text-dim);
+}
+.round-meta {
+  font-size: 12px;
+  margin-top: 2px;
 }

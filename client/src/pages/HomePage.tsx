@@ -38,7 +38,7 @@ export default function HomePage() {
 
       <div className="home-footer">
         <Link to="/help" className="help-link">
-          How to use Dad Golf →
+          How to use Stableford →
         </Link>
       </div>
 
