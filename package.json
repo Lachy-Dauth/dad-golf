@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Real-time multi-player Stableford scoring app",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "workspaces": [
     "shared",
     "server",

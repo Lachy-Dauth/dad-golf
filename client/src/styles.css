@@ -68,6 +68,10 @@ p {
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
   padding: env(safe-area-inset-top) 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .logo {
@@ -79,6 +83,25 @@ p {
   color: var(--text);
   font-weight: 700;
   font-size: 18px;
+}
+
+.header-link {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+}
+.header-link:hover {
+  color: var(--text);
+  border-color: var(--primary);
 }
 
 .logo-mark {
@@ -806,6 +829,42 @@ select:focus {
   border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
+}
+
+/* help page */
+.help-list {
+  padding-left: 20px;
+  margin: 8px 0;
+  line-height: 1.6;
+}
+.help-list li {
+  margin-bottom: 6px;
+}
+.help-list code,
+.section code {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.home-footer {
+  margin-top: 20px;
+  text-align: center;
+}
+.help-link {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 10px 16px;
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.help-link:hover {
+  color: var(--text);
+  border-color: var(--primary);
 }
 
 /* small screens */

@@ -7,6 +7,7 @@ import GroupDetailPage from "./pages/GroupDetailPage.js";
 import NewRoundPage from "./pages/NewRoundPage.js";
 import JoinRoundPage from "./pages/JoinRoundPage.js";
 import RoundPage from "./pages/RoundPage.js";
+import HelpPage from "./pages/HelpPage.js";
 
 export default function App() {
   return (
@@ -16,10 +17,14 @@ export default function App() {
           <span className="logo-mark">⛳</span>
           Dad Golf
         </Link>
+        <Link to="/help" className="header-link" title="How to use">
+          ?
+        </Link>
       </header>
       <main className="app-main">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/help" element={<HelpPage />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/courses/new" element={<NewCoursePage />} />
           <Route path="/groups" element={<GroupsPage />} />

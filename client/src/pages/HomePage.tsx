@@ -36,6 +36,12 @@ export default function HomePage() {
         </Link>
       </div>
 
+      <div className="home-footer">
+        <Link to="/help" className="help-link">
+          How to use Dad Golf →
+        </Link>
+      </div>
+
       {recent.length > 0 && (
         <section className="section">
           <h2>Recent rounds on this device</h2>
