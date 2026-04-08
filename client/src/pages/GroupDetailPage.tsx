@@ -12,7 +12,7 @@ export default function GroupDetailPage() {
   const [invites, setInvites] = useState<GroupInvite[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
-  const [newHandicap, setNewHandicap] = useState<number>(18);
+  const [newHandicap, setNewHandicap] = useState<string>("18.0");
   const [adding, setAdding] = useState(false);
 
   const isOwner = !!(user && group && group.ownerUserId === user.id);
@@ -46,11 +46,20 @@ export default function GroupDetailPage() {
 
   async function handleAdd() {
     if (!id || !newName.trim()) return;
+    const n = Number(newHandicap);
+    if (!Number.isFinite(n) || n < 0 || n > 54) {
+      setError("Handicap must be a number between 0.0 and 54.0");
+      return;
+    }
     setAdding(true);
     try {
-      await api.addGroupMember(id, newName.trim(), newHandicap);
+      await api.addGroupMember(
+        id,
+        newName.trim(),
+        Math.round(n * 10) / 10,
+      );
       setNewName("");
-      setNewHandicap(18);
+      setNewHandicap("18.0");
       load();
     } catch (e) {
       setError((e as Error).message);
@@ -134,12 +143,14 @@ export default function GroupDetailPage() {
             />
             <input
               type="number"
+              inputMode="decimal"
+              step="0.1"
               min={0}
               max={54}
-              placeholder="HCP"
+              placeholder="GA HCP"
               value={newHandicap}
-              onChange={(e) => setNewHandicap(Number(e.target.value))}
-              style={{ width: 80 }}
+              onChange={(e) => setNewHandicap(e.target.value)}
+              style={{ width: 96 }}
             />
             <button
               className="btn btn-primary"
@@ -247,7 +258,7 @@ function MemberRow({
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(member.name);
-  const [handicap, setHandicap] = useState(member.handicap);
+  const [handicap, setHandicap] = useState(member.handicap.toFixed(1));
 
   if (editing) {
     return (
@@ -257,18 +268,22 @@ function MemberRow({
             <input value={name} onChange={(e) => setName(e.target.value)} />
             <input
               type="number"
+              inputMode="decimal"
+              step="0.1"
               min={0}
               max={54}
               value={handicap}
-              onChange={(e) => setHandicap(Number(e.target.value))}
-              style={{ width: 70 }}
+              onChange={(e) => setHandicap(e.target.value)}
+              style={{ width: 90 }}
             />
           </div>
           <div className="row-actions">
             <button
               className="btn btn-primary"
               onClick={() => {
-                onSave(name.trim(), handicap);
+                const n = Number(handicap);
+                if (!Number.isFinite(n) || n < 0 || n > 54) return;
+                onSave(name.trim(), Math.round(n * 10) / 10);
                 setEditing(false);
               }}
             >
@@ -291,7 +306,9 @@ function MemberRow({
             {member.name}
             {member.userId === null && <span className="badge">guest</span>}
           </div>
-          <div className="list-secondary">HCP {member.handicap}</div>
+          <div className="list-secondary">
+            GA HCP {member.handicap.toFixed(1)}
+          </div>
         </div>
         <div className="row-actions">
           {canEdit && (

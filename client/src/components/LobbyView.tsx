@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { RoundState, User } from "@dad-golf/shared";
+import { calculateDailyHandicap } from "@dad-golf/shared";
 
 interface Props {
   state: RoundState;
@@ -25,7 +26,7 @@ export default function LobbyView({
   onRemovePlayer,
 }: Props) {
   const [name, setName] = useState("");
-  const [handicap, setHandicap] = useState<number>(18);
+  const [handicap, setHandicap] = useState<string>("18.0");
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,10 +36,15 @@ export default function LobbyView({
 
   async function handleJoinGuest() {
     if (!name.trim()) return;
+    const n = Number(handicap);
+    if (!Number.isFinite(n) || n < 0 || n > 54) {
+      setError("Handicap must be a number between 0.0 and 54.0");
+      return;
+    }
     setJoining(true);
     setError(null);
     try {
-      await onJoinAsGuest(name.trim(), handicap);
+      await onJoinAsGuest(name.trim(), Math.round(n * 10) / 10);
       setName("");
     } catch (e) {
       setError((e as Error).message);
@@ -69,8 +75,8 @@ export default function LobbyView({
           ) : (
             <div className="form-inline">
               <div>
-                Joining as <strong>{viewer.displayName}</strong> (HCP{" "}
-                {viewer.handicap})
+                Joining as <strong>{viewer.displayName}</strong> (GA HCP{" "}
+                {viewer.handicap.toFixed(1)})
               </div>
               <button
                 className="btn btn-primary"
@@ -94,12 +100,14 @@ export default function LobbyView({
               />
               <input
                 type="number"
+                inputMode="decimal"
+                step="0.1"
                 min={0}
                 max={54}
                 value={handicap}
-                onChange={(e) => setHandicap(Number(e.target.value))}
-                placeholder="HCP"
-                style={{ width: 80 }}
+                onChange={(e) => setHandicap(e.target.value)}
+                placeholder="GA HCP"
+                style={{ width: 96 }}
               />
               <button
                 className="btn btn-primary"
@@ -145,6 +153,10 @@ export default function LobbyView({
                 isLeader || (viewer != null && p.userId === viewer.id);
               const isLeaderPlayer =
                 p.userId != null && p.userId === state.round.leaderUserId;
+              const dh = calculateDailyHandicap(
+                p.handicap,
+                state.course.slope,
+              );
               return (
                 <li
                   key={p.id}
@@ -158,7 +170,9 @@ export default function LobbyView({
                     )}
                     {p.isGuest && <span className="badge">guest</span>}
                   </div>
-                  <div className="player-hcp">HCP {p.handicap}</div>
+                  <div className="player-hcp">
+                    GA {p.handicap.toFixed(1)} · DH {dh}
+                  </div>
                   {activePlayerId === p.id && (
                     <div className="player-me-badge">you</div>
                   )}

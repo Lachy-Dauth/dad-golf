@@ -10,11 +10,15 @@ import {
 const SEED_COURSES: Array<{
   name: string;
   location: string;
+  rating: number;
+  slope: number;
   holes: Hole[];
 }> = [
   {
     name: "Pebble Creek Municipal",
     location: "Anywhere, USA",
+    rating: 71.4,
+    slope: 124,
     holes: [
       { number: 1, par: 4, strokeIndex: 7 },
       { number: 2, par: 5, strokeIndex: 11 },
@@ -39,6 +43,8 @@ const SEED_COURSES: Array<{
   {
     name: "Oakridge Links",
     location: "Greenfield",
+    rating: 72.8,
+    slope: 130,
     holes: [
       { number: 1, par: 4, strokeIndex: 5 },
       { number: 2, par: 4, strokeIndex: 11 },
@@ -76,7 +82,7 @@ export function seedIfEmpty(): void {
   if (!seedUser) return;
 
   for (const c of SEED_COURSES) {
-    createCourse(c.name, c.location, c.holes, seedUser.id);
+    createCourse(c.name, c.location, c.rating, c.slope, c.holes, seedUser.id);
   }
   console.log(`Seeded ${SEED_COURSES.length} courses`);
 }

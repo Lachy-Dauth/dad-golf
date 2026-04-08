@@ -38,6 +38,15 @@ body,
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Default link colour: keep links on-brand instead of the browser default
+   blue / visited purple. The author origin overrides the user-agent
+   :link / :visited colours regardless of specificity, and class-styled
+   links (.btn, .header-link, .back-link, etc.) win over `a` because their
+   class selectors are more specific. */
+a {
+  color: var(--primary);
+}
+
 h1 {
   font-size: 24px;
   margin: 0 0 16px;
@@ -297,6 +306,14 @@ p {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+.field-row {
+  display: flex;
+  gap: 12px;
+}
+.field-row > .field {
+  flex: 1 1 0;
+  min-width: 0;
 }
 .field > span {
   font-size: 13px;
@@ -934,6 +951,9 @@ input:-webkit-autofill:focus {
   }
   .action-grid {
     grid-template-columns: 1fr;
+  }
+  .field-row {
+    flex-direction: column;
   }
 }
 

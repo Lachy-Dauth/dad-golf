@@ -29,7 +29,9 @@ export default function LeaderboardView({ state }: Props) {
           <span className="lb-pos">{row.position}</span>
           <span className="lb-name">
             <div className="lb-primary">{row.name}</div>
-            <div className="lb-secondary">HCP {row.handicap}</div>
+            <div className="lb-secondary">
+              GA {row.handicap.toFixed(1)} · DH {row.dailyHandicap}
+            </div>
           </span>
           <span className="lb-num">
             {row.holesPlayed}/{course.holes.length}

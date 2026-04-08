@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   display_name TEXT NOT NULL,
-  handicap INTEGER NOT NULL DEFAULT 18,
+  handicap REAL NOT NULL DEFAULT 18.0,
   created_at TEXT NOT NULL
 );
 
@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS courses (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   location TEXT,
+  rating REAL NOT NULL DEFAULT 72.0,
+  slope INTEGER NOT NULL DEFAULT 113,
   holes_json TEXT NOT NULL,
   created_at TEXT NOT NULL,
   created_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL
@@ -72,7 +74,7 @@ CREATE TABLE IF NOT EXISTS group_members (
   group_id TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
   user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
-  handicap INTEGER NOT NULL,
+  handicap REAL NOT NULL,
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_group_members_group ON group_members(group_id);
@@ -104,7 +106,7 @@ CREATE TABLE IF NOT EXISTS players (
   round_id TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
   user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
-  handicap INTEGER NOT NULL,
+  handicap REAL NOT NULL,
   joined_at TEXT NOT NULL,
   UNIQUE(round_id, name)
 );
@@ -132,6 +134,16 @@ function ensureColumn(table: string, column: string, ddl: string): void {
   }
 }
 ensureColumn("courses", "created_by_user_id", "created_by_user_id TEXT");
+ensureColumn(
+  "courses",
+  "rating",
+  "rating REAL NOT NULL DEFAULT 72.0",
+);
+ensureColumn(
+  "courses",
+  "slope",
+  "slope INTEGER NOT NULL DEFAULT 113",
+);
 ensureColumn("groups", "owner_user_id", "owner_user_id TEXT");
 ensureColumn("group_members", "user_id", "user_id TEXT");
 ensureColumn("rounds", "leader_user_id", "leader_user_id TEXT");
@@ -266,20 +278,33 @@ export function deleteSession(token: string): void {
 export function createCourse(
   name: string,
   location: string | null,
+  rating: number,
+  slope: number,
   holes: Hole[],
   createdByUserId: string,
 ): Course {
   const id = newId();
   const createdAt = now();
   db.prepare(
-    `INSERT INTO courses (id, name, location, holes_json, created_at, created_by_user_id)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-  ).run(id, name, location, JSON.stringify(holes), createdAt, createdByUserId);
+    `INSERT INTO courses (id, name, location, rating, slope, holes_json, created_at, created_by_user_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    id,
+    name,
+    location,
+    rating,
+    slope,
+    JSON.stringify(holes),
+    createdAt,
+    createdByUserId,
+  );
   const creator = getUser(createdByUserId);
   return {
     id,
     name,
     location,
+    rating,
+    slope,
     holes,
     createdAt,
     createdByUserId,
@@ -293,6 +318,8 @@ interface CourseRow {
   id: string;
   name: string;
   location: string | null;
+  rating: number;
+  slope: number;
   holes_json: string;
   created_at: string;
   created_by_user_id: string | null;
@@ -309,6 +336,8 @@ function rowToCourse(row: CourseListRow): Course {
     id: row.id,
     name: row.name,
     location: row.location,
+    rating: row.rating,
+    slope: row.slope,
     holes: JSON.parse(row.holes_json) as Hole[],
     createdAt: row.created_at,
     createdByUserId: row.created_by_user_id,
@@ -359,11 +388,13 @@ export function updateCourse(
   id: string,
   name: string,
   location: string | null,
+  rating: number,
+  slope: number,
   holes: Hole[],
 ): void {
   db.prepare(
-    `UPDATE courses SET name = ?, location = ?, holes_json = ? WHERE id = ?`,
-  ).run(name, location, JSON.stringify(holes), id);
+    `UPDATE courses SET name = ?, location = ?, rating = ?, slope = ?, holes_json = ? WHERE id = ?`,
+  ).run(name, location, rating, slope, JSON.stringify(holes), id);
 }
 
 export function deleteCourse(id: string): void {

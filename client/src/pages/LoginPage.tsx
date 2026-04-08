@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [handicap, setHandicap] = useState(18);
+  const [handicap, setHandicap] = useState("18.0");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,11 +25,15 @@ export default function LoginPage() {
       if (mode === "signin") {
         await signIn(username.trim(), password);
       } else {
+        const handicapNum = Number(handicap);
+        if (!Number.isFinite(handicapNum) || handicapNum < 0 || handicapNum > 54) {
+          throw new Error("Handicap must be a number between 0.0 and 54.0");
+        }
         await signUp({
           username: username.trim(),
           password,
           displayName: displayName.trim() || username.trim(),
-          handicap,
+          handicap: Math.round(handicapNum * 10) / 10,
         });
       }
       nav(next, { replace: true });
@@ -81,13 +85,16 @@ export default function LoginPage() {
               />
             </label>
             <label className="field">
-              <span>Handicap</span>
+              <span>Golf Australia handicap</span>
               <input
                 type="number"
+                inputMode="decimal"
+                step="0.1"
                 min={0}
                 max={54}
                 value={handicap}
-                onChange={(e) => setHandicap(Number(e.target.value))}
+                onChange={(e) => setHandicap(e.target.value)}
+                placeholder="e.g. 12.3"
               />
             </label>
           </>

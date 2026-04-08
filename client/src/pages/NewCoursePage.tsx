@@ -17,6 +17,8 @@ export default function NewCoursePage() {
   const { user, loading } = useAuth();
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
+  const [rating, setRating] = useState<string>("72.0");
+  const [slope, setSlope] = useState<string>("113");
   const [holeCount, setHoleCount] = useState<9 | 18>(18);
   const [holes, setHoles] = useState<Hole[]>(defaultHoles(18));
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +41,16 @@ export default function NewCoursePage() {
       setError("Course name is required");
       return;
     }
+    const ratingNum = Number(rating);
+    if (!Number.isFinite(ratingNum) || ratingNum < 50 || ratingNum > 90) {
+      setError("Course rating must be a number between 50.0 and 90.0");
+      return;
+    }
+    const slopeNum = Number(slope);
+    if (!Number.isInteger(slopeNum) || slopeNum < 55 || slopeNum > 155) {
+      setError("Slope rating must be a whole number between 55 and 155");
+      return;
+    }
     const siSet = new Set(holes.map((h) => h.strokeIndex));
     if (siSet.size !== holes.length) {
       setError("Stroke indexes must all be unique (1–" + holes.length + ")");
@@ -49,6 +61,8 @@ export default function NewCoursePage() {
       await api.createCourse({
         name: name.trim(),
         location: location.trim() || null,
+        rating: ratingNum,
+        slope: slopeNum,
         holes,
       });
       nav("/courses");
@@ -102,6 +116,34 @@ export default function NewCoursePage() {
             placeholder="City, State"
           />
         </label>
+        <div className="field-row">
+          <label className="field">
+            <span>Course rating</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              min={50}
+              max={90}
+              value={rating}
+              onChange={(e) => setRating(e.target.value)}
+              placeholder="e.g. 72.4"
+            />
+          </label>
+          <label className="field">
+            <span>Slope rating</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              step="1"
+              min={55}
+              max={155}
+              value={slope}
+              onChange={(e) => setSlope(e.target.value)}
+              placeholder="e.g. 130"
+            />
+          </label>
+        </div>
         <div className="field">
           <span>Holes</span>
           <div className="segmented">

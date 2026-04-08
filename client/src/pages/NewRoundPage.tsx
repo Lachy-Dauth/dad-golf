@@ -192,7 +192,9 @@ export default function NewRoundPage() {
                         onClick={() => toggleMember(m.id)}
                       >
                         <div className="player-name">{m.name}</div>
-                        <div className="player-hcp">HCP {m.handicap}</div>
+                        <div className="player-hcp">
+                          GA HCP {m.handicap.toFixed(1)}
+                        </div>
                         <div className="player-toggle">
                           {checked ? "✓ added" : "tap to add"}
                         </div>

@@ -1,33 +1,57 @@
 import type { Course, Hole, Player, Score, LeaderboardRow } from "./types.js";
 
 /**
- * How many strokes a player receives on a hole given their handicap and
- * the hole's stroke index (1 = hardest, 18 = easiest).
+ * Convert a Golf Australia handicap (one decimal place) into the integer
+ * Daily Handicap used for Stableford on a given course.
  *
- * Handicap 18 → 1 shot on every hole.
- * Handicap 27 → 1 shot on every hole + an extra on stroke index 1-9.
- * Handicap 36+ → 2 shots on every hole + extras on the hardest holes.
+ *   Daily Handicap = round(GA Handicap × Slope Rating ÷ 113)
+ *
+ * The slope of a "neutral" course is 113, so playing a tougher course
+ * (higher slope) gives you more strokes and an easier course gives fewer.
+ * Source: https://www.golf.org.au/handicapping
  */
-export function strokesReceived(handicap: number, strokeIndex: number): number {
-  if (handicap < 0) return 0;
-  const base = Math.floor(handicap / 18);
-  const remainder = handicap - base * 18;
+export function calculateDailyHandicap(
+  gaHandicap: number,
+  slope: number,
+): number {
+  if (!Number.isFinite(gaHandicap) || !Number.isFinite(slope) || slope <= 0) {
+    return 0;
+  }
+  return Math.round((gaHandicap * slope) / 113);
+}
+
+/**
+ * How many strokes a player receives on a hole given their (integer) daily
+ * handicap and the hole's stroke index (1 = hardest, 18 = easiest).
+ *
+ * Daily handicap 18 → 1 shot on every hole.
+ * Daily handicap 27 → 1 shot on every hole + an extra on stroke index 1-9.
+ * Daily handicap 36+ → 2 shots on every hole + extras on the hardest holes.
+ */
+export function strokesReceived(
+  dailyHandicap: number,
+  strokeIndex: number,
+): number {
+  if (dailyHandicap < 0) return 0;
+  const base = Math.floor(dailyHandicap / 18);
+  const remainder = dailyHandicap - base * 18;
   const extra = remainder >= strokeIndex ? 1 : 0;
   return base + extra;
 }
 
 /**
- * Stableford points for a single hole.
+ * Stableford points for a single hole. `dailyHandicap` is the integer daily
+ * handicap (i.e. already adjusted from GA handicap by the course slope).
  * Returns 0 if strokes is undefined/0 (hole not played).
  */
 export function stablefordPoints(
   strokes: number,
   par: number,
-  handicap: number,
+  dailyHandicap: number,
   strokeIndex: number,
 ): number {
   if (!strokes || strokes <= 0) return 0;
-  const net = strokes - strokesReceived(handicap, strokeIndex);
+  const net = strokes - strokesReceived(dailyHandicap, strokeIndex);
   const diff = net - par;
   if (diff <= -3) return 5;
   if (diff === -2) return 4;
@@ -59,14 +83,15 @@ export function computePlayerHoles(
       byHole.set(s.holeNumber, s);
     }
   }
+  const dailyHandicap = calculateDailyHandicap(player.handicap, course.slope);
   return holes.map((h) => {
     const score = byHole.get(h.number);
     const strokes = score ? score.strokes : null;
-    const received = strokesReceived(player.handicap, h.strokeIndex);
+    const received = strokesReceived(dailyHandicap, h.strokeIndex);
     const net = strokes != null ? strokes - received : null;
     const points =
       strokes != null
-        ? stablefordPoints(strokes, h.par, player.handicap, h.strokeIndex)
+        ? stablefordPoints(strokes, h.par, dailyHandicap, h.strokeIndex)
         : 0;
     return {
       holeNumber: h.number,
@@ -98,6 +123,7 @@ export function computeLeaderboard(
       playerId: p.id,
       name: p.name,
       handicap: p.handicap,
+      dailyHandicap: calculateDailyHandicap(p.handicap, course.slope),
       holesPlayed: played.length,
       totalPoints,
       totalStrokes,

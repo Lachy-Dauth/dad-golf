@@ -83,6 +83,8 @@ export const api = {
   createCourse: (payload: {
     name: string;
     location: string | null;
+    rating: number;
+    slope: number;
     holes: Hole[];
   }) =>
     fetch("/api/courses", {
@@ -92,7 +94,13 @@ export const api = {
     }).then((r) => json<{ course: Course }>(r)),
   updateCourse: (
     id: string,
-    payload: { name: string; location: string | null; holes: Hole[] },
+    payload: {
+      name: string;
+      location: string | null;
+      rating: number;
+      slope: number;
+      holes: Hole[];
+    },
   ) =>
     fetch(`/api/courses/${id}`, {
       method: "PATCH",

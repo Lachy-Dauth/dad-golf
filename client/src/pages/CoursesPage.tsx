@@ -81,7 +81,8 @@ export default function CoursesPage() {
                     <div className="list-primary">{c.name}</div>
                     <div className="list-secondary">
                       {c.location ? `${c.location} · ` : ""}
-                      {c.holes.length} holes · par {totalPar(c)}
+                      {c.holes.length} holes · par {totalPar(c)} ·{" "}
+                      rating {c.rating.toFixed(1)} · slope {c.slope}
                       {c.createdByName && ` · by ${c.createdByName}`}
                       {c.favoriteCount > 0 &&
                         ` · ★ ${c.favoriteCount}`}
