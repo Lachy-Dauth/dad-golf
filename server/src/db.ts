@@ -76,7 +76,6 @@ CREATE TABLE IF NOT EXISTS group_members (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_group_members_group ON group_members(group_id);
-CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
 
 CREATE TABLE IF NOT EXISTS group_invites (
   id TEXT PRIMARY KEY,
@@ -137,6 +136,12 @@ ensureColumn("groups", "owner_user_id", "owner_user_id TEXT");
 ensureColumn("group_members", "user_id", "user_id TEXT");
 ensureColumn("rounds", "leader_user_id", "leader_user_id TEXT");
 ensureColumn("players", "user_id", "user_id TEXT");
+
+// Indexes that reference columns added by the migrations above must run
+// after ensureColumn() so they work on pre-existing databases.
+db.exec(
+  `CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);`,
+);
 
 // ---------- helpers ----------
 const now = () => new Date().toISOString();
