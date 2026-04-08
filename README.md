@@ -97,21 +97,43 @@ Pre-implementation. See `plan.md` for the detailed build plan.
 
 ## Getting started
 
-Once implemented:
-
 ```bash
 # clone
 git clone https://github.com/Lachy-Dauth/dad-golf.git
 cd dad-golf
 
-# install
+# install (auto-builds the shared package)
 npm install
 
-# run dev
+# run in dev (server on :3001, client on :5173)
 npm run dev
 ```
 
-(These commands will work after the project is scaffolded — see `plan.md` Phase 1.)
+Open http://localhost:5173. The Vite dev server proxies `/api` and `/ws` to
+the backend on `:3001`. Two sample courses are seeded on first run, so you
+can create a round immediately.
+
+### Production build
+
+```bash
+npm run build    # builds shared, server, and client
+npm run start    # starts the Fastify server (serves the built client too)
+```
+
+The server reads `PORT` and `DATA_DIR` from the environment; in production
+it serves `client/dist/*` on the same port as the API.
+
+### Deploying to Railway
+
+See [`DEPLOY_RAILWAY.md`](./DEPLOY_RAILWAY.md) for a step-by-step guide.
+Short version: connect the repo, add a `/data` volume, set `DATA_DIR=/data`,
+generate a domain. The included `railway.json` and `nixpacks.toml` handle
+the rest.
+
+### How to use
+
+Every page in the app links to a built-in guide at `/help`, or you can
+tap the **?** in the top-right of any screen.
 
 ## License
 

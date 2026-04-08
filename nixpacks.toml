@@ -1,0 +1,19 @@
+# Nixpacks build config for Railway.
+#
+# better-sqlite3 compiles a native addon. Nixpacks' default Node image
+# ships with python3 + build tools, but we pin them here to keep the
+# build deterministic across Railway image updates.
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "python3", "gcc", "gnumake"]
+
+[phases.install]
+# --include=dev forces devDependencies (typescript, vite, ...) to install
+# even if Railway has NODE_ENV=production in the service variables.
+cmds = ["npm ci --include=dev"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"
