@@ -84,7 +84,7 @@ export default function LobbyView({
         ) : (
           <>
             <p className="muted">
-              Join as a guest with no account, or sign in to track your rounds.
+              Join as a guest with no account, or log in to track your rounds.
             </p>
             <div className="form-inline">
               <input

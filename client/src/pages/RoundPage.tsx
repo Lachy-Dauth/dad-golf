@@ -188,7 +188,7 @@ export default function RoundPage() {
                 const url = `${location.origin}/r/${round.roomCode}`;
                 navigator.clipboard?.writeText(url);
               }}
-              title="Copy share link (anyone can join, no sign-in required)"
+              title="Copy share link (anyone can join, no log-in required)"
             >
               copy link
             </button>

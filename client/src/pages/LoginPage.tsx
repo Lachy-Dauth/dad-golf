@@ -42,7 +42,7 @@ export default function LoginPage() {
 
   return (
     <div className="page">
-      <h1>{mode === "signin" ? "Sign in" : "Create account"}</h1>
+      <h1>{mode === "signin" ? "Log in" : "Create account"}</h1>
       <p className="muted">
         Stableford keeps your courses, groups and rounds tied to your account.
       </p>
@@ -101,7 +101,7 @@ export default function LoginPage() {
             {busy
               ? "Working…"
               : mode === "signin"
-                ? "Sign in"
+                ? "Log in"
                 : "Create account"}
           </button>
         </div>
@@ -126,7 +126,7 @@ export default function LoginPage() {
               className="link-btn"
               onClick={() => setMode("signin")}
             >
-              Sign in
+              Log in
             </button>
           </>
         )}

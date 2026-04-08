@@ -104,6 +104,25 @@ p {
   border-color: var(--primary);
 }
 
+.header-text-link {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  border: 1px solid var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  line-height: 1;
+}
+.header-text-link:hover {
+  filter: brightness(1.08);
+}
+
 .logo-mark {
   font-size: 22px;
 }

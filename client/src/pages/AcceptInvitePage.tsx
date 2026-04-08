@@ -71,7 +71,7 @@ export default function AcceptInvitePage() {
         <h1>Join {group.name}</h1>
         <p className="muted">
           You've been invited to <strong>{group.name}</strong>
-          {group.ownerName ? ` by ${group.ownerName}` : ""}. Sign in or create
+          {group.ownerName ? ` by ${group.ownerName}` : ""}. Log in or create
           an account to accept.
         </p>
         <div className="form-actions">
@@ -79,7 +79,7 @@ export default function AcceptInvitePage() {
             to={`/login?next=${encodeURIComponent(`/groups/join/${token}`)}`}
             className="btn btn-primary"
           >
-            Sign in to accept
+            Log in to accept
           </Link>
         </div>
       </div>

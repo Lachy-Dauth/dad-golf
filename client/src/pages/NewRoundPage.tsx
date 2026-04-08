@@ -114,12 +114,12 @@ export default function NewRoundPage() {
     return (
       <div className="page">
         <h1>Start a round</h1>
-        <p className="muted">You need to sign in to start a round.</p>
+        <p className="muted">You need to log in to start a round.</p>
         <Link
           to={`/login?next=${encodeURIComponent("/rounds/new")}`}
           className="btn btn-primary"
         >
-          Sign in
+          Log in
         </Link>
       </div>
     );

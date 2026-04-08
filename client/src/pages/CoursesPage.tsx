@@ -37,7 +37,7 @@ export default function CoursesPage() {
 
   async function handleToggleFav(c: Course) {
     if (!user) {
-      alert("Sign in to favourite courses.");
+      alert("Log in to favourite courses.");
       return;
     }
     try {
@@ -61,7 +61,7 @@ export default function CoursesPage() {
       </div>
       {!user && (
         <div className="muted">
-          <Link to="/login">Sign in</Link> to add or favourite courses.
+          <Link to="/login">Log in</Link> to add or favourite courses.
         </div>
       )}
       {error && <div className="error">{error}</div>}

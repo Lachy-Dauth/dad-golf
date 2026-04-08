@@ -21,9 +21,9 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="page">
-        <div className="muted">You are not signed in.</div>
+        <div className="muted">You are not logged in.</div>
         <Link to="/login" className="btn btn-primary">
-          Sign in
+          Log in
         </Link>
       </div>
     );
@@ -52,7 +52,7 @@ export default function ProfilePage() {
     <div className="page">
       <h1>Your profile</h1>
       <p className="muted">
-        Signed in as <strong>@{user.username}</strong>
+        Logged in as <strong>@{user.username}</strong>
       </p>
 
       <div className="form">

@@ -71,12 +71,12 @@ export default function NewCoursePage() {
     return (
       <div className="page">
         <h1>New course</h1>
-        <p className="muted">You need to sign in to create a course.</p>
+        <p className="muted">You need to log in to create a course.</p>
         <Link
           to={`/login?next=${encodeURIComponent("/courses/new")}`}
           className="btn btn-primary"
         >
-          Sign in
+          Log in
         </Link>
       </div>
     );

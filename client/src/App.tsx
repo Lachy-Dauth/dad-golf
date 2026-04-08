@@ -18,13 +18,13 @@ function HeaderUser() {
   if (loading) return null;
   if (!user) {
     return (
-      <Link to="/login" className="header-link">
-        Sign in
+      <Link to="/login" className="header-text-link">
+        Log in
       </Link>
     );
   }
   return (
-    <Link to="/profile" className="header-link" title="Profile">
+    <Link to="/profile" className="header-text-link" title="Profile">
       @{user.username}
     </Link>
   );

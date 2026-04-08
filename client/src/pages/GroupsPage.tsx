@@ -72,7 +72,7 @@ export default function GroupsPage() {
         </div>
       ) : (
         <div className="muted">
-          <Link to="/login">Sign in</Link> to create or manage groups.
+          <Link to="/login">Log in</Link> to create or manage groups.
         </div>
       )}
 
