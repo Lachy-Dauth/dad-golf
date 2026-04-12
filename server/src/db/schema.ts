@@ -122,12 +122,33 @@ CREATE TABLE IF NOT EXISTS competition_claims (
   UNIQUE(competition_id, player_id)
 );
 CREATE INDEX IF NOT EXISTS idx_competition_claims_comp ON competition_claims(competition_id);
+
+CREATE TABLE IF NOT EXISTS handicap_rounds (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  round_id TEXT REFERENCES rounds(id) ON DELETE SET NULL,
+  date TEXT NOT NULL,
+  course_name TEXT NOT NULL,
+  adjusted_gross_score DOUBLE PRECISION NOT NULL,
+  course_rating DOUBLE PRECISION NOT NULL,
+  slope_rating INTEGER NOT NULL,
+  score_differential DOUBLE PRECISION NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  source TEXT NOT NULL DEFAULT 'manual',
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
   `);
 
   // Migration: add lat/lng columns to courses (safe to re-run)
   await pool.query(`
     ALTER TABLE courses ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
     ALTER TABLE courses ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+  `);
+
+  // Migration: add handicap auto-adjust setting to users
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS handicap_auto_adjust INTEGER NOT NULL DEFAULT 0;
   `);
 }
 

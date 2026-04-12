@@ -4,6 +4,7 @@ import type {
   Group,
   GroupInvite,
   GroupMember,
+  HandicapRound,
   Hole,
   Player,
   RoundState,
@@ -11,6 +12,7 @@ import type {
   User,
   Weather,
 } from "@dad-golf/shared";
+import type { HandicapCalculation } from "@dad-golf/shared";
 
 // Admin types
 export interface AdminStats {
@@ -376,4 +378,64 @@ export const api = {
     fetch(`/api/admin/activity?limit=${limit}`, {
       headers: authHeaders(),
     }).then((r) => json<{ events: ActivityEvent[] }>(r)),
+
+  // handicap
+  getHandicap: () =>
+    fetch("/api/handicap", { headers: authHeaders() }).then((r) =>
+      json<{
+        autoAdjust: boolean;
+        rounds: HandicapRound[];
+        calculation: HandicapCalculation | null;
+        currentHandicap: number;
+      }>(r),
+    ),
+  updateHandicapSettings: (autoAdjust: boolean) =>
+    fetch("/api/handicap/settings", {
+      method: "PATCH",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ autoAdjust }),
+    }).then((r) => json<{ user: User }>(r)),
+  addHandicapRound: (payload: {
+    date: string;
+    courseName: string;
+    adjustedGrossScore: number;
+    courseRating: number;
+    slopeRating: number;
+  }) =>
+    fetch("/api/handicap/rounds", {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
+    }).then((r) => json<{ round: HandicapRound; calculation: HandicapCalculation | null }>(r)),
+  updateHandicapRound: (
+    id: string,
+    payload: {
+      date: string;
+      courseName: string;
+      adjustedGrossScore: number;
+      courseRating: number;
+      slopeRating: number;
+    },
+  ) =>
+    fetch(`/api/handicap/rounds/${id}`, {
+      method: "PATCH",
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
+    }).then((r) => json<{ round: HandicapRound; calculation: HandicapCalculation | null }>(r)),
+  deleteHandicapRound: (id: string) =>
+    fetch(`/api/handicap/rounds/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean; calculation: HandicapCalculation | null }>(r)),
+  reorderHandicapRounds: (orderedIds: string[]) =>
+    fetch("/api/handicap/rounds/reorder", {
+      method: "PUT",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ orderedIds }),
+    }).then((r) => json<{ rounds: HandicapRound[]; calculation: HandicapCalculation | null }>(r)),
+  applyHandicap: () =>
+    fetch("/api/handicap/apply", {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ user: User; calculation: HandicapCalculation }>(r)),
 };

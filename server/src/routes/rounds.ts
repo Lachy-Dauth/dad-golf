@@ -1,5 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import { generateRoomCode, normalizeRoomCode } from "@dad-golf/shared";
+import {
+  generateRoomCode,
+  normalizeRoomCode,
+  calculateScoreDifferential,
+  calculateHandicapIndex,
+} from "@dad-golf/shared";
 import {
   addPlayer,
   createCompetition,
@@ -25,6 +30,13 @@ import {
   updateRoundStatus,
   upsertClaim,
   upsertScore,
+  getUser,
+  findHandicapRoundByRoundId,
+  countHandicapRounds,
+  deleteOldestHandicapRound,
+  createHandicapRound,
+  listHandicapRounds,
+  updateUserHandicap,
 } from "../db/index.js";
 import { buildRoundState } from "../roundState.js";
 import { broadcast } from "../hub.js";
@@ -232,7 +244,65 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     }
     await updateRoundStatus(round.id, "complete");
     const state = await buildRoundState(code, user.id);
-    if (state) broadcast(code, { type: "round_completed", state });
+
+    // Auto-add handicap rounds for players with auto-adjust enabled
+    if (state) {
+      for (const player of state.players) {
+        if (!player.userId) continue;
+        const playerUser = await getUser(player.userId);
+        if (!playerUser || !playerUser.handicapAutoAdjust) continue;
+
+        const existing = await findHandicapRoundByRoundId(player.userId, round.id);
+        if (existing) continue;
+
+        // Require at least 14 holes scored for a valid handicap round
+        const playerScores = state.scores.filter((s) => s.playerId === player.id);
+        if (playerScores.length < 14) continue;
+
+        // Calculate adjusted gross score: actual strokes + par for unplayed holes
+        let adjustedGross = playerScores.reduce((sum, s) => sum + s.strokes, 0);
+        const scoredHoles = new Set(playerScores.map((s) => s.holeNumber));
+        for (const hole of state.course.holes) {
+          if (!scoredHoles.has(hole.number)) {
+            adjustedGross += hole.par;
+          }
+        }
+
+        const differential = calculateScoreDifferential(
+          adjustedGross,
+          state.course.rating,
+          state.course.slope,
+        );
+
+        const count = await countHandicapRounds(player.userId);
+        if (count >= 20) {
+          await deleteOldestHandicapRound(player.userId);
+        }
+
+        await createHandicapRound(
+          player.userId,
+          new Date().toISOString().split("T")[0],
+          state.course.name,
+          adjustedGross,
+          state.course.rating,
+          state.course.slope,
+          differential,
+          round.id,
+          "auto",
+        );
+
+        // Recalculate and update user handicap
+        const hRounds = await listHandicapRounds(player.userId);
+        const calc = calculateHandicapIndex(
+          hRounds.map((r) => ({ id: r.id, differential: r.scoreDifferential })),
+        );
+        if (calc) {
+          await updateUserHandicap(player.userId, calc.handicapIndex);
+        }
+      }
+
+      broadcast(code, { type: "round_completed", state });
+    }
     return { state };
   });
 

@@ -9,8 +9,24 @@ export interface User {
   username: string;
   displayName: string;
   handicap: number;
+  handicapAutoAdjust: boolean;
   createdAt: string;
   isAdmin: boolean;
+}
+
+export interface HandicapRound {
+  id: string;
+  userId: string;
+  roundId: string | null;
+  date: string;
+  courseName: string;
+  adjustedGrossScore: number;
+  courseRating: number;
+  slopeRating: number;
+  scoreDifferential: number;
+  sortOrder: number;
+  source: "manual" | "auto";
+  createdAt: string;
 }
 
 export interface Course {

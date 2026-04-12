@@ -12,6 +12,7 @@ import LoginPage from "./pages/LoginPage.js";
 import ProfilePage from "./pages/ProfilePage.js";
 import AcceptInvitePage from "./pages/AcceptInvitePage.js";
 import AdminPage from "./pages/AdminPage.js";
+import HandicapPage from "./pages/HandicapPage.js";
 import { AuthProvider, useAuth } from "./AuthContext.js";
 import { ThemeProvider, useTheme } from "./ThemeContext.js";
 import InstallPrompt from "./components/InstallPrompt.js";
@@ -57,42 +58,43 @@ function HeaderUser() {
 export default function App() {
   return (
     <ThemeProvider>
-    <AuthProvider>
-      <div className="app">
-        <header className="app-header">
-          <Link to="/" className="logo">
-            <span className="logo-mark">⛳</span>
-            Stableford
-          </Link>
-          <div className="header-actions">
-            <ThemeToggle />
-            <Link to="/help" className="header-link" title="How to use">
-              ?
+      <AuthProvider>
+        <div className="app">
+          <header className="app-header">
+            <Link to="/" className="logo">
+              <span className="logo-mark">⛳</span>
+              Stableford
             </Link>
-            <HeaderUser />
-          </div>
-        </header>
-        <main className="app-main">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/help" element={<HelpPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/courses" element={<CoursesPage />} />
-            <Route path="/courses/new" element={<NewCoursePage />} />
-            <Route path="/courses/:id/edit" element={<NewCoursePage />} />
-            <Route path="/groups" element={<GroupsPage />} />
-            <Route path="/groups/:id" element={<GroupDetailPage />} />
-            <Route path="/groups/join/:token" element={<AcceptInvitePage />} />
-            <Route path="/rounds/new" element={<NewRoundPage />} />
-            <Route path="/join" element={<JoinRoundPage />} />
-            <Route path="/r/:code" element={<RoundPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-          </Routes>
-        </main>
-        <InstallPrompt />
-      </div>
-    </AuthProvider>
+            <div className="header-actions">
+              <ThemeToggle />
+              <Link to="/help" className="header-link" title="How to use">
+                ?
+              </Link>
+              <HeaderUser />
+            </div>
+          </header>
+          <main className="app-main">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/help" element={<HelpPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/courses" element={<CoursesPage />} />
+              <Route path="/courses/new" element={<NewCoursePage />} />
+              <Route path="/courses/:id/edit" element={<NewCoursePage />} />
+              <Route path="/groups" element={<GroupsPage />} />
+              <Route path="/groups/:id" element={<GroupDetailPage />} />
+              <Route path="/groups/join/:token" element={<AcceptInvitePage />} />
+              <Route path="/rounds/new" element={<NewRoundPage />} />
+              <Route path="/join" element={<JoinRoundPage />} />
+              <Route path="/r/:code" element={<RoundPage />} />
+              <Route path="/handicap" element={<HandicapPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+            </Routes>
+          </main>
+          <InstallPrompt />
+        </div>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

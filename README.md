@@ -13,6 +13,7 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 - **Live leaderboard** — everyone sees the standings update in real time as scores come in
 - **Hole competitions** — closest-to-pin and longest drive contests on selected holes
 - **Weather** — live weather conditions displayed for the course location
+- **Handicap tracker** — track your last 20 rounds and auto-calculate your GA Handicap Index using Australia's World Handicap System; optionally auto-updates when you complete rounds
 - **Groups** — create groups, invite members, and track rounds together
 - **Admin dashboard** — view stats, manage users, and monitor activity
 - **Dark / light mode** — theme toggle that respects your preference
@@ -63,6 +64,7 @@ dad-golf/
 │       │   ├── players.ts   # Player management
 │       │   ├── scores.ts    # Score tracking
 │       │   ├── competitions.ts # Hole competitions (CTP, longest drive)
+│       │   ├── handicapRounds.ts # Handicap round history
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
@@ -70,6 +72,7 @@ dad-golf/
 │       │   ├── groups.ts    # /api/groups/*
 │       │   ├── rounds.ts    # /api/rounds/*
 │       │   ├── weather.ts   # /api/weather/*
+│       │   ├── handicap.ts  # /api/handicap/*
 │       │   └── admin.ts     # /api/admin/*
 │       ├── hub.ts           # WebSocket pub/sub hub
 │       ├── ws.ts            # WebSocket handler for live round updates

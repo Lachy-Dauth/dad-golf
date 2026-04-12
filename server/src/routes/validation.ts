@@ -85,6 +85,27 @@ export function validatePassword(p: unknown): string {
   return p;
 }
 
+export function validateAdjustedGrossScore(s: unknown): number {
+  const n = Number(s);
+  if (!Number.isInteger(n) || n < 30 || n > 200) {
+    throw new Error("adjusted gross score must be an integer between 30 and 200");
+  }
+  return n;
+}
+
+export function validateDate(d: unknown): string {
+  if (typeof d !== "string") throw new Error("date must be a string");
+  const trimmed = d.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    throw new Error("date must be in YYYY-MM-DD format");
+  }
+  const parsed = new Date(trimmed);
+  if (isNaN(parsed.getTime())) {
+    throw new Error("date is not a valid date");
+  }
+  return trimmed;
+}
+
 export async function getViewerUser(req: FastifyRequest): Promise<User | null> {
   const auth = req.headers.authorization;
   if (!auth) return null;
