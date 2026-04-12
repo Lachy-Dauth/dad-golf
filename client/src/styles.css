@@ -573,25 +573,6 @@ input:-webkit-autofill:focus {
   display: flex;
   align-items: center;
 }
-.conn-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-.conn-dot.on {
-  background: var(--primary);
-}
-.conn-dot.off {
-  background: var(--danger);
-}
-
-.round-header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
 /* weather widget */
 .weather-widget {
   display: flex;

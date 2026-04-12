@@ -22,11 +22,11 @@ export async function registerWeatherRoutes(app: FastifyInstance): Promise<void>
       // If no coordinates stored, try geocoding the location text
       if (lat == null || lng == null) {
         if (!course.location) {
-          return reply.code(404).send({ error: "course has no location set" });
+          return reply.code(422).send({ error: "course has no location set" });
         }
         const geo = await geocodeLocation(course.location);
         if (!geo) {
-          return reply.code(404).send({ error: "could not geocode course location" });
+          return reply.code(502).send({ error: "could not geocode course location" });
         }
         lat = geo.latitude;
         lng = geo.longitude;

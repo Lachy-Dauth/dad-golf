@@ -12,7 +12,8 @@ function weatherLabel(code: number, isDay: boolean): { label: string; icon: stri
   // WMO Weather interpretation codes (WW)
   // https://open-meteo.com/en/docs
   if (code === 0) return { label: "Clear", icon: isDay ? "\u2600" : "\u263E" }; // ☀ ☾
-  if (code <= 3) return { label: "Partly cloudy", icon: isDay ? "\u26C5" : "\u2601" }; // ⛅ ☁
+  if (code <= 2) return { label: "Partly cloudy", icon: isDay ? "\u26C5" : "\u2601" }; // ⛅ ☁
+  if (code === 3) return { label: "Overcast", icon: "\u2601" }; // ☁
   if (code <= 48) return { label: "Fog", icon: "\u2601" }; // ☁
   if (code <= 57) return { label: "Drizzle", icon: "\u{1F327}" }; // 🌧
   if (code <= 67) return { label: "Rain", icon: "\u{1F327}" }; // 🌧
@@ -30,7 +31,6 @@ function windCompass(deg: number): string {
 
 export default function WeatherWidget({ roomCode, courseLocation }: Props) {
   const [weather, setWeather] = useState<Weather | null>(null);
-  const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,9 +39,7 @@ export default function WeatherWidget({ roomCode, courseLocation }: Props) {
       .then((res) => {
         if (!cancelled) setWeather(res.weather);
       })
-      .catch(() => {
-        if (!cancelled) setError(true);
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -49,17 +47,22 @@ export default function WeatherWidget({ roomCode, courseLocation }: Props) {
 
   // Refresh every 15 minutes
   useEffect(() => {
-    if (error) return;
+    let cancelled = false;
     const interval = setInterval(() => {
       api
         .getRoundWeather(roomCode)
-        .then((res) => setWeather(res.weather))
+        .then((res) => {
+          if (!cancelled) setWeather(res.weather);
+        })
         .catch(() => {});
     }, 15 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [roomCode, error]);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [roomCode]);
 
-  if (error || !weather) return null;
+  if (!weather) return null;
 
   const { label, icon } = weatherLabel(weather.weatherCode, weather.isDay);
 

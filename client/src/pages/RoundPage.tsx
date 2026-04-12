@@ -24,7 +24,7 @@ export default function RoundPage() {
   const { user: viewer } = useAuth();
   const [initial, setInitial] = useState<RoundState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const { state, setState, connected } = useRoundSocket(roomCode, initial);
+  const { state, setState } = useRoundSocket(roomCode, initial);
   const [tab, setTab] = useState<Tab>("scoring");
   const [activePlayerId, setActivePlayer] = useState<string | null>(
     roomCode ? getActivePlayerId(roomCode) : null,
@@ -193,13 +193,7 @@ export default function RoundPage() {
           </div>
           {round.leaderName && <div className="round-meta muted">Leader: {round.leaderName}</div>}
         </div>
-        <div className="round-header-right">
-          {roomCode && <WeatherWidget roomCode={roomCode} courseLocation={course.location} />}
-          <div
-            className={`conn-dot ${connected ? "on" : "off"}`}
-            title={connected ? "Live" : "Reconnecting…"}
-          />
-        </div>
+        {roomCode && <WeatherWidget roomCode={roomCode} courseLocation={course.location} />}
       </div>
 
       {actionError && <div className="error">{actionError}</div>}

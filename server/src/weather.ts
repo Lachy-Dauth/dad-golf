@@ -14,13 +14,17 @@ export interface GeocodingResult {
 }
 
 export async function geocodeLocation(query: string): Promise<GeocodingResult | null> {
-  const url = `${OPEN_METEO_GEOCODING_URL}?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = (await res.json()) as { results?: Array<{ latitude: number; longitude: number; name: string }> };
-  if (!data.results || data.results.length === 0) return null;
-  const r = data.results[0];
-  return { latitude: r.latitude, longitude: r.longitude, name: r.name };
+  try {
+    const url = `${OPEN_METEO_GEOCODING_URL}?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { results?: Array<{ latitude: number; longitude: number; name: string }> };
+    if (!data.results || data.results.length === 0) return null;
+    const r = data.results[0];
+    return { latitude: r.latitude, longitude: r.longitude, name: r.name };
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchWeather(latitude: number, longitude: number): Promise<Weather | null> {
@@ -38,7 +42,12 @@ export async function fetchWeather(latitude: number, longitude: number): Promise
     timezone: "auto",
   });
 
-  const res = await fetch(`${OPEN_METEO_WEATHER_URL}?${params}`);
+  let res: Response;
+  try {
+    res = await fetch(`${OPEN_METEO_WEATHER_URL}?${params}`);
+  } catch {
+    return null;
+  }
   if (!res.ok) return null;
 
   const data = (await res.json()) as {
