@@ -38,9 +38,11 @@ After `npm install`, the shared package is automatically built via `postinstall`
 **Monorepo** with three npm workspaces: `shared`, `server`, `client`.
 
 ### Shared (`@dad-golf/shared`)
+
 Exports types, Stableford scoring logic, and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
 
 ### Server (`@dad-golf/server`)
+
 Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Each domain has a `db/*.ts` module (query functions) and a `routes/*.ts` module (HTTP endpoints).
 
 **Route registration pattern**: each file exports `registerXxxRoutes(app: FastifyInstance)`, all called from `routes/index.ts`. Routes use Fastify generics for typing: `app.post<{ Body: {...}; Params: {...} }>("/path", handler)`.
@@ -52,11 +54,13 @@ Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Ea
 **Production serving**: if `client/dist/` exists, Fastify serves it as static files with SPA fallback (non-API 404s → `index.html`).
 
 ### Client (`@dad-golf/client`)
+
 React 18 + Vite + TypeScript. Mobile-first. Vite proxies `/api` → `http://localhost:3001` and `/ws` → `ws://localhost:3001` in dev.
 
 Auth state in `AuthContext.tsx` (token in localStorage key `"sf:token"`). Theme toggle in `ThemeContext.tsx`.
 
 ### Database
+
 Raw parameterized SQL (`pool.query(sql, [params])`). Schema auto-created via `initDb()` in `db/schema.ts` (CREATE IF NOT EXISTS). Course holes stored as JSON text column. Booleans are INTEGER 0/1.
 
 ## Code Style

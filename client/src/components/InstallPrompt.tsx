@@ -6,8 +6,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -53,11 +52,7 @@ export default function InstallPrompt() {
   return (
     <div className="install-banner">
       <div className="install-banner-content">
-        <img
-          src="/icon-192.png"
-          alt="Stableford"
-          className="install-banner-icon"
-        />
+        <img src="/icon-192.png" alt="Stableford" className="install-banner-icon" />
         <div className="install-banner-text">
           <strong>Install Stableford</strong>
           <span className="muted">Add to home screen for quick access</span>
