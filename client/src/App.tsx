@@ -13,7 +13,22 @@ import ProfilePage from "./pages/ProfilePage.js";
 import AcceptInvitePage from "./pages/AcceptInvitePage.js";
 import AdminPage from "./pages/AdminPage.js";
 import { AuthProvider, useAuth } from "./AuthContext.js";
+import { ThemeProvider, useTheme } from "./ThemeContext.js";
 import InstallPrompt from "./components/InstallPrompt.js";
+
+function ThemeToggle() {
+  const { resolved, toggle } = useTheme();
+  return (
+    <button
+      className="theme-toggle"
+      onClick={toggle}
+      title={resolved === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={resolved === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {resolved === "dark" ? "\u2600" : "\u263E"}
+    </button>
+  );
+}
 
 function HeaderUser() {
   const { user, loading } = useAuth();
@@ -41,6 +56,7 @@ function HeaderUser() {
 
 export default function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <div className="app">
         <header className="app-header">
@@ -49,6 +65,7 @@ export default function App() {
             Stableford
           </Link>
           <div className="header-actions">
+            <ThemeToggle />
             <Link to="/help" className="header-link" title="How to use">
               ?
             </Link>
@@ -75,5 +92,6 @@ export default function App() {
         <InstallPrompt />
       </div>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
