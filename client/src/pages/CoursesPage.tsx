@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import type { Course } from "@dad-golf/shared";
 import { totalPar } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
 import StarRating from "../components/StarRating.js";
+import { useAsync } from "../hooks/useAsync.js";
 
 type Filter = "all" | "9" | "18" | "favorites" | "mine";
 type Sort = "popular" | "top-rated" | "newest" | "az";
@@ -14,23 +15,16 @@ const PAGE_SIZE = 20;
 export default function CoursesPage() {
   const { user } = useAuth();
   const nav = useNavigate();
-  const [courses, setCourses] = useState<Course[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: courses,
+    error,
+    execute: load,
+  } = useAsync(() => api.listCourses().then((res) => res.courses), [user?.id]);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("popular");
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
-
-  const load = () => {
-    api
-      .listCourses()
-      .then((res) => setCourses(res.courses))
-      .catch((e: Error) => setError(e.message));
-  };
-
-  useEffect(() => {
-    load();
-  }, [user?.id]);
 
   // Reset auth-dependent filters when user logs out
   useEffect(() => {
@@ -94,7 +88,7 @@ export default function CoursesPage() {
   async function handleDelete(e: React.MouseEvent, c: Course) {
     e.stopPropagation();
     if (!user?.isAdmin && c.favoriteCount > 0) {
-      setError("This course has favourites and cannot be deleted.");
+      setActionError("This course has favourites and cannot be deleted.");
       return;
     }
     if (!confirm(`Delete "${c.name}"?`)) return;
@@ -102,14 +96,14 @@ export default function CoursesPage() {
       await api.deleteCourse(c.id);
       load();
     } catch (err) {
-      setError((err as Error).message);
+      setActionError((err as Error).message);
     }
   }
 
   async function handleToggleFav(e: React.MouseEvent, c: Course) {
     e.stopPropagation();
     if (!user) {
-      setError("Log in to favourite courses.");
+      setActionError("Log in to favourite courses.");
       return;
     }
     try {
@@ -117,7 +111,7 @@ export default function CoursesPage() {
       else await api.favoriteCourse(c.id);
       load();
     } catch (err) {
-      setError((err as Error).message);
+      setActionError((err as Error).message);
     }
   }
 
@@ -188,8 +182,8 @@ export default function CoursesPage() {
         </label>
       </div>
 
-      {error && <div className="error">{error}</div>}
-      {!courses && <div className="muted">Loading...</div>}
+      {(error || actionError) && <div className="error">{error || actionError}</div>}
+      {!courses && !error && <div className="muted">Loading...</div>}
       {courses && filtered.length === 0 && (
         <div className="muted">
           {courses.length === 0

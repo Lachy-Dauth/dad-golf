@@ -1,0 +1,450 @@
+/* scoring view */
+.scoring-player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.scoring-name {
+  font-weight: 700;
+  font-size: 18px;
+}
+.scoring-sub {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.hole-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.hole-info {
+  text-align: center;
+  flex: 1;
+}
+.hole-label {
+  font-size: 24px;
+  font-weight: 800;
+}
+.hole-meta {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.stroke-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.stroke-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 12px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 60px;
+}
+.stroke-btn:hover {
+  background: var(--surface-hover);
+}
+.stroke-btn.selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-fg);
+  font-weight: 700;
+}
+.stroke-num {
+  font-size: 20px;
+  font-weight: 700;
+}
+.stroke-pts {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.hole-chips {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+}
+.hole-chip {
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 6px 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 11px;
+  min-height: 42px;
+}
+.hole-chip.played {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.hole-chip.active {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.chip-num {
+  font-size: 10px;
+  opacity: 0.6;
+}
+.chip-pts {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.hole-chip {
+  position: relative;
+}
+.comp-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+/* ---- Scorecard (vertical layout: holes as rows, players as columns) ---- */
+.scorecard-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 12px;
+}
+.scorecard {
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+}
+.scorecard th,
+.scorecard td {
+  padding: 6px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-dim);
+}
+.scorecard thead th {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.scorecard .hole-col {
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 44px;
+}
+.scorecard thead .hole-col {
+  font-weight: 700;
+}
+.scorecard .par-cell {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.scorecard .player-col {
+  min-width: 52px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scorecard .subtotal-row td {
+  font-weight: 700;
+  border-top: 2px solid var(--border);
+}
+.scorecard .subtotal-cell {
+  font-weight: 700;
+}
+.scorecard-totals {
+  width: auto;
+}
+.scorecard-totals th,
+.scorecard-totals td {
+  min-width: 60px;
+}
+
+/* ---- Score colour coding ---- */
+.score-eagle {
+  background: rgba(255, 207, 92, 0.25);
+  color: var(--accent);
+  font-weight: 700;
+}
+.score-birdie {
+  background: rgba(59, 193, 107, 0.2);
+  color: var(--primary);
+  font-weight: 600;
+}
+.score-par {
+  /* default – no special styling */
+}
+.score-bogey {
+  background: rgba(251, 146, 60, 0.15);
+  color: #fb923c;
+}
+.score-double {
+  background: rgba(229, 72, 77, 0.15);
+  color: var(--danger);
+}
+
+/* ---- Progression chart ---- */
+.progression-chart {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.progression-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.chart-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---- Player stats ---- */
+.player-stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.player-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.player-stat-header {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.player-stat-hcp {
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.stat-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stat-value {
+  font-weight: 700;
+  font-size: 18px;
+}
+.stat-label {
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.score-dist {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.score-dist-item {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.score-par-chip {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* ---- Round replay summary ---- */
+.round-replay {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.round-context {
+  font-size: 13px;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* ---------- Competitions (CTP / Longest Drive) ---------- */
+.competition-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.competition-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.competition-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.competition-badge.ctp {
+  background: rgba(59, 193, 107, 0.15);
+  color: var(--primary);
+  border: 1px solid rgba(59, 193, 107, 0.3);
+}
+.competition-badge.longest_drive {
+  background: rgba(255, 207, 92, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(255, 207, 92, 0.3);
+}
+.hole-competition-badges {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-top: 4px;
+}
+.competition-claims {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.competition-claim-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  background: var(--surface-2);
+}
+.competition-claim-row.winner {
+  background: rgba(59, 193, 107, 0.1);
+  border: 1px solid rgba(59, 193, 107, 0.25);
+}
+.claim-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.winner-icon {
+  color: var(--accent);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.claim-player {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.claim-text {
+  color: var(--text-dim);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.claim-actions {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.competition-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.competition-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+}
+.competition-input input::placeholder {
+  color: var(--text-dim);
+}
+.competition-input .btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  min-height: auto;
+}
+.competition-add-section {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.competition-add-btn {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.competition-type-picker {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* small screens */
+@media (max-width: 360px) {
+  .stroke-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  .hole-chips {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}

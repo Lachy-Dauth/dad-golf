@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import type { RoundState } from "@dad-golf/shared";
-import { useRoundSocket } from "../useRoundSocket.js";
+import { useRoundSocket } from "../hooks/useRoundSocket.js";
 import {
   addRecentRound,
   clearActivePlayerId,

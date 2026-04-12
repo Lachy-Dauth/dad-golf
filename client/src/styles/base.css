@@ -1,0 +1,252 @@
+:root {
+  --bg: #0f1713;
+  --surface: #162520;
+  --surface-2: #1f322b;
+  --border: #2d4740;
+  --border-dim: rgba(45, 71, 64, 0.5);
+  --text: #e7f0ec;
+  --text-dim: #91a8a1;
+  --primary: #3bc16b;
+  --primary-dim: #1f7a3d;
+  --primary-hover: #4fd07b;
+  --primary-fg: #062012;
+  --accent: #ffcf5c;
+  --danger: #e5484d;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  --shadow-strong: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  --header-bg: rgba(15, 23, 19, 0.9);
+  --surface-hover: #263e36;
+  --radius: 12px;
+  --radius-sm: 8px;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f4f7f5;
+  --surface: #ffffff;
+  --surface-2: #e8eeeb;
+  --border: #c8d5cf;
+  --border-dim: rgba(0, 0, 0, 0.06);
+  --text: #1a2b24;
+  --text-dim: #5e7a70;
+  --primary: #2a9d54;
+  --primary-dim: #8ed4a6;
+  --primary-hover: #228b47;
+  --primary-fg: #062012;
+  --accent: #d49b0a;
+  --danger: #d93036;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-strong: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  --header-bg: rgba(244, 247, 245, 0.92);
+  --surface-hover: #dce5e0;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+  font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Default link colour: keep links on-brand instead of the browser default
+   blue / visited purple. The author origin overrides the user-agent
+   :link / :visited colours regardless of specificity, and class-styled
+   links (.btn, .header-link, .back-link, etc.) win over `a` because their
+   class selectors are more specific. */
+a {
+  color: var(--primary);
+}
+
+h1 {
+  font-size: 24px;
+  margin: 0 0 16px;
+}
+h2 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+h3 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+p {
+  line-height: 1.5;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--header-bg);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: env(safe-area-inset-top) 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.header-link {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+}
+.header-link:hover {
+  color: var(--text);
+  border-color: var(--primary);
+}
+
+.header-text-link {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  border: 1px solid var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  line-height: 1;
+}
+.header-text-link:hover {
+  filter: brightness(1.08);
+}
+
+.logo-mark {
+  font-size: 22px;
+}
+
+.app-main {
+  flex: 1;
+  padding: 16px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero {
+  padding: 12px 0 4px;
+}
+
+.hero h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: var(--text-dim);
+}
+
+.error {
+  color: var(--danger);
+  background: rgba(229, 72, 77, 0.12);
+  border: 1px solid rgba(229, 72, 77, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.section {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.empty-block {
+  text-align: center;
+  padding: 32px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+/* ---------- Theme toggle ---------- */
+.theme-toggle {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  appearance: none;
+  padding: 0;
+}
+.theme-toggle:hover {
+  color: var(--text);
+  border-color: var(--primary);
+}

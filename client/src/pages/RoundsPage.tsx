@@ -3,14 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api.js";
 import { useAuth } from "../AuthContext.js";
 import type { RoundSummary } from "@dad-golf/shared";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { formatDate } from "../utils/dateFormat.js";
 
 function ordinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];

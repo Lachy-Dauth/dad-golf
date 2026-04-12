@@ -1,9 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import {
-  generateRoomCode,
-  calculateScoreDifferential,
-  calculateHandicapIndex,
-} from "@dad-golf/shared";
+import { generateRoomCode } from "@dad-golf/shared";
 import {
   addPlayer,
   createCompetition,
@@ -32,20 +28,16 @@ import {
   upsertClaim,
   upsertScore,
   getUser,
-  findHandicapRoundByRoundId,
-  countHandicapRounds,
-  deleteOldestHandicapRound,
-  createHandicapRound,
-  listHandicapRounds,
-  updateUserHandicap,
   createActivityEvent,
-  getUserGroupIds,
 } from "../db/index.js";
 import { evaluateBadges } from "../badgeEvaluator.js";
 import { buildRoundState } from "../roundState.js";
+import { processRoundCompletion } from "../roundCompletion.js";
 import { broadcast } from "../hub.js";
 import {
   MAX_PLAYERS_PER_ROUND,
+  errorMessage,
+  fireAndForget,
   getViewerUser,
   parsePagination,
   requireRound,
@@ -119,7 +111,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       const state = await buildRoundState(round.roomCode, user.id);
       return reply.code(201).send({ state });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -179,7 +171,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       if (state) broadcast(code, { type: "player_joined", player, state });
       return reply.code(201).send({ player, state });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -208,7 +200,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       if (state) broadcast(code, { type: "state", state });
       return { ok: true, state };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -248,11 +240,15 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     if (state) {
       broadcast(code, { type: "round_started", state });
       if (round.groupId) {
-        createActivityEvent("round_started", user.id, round.groupId, round.id, user.activityVisibility, {
-          courseName: state.course.name,
-          roomCode: code,
-          playerCount: state.players.length,
-        }).catch(() => {});
+        fireAndForget(
+          createActivityEvent("round_started", user.id, round.groupId, round.id, user.activityVisibility, {
+            courseName: state.course.name,
+            roomCode: code,
+            playerCount: state.players.length,
+          }),
+          req.log,
+          "round_started activity event",
+        );
       }
     }
     return { state };
@@ -269,122 +265,8 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     }
     await updateRoundStatus(round.id, "complete");
     const state = await buildRoundState(code, user.id);
-
-    // Auto-add handicap rounds for players with auto-adjust enabled
     if (state) {
-      // Fire round_completed activity event (fire-and-forget)
-      if (round.groupId) {
-        const winner = state.leaderboard[0];
-        const winnerPlayer = winner
-          ? state.players.find((p) => p.id === winner.playerId)
-          : null;
-        const winnerId = winnerPlayer?.userId ?? user.id;
-        createActivityEvent(
-          "round_completed",
-          winnerId,
-          round.groupId,
-          round.id,
-          user.activityVisibility,
-          {
-            courseName: state.course.name,
-            roomCode: code,
-            playerCount: state.players.length,
-            winnerName: winner?.name ?? null,
-            winnerPoints: winner?.totalPoints ?? null,
-          },
-        ).catch(() => {});
-      }
-
-      for (const player of state.players) {
-        if (!player.userId) continue;
-        const playerUser = await getUser(player.userId);
-        if (!playerUser || !playerUser.handicapAutoAdjust) continue;
-
-        const existing = await findHandicapRoundByRoundId(player.userId, round.id);
-        if (existing) continue;
-
-        // Require at least 75% of holes scored for a valid handicap round
-        const playerScores = state.scores.filter((s) => s.playerId === player.id);
-        const minHoles = Math.ceil(state.course.holes.length * 0.75);
-        if (playerScores.length < minHoles) continue;
-
-        // Calculate adjusted gross score: actual strokes + par for unplayed holes
-        let adjustedGross = playerScores.reduce((sum, s) => sum + s.strokes, 0);
-        const scoredHoles = new Set(playerScores.map((s) => s.holeNumber));
-        for (const hole of state.course.holes) {
-          if (!scoredHoles.has(hole.number)) {
-            adjustedGross += hole.par;
-          }
-        }
-
-        const differential = calculateScoreDifferential(
-          adjustedGross,
-          state.course.rating,
-          state.course.slope,
-        );
-
-        const count = await countHandicapRounds(player.userId);
-        if (count >= 20) {
-          await deleteOldestHandicapRound(player.userId);
-        }
-
-        const roundDate = (state.round.completedAt ?? new Date().toISOString()).split("T")[0];
-        await createHandicapRound(
-          player.userId,
-          roundDate,
-          state.course.name,
-          adjustedGross,
-          state.course.rating,
-          state.course.slope,
-          differential,
-          round.id,
-          "auto",
-        );
-
-        // Recalculate and update user handicap
-        const hRounds = await listHandicapRounds(player.userId);
-        const calc = calculateHandicapIndex(
-          hRounds.map((r) => ({ id: r.id, differential: r.scoreDifferential })),
-        );
-        if (calc) {
-          const oldHandicap = playerUser.handicap;
-          await updateUserHandicap(player.userId, calc.handicapIndex);
-          // Fire handicap_change if significant change (fire-and-forget)
-          if (Math.abs(calc.handicapIndex - oldHandicap) >= 0.1) {
-            getUserGroupIds(player.userId)
-              .then((userGroups) =>
-                Promise.allSettled(
-                  userGroups.map((gId) =>
-                    createActivityEvent(
-                      "handicap_change",
-                      player.userId!,
-                      gId,
-                      round.id,
-                      playerUser.activityVisibility,
-                      { oldHandicap, newHandicap: calc.handicapIndex },
-                    ),
-                  ),
-                ),
-              )
-              .catch(() => {});
-          }
-        }
-      }
-
-      // Evaluate badges for all players
-      for (const player of state.players) {
-        if (!player.userId) continue;
-        const playerUser = await getUser(player.userId);
-        evaluateBadges({
-          trigger: "round_completed",
-          userId: player.userId,
-          roundId: round.id,
-          groupId: round.groupId ?? undefined,
-          roundState: state,
-          visibility: playerUser?.activityVisibility ?? "group",
-        }).catch(() => {});
-      }
-
+      await processRoundCompletion(state, round, code, user.activityVisibility, req.log);
       broadcast(code, { type: "round_completed", state });
     }
     return { state };
@@ -443,7 +325,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       if (state) broadcast(code, { type: "score_update", score, state });
       return { score, state };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -496,7 +378,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       if (state) broadcast(code, { type: "competition_update", state });
       return reply.code(201).send({ state });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -552,7 +434,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       if (state) broadcast(code, { type: "competition_update", state });
       return { state };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -611,21 +493,29 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       const winningPlayer = await getPlayer(playerId);
       if (winningPlayer?.userId && round.groupId) {
         const winnerUser = await getUser(winningPlayer.userId);
-        createActivityEvent(
-          "competition_won",
-          winningPlayer.userId,
-          round.groupId,
-          round.id,
-          winnerUser?.activityVisibility ?? "group",
-          { competitionType: comp!.type, roomCode: code, holeNumber: comp!.holeNumber },
-        ).catch(() => {});
-        evaluateBadges({
-          trigger: "competition_won",
-          userId: winningPlayer.userId,
-          roundId: round.id,
-          groupId: round.groupId,
-          visibility: winnerUser?.activityVisibility ?? "group",
-        }).catch(() => {});
+        fireAndForget(
+          createActivityEvent(
+            "competition_won",
+            winningPlayer.userId,
+            round.groupId,
+            round.id,
+            winnerUser?.activityVisibility ?? "group",
+            { competitionType: comp!.type, roomCode: code, holeNumber: comp!.holeNumber },
+          ),
+          req.log,
+          "competition_won activity event",
+        );
+        fireAndForget(
+          evaluateBadges({
+            trigger: "competition_won",
+            userId: winningPlayer.userId,
+            roundId: round.id,
+            groupId: round.groupId,
+            visibility: winnerUser?.activityVisibility ?? "group",
+          }),
+          req.log,
+          "competition_won badge evaluation",
+        );
       }
     }
     return { state };

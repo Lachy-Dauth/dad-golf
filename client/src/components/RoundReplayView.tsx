@@ -3,29 +3,10 @@ import type { RoundState, PlayerHoleResult } from "@dad-golf/shared";
 import { computePlayerHoles } from "@dad-golf/shared";
 import ProgressionChart from "./ProgressionChart.js";
 import PlayerStatsView from "./PlayerStatsView.js";
+import { formatDate, formatElapsedTime } from "../utils/dateFormat.js";
 
 interface Props {
   state: RoundState;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function formatDuration(startIso: string | null, endIso: string | null): string | null {
-  if (!startIso || !endIso) return null;
-  const ms = new Date(endIso).getTime() - new Date(startIso).getTime();
-  if (ms <= 0) return null;
-  const mins = Math.round(ms / 60_000);
-  if (mins < 60) return `${mins}m`;
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
 export default function RoundReplayView({ state }: Props) {
@@ -54,7 +35,7 @@ export default function RoundReplayView({ state }: Props) {
   }, [players, playerHolesMap]);
 
   const dateStr = formatDate(round.completedAt ?? round.startedAt ?? round.createdAt);
-  const duration = formatDuration(round.startedAt, round.completedAt);
+  const duration = formatElapsedTime(round.startedAt, round.completedAt);
 
   return (
     <div className="round-replay">

@@ -1,0 +1,929 @@
+/* hole entry grid (course creator) */
+.hole-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--surface-2);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+}
+.hole-grid-header,
+.hole-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.hole-grid-header {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  padding: 0 4px 8px;
+}
+.hole-num {
+  font-weight: 600;
+  padding-left: 4px;
+}
+
+/* round page */
+.round-page {
+  gap: 12px;
+}
+.round-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.round-title {
+  font-weight: 700;
+  font-size: 17px;
+}
+.round-code {
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+}
+/* weather widget */
+.weather-widget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+.weather-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.weather-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.weather-temp {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.weather-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+.weather-wind {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+/* help page */
+.help-list {
+  padding-left: 20px;
+  margin: 8px 0;
+  line-height: 1.6;
+}
+.help-list li {
+  margin-bottom: 6px;
+}
+.help-list code,
+.section code {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.home-footer {
+  margin-top: 20px;
+  text-align: center;
+}
+.help-link {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 10px 16px;
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.help-link:hover {
+  color: var(--text);
+  border-color: var(--primary);
+}
+
+.round-meta {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* ---------- Theme selector (profile) ---------- */
+.theme-section {
+  margin-top: 16px;
+}
+.theme-section h2 {
+  margin-bottom: 12px;
+}
+
+/* ---------- Scheduled Rounds ---------- */
+.scheduled-round-card {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.scheduled-round-card + .scheduled-round-card {
+  margin-top: 8px;
+}
+.scheduled-round-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.rsvp-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rsvp-count {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.rsvp-accepted {
+  background: rgba(59, 193, 107, 0.15);
+  color: var(--primary);
+}
+.rsvp-tentative {
+  background: rgba(255, 207, 92, 0.15);
+  color: var(--accent);
+}
+.rsvp-declined {
+  background: rgba(255, 99, 99, 0.1);
+  color: var(--danger);
+}
+.rsvp-names {
+  font-size: 13px;
+}
+.scheduled-round-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rsvp-buttons {
+  display: flex;
+  gap: 6px;
+}
+.scheduled-round-admin-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Scheduled round detail page */
+.sr-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-dim);
+  font-size: 14px;
+}
+.sr-detail-row:last-child {
+  border-bottom: none;
+}
+.sr-detail-label {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.rsvp-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rsvp-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--surface-2);
+  color: var(--text);
+}
+.rsvp-section-header.rsvp-accepted {
+  border-left: 3px solid var(--primary);
+}
+.rsvp-section-header.rsvp-tentative {
+  border-left: 3px solid var(--accent);
+}
+.rsvp-section-header.rsvp-declined {
+  border-left: 3px solid var(--danger);
+}
+.rsvp-chevron {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.rsvp-section-list {
+  list-style: none;
+  padding: 4px 0 4px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+.rsvp-section-list li {
+  padding: 4px 0;
+  color: var(--text-dim);
+}
+.started-round-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Calendar dropdown */
+.calendar-dropdown-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.calendar-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  margin-top: 4px;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.calendar-dropdown-item {
+  display: block;
+  padding: 10px 14px;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--text);
+  cursor: pointer;
+}
+.calendar-dropdown-item:hover {
+  background: var(--surface-hover);
+}
+.calendar-dropdown-item + .calendar-dropdown-item {
+  border-top: 1px solid var(--border-dim);
+}
+
+/* Calendar icon button on cards */
+.calendar-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.calendar-icon-btn:hover {
+  opacity: 1;
+  background: var(--surface-hover);
+}
+
+/* ================================================================
+   Community Courses
+   ================================================================ */
+
+/* -- Search input -- */
+.course-search {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+}
+.course-search::placeholder {
+  color: var(--text-dim);
+}
+.course-search:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+}
+
+/* -- Filter tabs -- */
+.course-filters {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0;
+}
+.course-filter-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.course-filter-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.course-filter-btn.active {
+  background: var(--primary);
+  color: var(--primary-fg);
+  border-color: var(--primary);
+}
+
+/* -- Sort -- */
+.course-sort {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.course-sort label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.course-sort select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* -- Course list & cards -- */
+.course-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.course-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.course-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary-dim);
+}
+.course-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.course-card-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+.course-card-location {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.course-card-meta {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.course-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.course-card-favs {
+  color: var(--danger);
+}
+.course-card-creator {
+  font-size: 12px;
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+/* -- Star rating -- */
+.star-rating {
+  display: inline-flex;
+  gap: 1px;
+  user-select: none;
+}
+.star-rating-sm .star {
+  font-size: 14px;
+}
+.star-rating-md .star {
+  font-size: 20px;
+}
+.star-filled {
+  color: var(--accent);
+}
+.star-empty {
+  color: var(--text-dim);
+  opacity: 0.4;
+}
+.star-rating-interactive .star {
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.star-rating-interactive .star:hover {
+  transform: scale(1.2);
+}
+
+/* -- Course detail page -- */
+.course-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.course-detail-header h1 {
+  margin: 0;
+}
+.course-location {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.course-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 8px 0;
+}
+.course-meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.course-meta-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+.course-meta-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+.course-meta-sub {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* -- Course scorecard -- */
+.course-scorecard-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.course-scorecard {
+  overflow-x: auto;
+}
+.course-scorecard table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 400px;
+}
+.course-scorecard th,
+.course-scorecard td {
+  padding: 6px 8px;
+  text-align: center;
+  border: 1px solid var(--border-dim);
+  white-space: nowrap;
+}
+.course-scorecard th {
+  background: var(--surface-2);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.course-scorecard th:first-child,
+.course-scorecard td:first-child {
+  text-align: left;
+  font-weight: 600;
+  width: 40px;
+}
+.course-scorecard th:last-child,
+.course-scorecard td:last-child {
+  font-weight: 700;
+  background: var(--surface-2);
+}
+
+/* -- Community rating -- */
+.course-rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.course-rating-text {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.course-rating-action {
+  margin-top: 8px;
+}
+.course-viewer-review {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* -- Review form -- */
+.course-review-form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.course-review-form textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+/* -- Reviews list -- */
+.review-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.review-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+.review-item:last-child {
+  border-bottom: none;
+}
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.review-author {
+  font-weight: 600;
+  color: var(--text);
+}
+.review-date {
+  color: var(--text-dim);
+}
+.review-text {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* -- Course detail actions -- */
+.course-detail-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* -- Report -- */
+.course-report {
+  margin-top: 4px;
+}
+.course-report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.course-report-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* -- Course picker (round creation) -- */
+.course-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.course-picker-search {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+}
+.course-picker-search::placeholder {
+  color: var(--text-dim);
+}
+.course-picker-list {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.course-picker-group-label {
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  position: sticky;
+  top: 0;
+}
+.course-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.course-picker-item:hover {
+  background: var(--surface-hover);
+}
+.course-picker-item.selected {
+  background: var(--surface-2);
+}
+.course-picker-item input[type="radio"] {
+  accent-color: var(--primary);
+}
+.course-picker-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.course-picker-holes {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.course-picker-add {
+  font-size: 13px;
+  color: var(--primary);
+  text-decoration: none;
+}
+.course-picker-add:hover {
+  text-decoration: underline;
+}
+
+/* -- Duplicate detection hint -- */
+.duplicate-hint {
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.duplicate-hint span {
+  color: var(--accent);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+.duplicate-hint ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.duplicate-hint li {
+  margin: 4px 0;
+}
+.duplicate-hint a {
+  color: var(--primary);
+}
+
+/* ---- Google Calendar ---- */
+.gcal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcal-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.gcal-connected-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+.gcal-synced-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--primary);
+  padding: 6px 0;
+}
+.gcal-synced-badge::before {
+  content: "\2713";
+  font-weight: 700;
+}
+
+/* ---- Calendar Feed ---- */
+.feed-url-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.feed-url-input {
+  flex: 1;
+  min-width: 0;
+  font-family: monospace;
+  font-size: 13px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+.feed-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* -- Location autocomplete -- */
+.location-autocomplete {
+  position: relative;
+}
+.location-loading {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.location-dropdown {
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.location-dropdown li {
+  border-bottom: 1px solid var(--border);
+}
+.location-dropdown li:last-child {
+  border-bottom: none;
+}
+.location-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.location-dropdown button:hover,
+.location-dropdown button:focus {
+  background: var(--primary);
+  color: white;
+  outline: none;
+}
+
+/* ---------- Badges ---------- */
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.badge-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: opacity 0.15s;
+}
+
+.badge-icon.earned {
+  border-color: var(--primary);
+}
+
+.badge-icon.locked {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.badge-name {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.badge-earned-at {
+  font-size: 10px;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+/* ---------- Public Profile ---------- */
+.profile-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.profile-avatar-lg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 auto 12px;
+  color: var(--text-dim);
+}
+
+@media (max-width: 360px) {
+  .badge-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

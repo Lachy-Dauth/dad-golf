@@ -10,6 +10,7 @@ import {
   updateActivityVisibility,
 } from "../db/index.js";
 import {
+  errorMessage,
   getViewerUser,
   requireUser,
   validateHandicap,
@@ -39,7 +40,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const token = await createSession(user.id);
       return reply.code(201).send({ user, token });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -56,7 +57,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         const token = await createSession(user.id);
         return { user, token };
       } catch (e) {
-        return reply.code(400).send({ error: (e as Error).message });
+        return reply.code(400).send({ error: errorMessage(e) });
       }
     },
   );
@@ -93,7 +94,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       }
       return { user: { ...user, displayName, handicap, activityVisibility } };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 }
