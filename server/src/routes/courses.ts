@@ -18,6 +18,7 @@ import {
 } from "../db/index.js";
 import {
   getViewerUser,
+  parsePagination,
   requireUser,
   validateCourseRating,
   validateCourseSlope,
@@ -243,12 +244,7 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     async (req, reply) => {
       const course = await getCourse(req.params.id);
       if (!course) return reply.code(404).send({ error: "course not found" });
-      const parsedLimit = Number(req.query.limit);
-      const parsedOffset = Number(req.query.offset);
-      const limit = Number.isFinite(parsedLimit)
-        ? Math.max(1, Math.min(Math.floor(parsedLimit), 50))
-        : 20;
-      const offset = Number.isFinite(parsedOffset) ? Math.max(0, Math.floor(parsedOffset)) : 0;
+      const { limit, offset } = parsePagination(req.query);
       return await listCourseReviews(course.id, limit, offset);
     },
   );

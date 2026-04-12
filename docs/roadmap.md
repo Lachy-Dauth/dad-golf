@@ -16,17 +16,17 @@ flowchart TD
         P1D["9b. Weather ✅"]
     end
 
-    subgraph phase2["Phase 2: Core Free Features (in progress)"]
-        P2A["1c. Round Replay\n1.5 weeks"]
+    subgraph phase2["Phase 2: Core Free Features ✅"]
+        P2A["1c. Round Replay ✅"]
         P2B["5c. CTP / Long Drive ✅"]
         P2D["6c. Group Roles ✅"]
-        P2E["7c. Handicap Auto-Adj\n1 week"]
-        P2F["3a. Community Courses\n2 weeks"]
+        P2E["7c. Handicap Auto-Adj ✅"]
+        P2F["3a. Community Courses ✅"]
     end
 
-    subgraph phase3["Phase 3: Free Features w/ Dependencies (weeks 7-12)"]
-        P3B["2c. Scheduled Rounds\n2 weeks"]
-        P3C["9a. Calendar Integration\n1 week"]
+    subgraph phase3["Phase 3: Free Features w/ Dependencies (in progress)"]
+        P3B["2c. Scheduled Rounds ✅"]
+        P3C["9a. Calendar Integration ✅"]
         P3D["4a. Activity Feed\n2 weeks"]
         P3E["4c. Achievement Badges\n1.5 weeks"]
     end
@@ -102,16 +102,16 @@ gantt
     Weather Integration (9b)        :done, p1c, 2026-05-04, 3d
     Dark Mode (8c)                  :done, p1d, 2026-05-07, 5d
 
-    section Phase 2: Core Free
+    section Phase 2: Core Free ✅
     CTP / Longest Drive (5c)        :done, p2b, 2026-05-18, 5d
     Group Roles (6c)                :done, p2d, 2026-05-25, 5d
-    Handicap Auto-Adj (7c)          :p2e, 2026-05-25, 5d
-    Round Replay (1c)               :p2a, 2026-06-01, 8d
-    Community Courses (3a)          :p2f, 2026-06-01, 10d
+    Handicap Auto-Adj (7c)          :done, p2e, 2026-05-25, 5d
+    Round Replay (1c)               :done, p2a, 2026-06-01, 8d
+    Community Courses (3a)          :done, p2f, 2026-06-01, 10d
 
     section Phase 3: Free w/ Deps
-    Scheduled Rounds (2c)           :p3b, after p2d, 10d
-    Calendar Integration (9a)       :p3c, after p3b, 5d
+    Scheduled Rounds (2c)           :done, p3b, after p2d, 10d
+    Calendar Integration (9a)       :done, p3c, after p3b, 5d
     Activity Feed (4a)              :p3d, after p2a, 10d
     Achievement Badges (4c)         :p3e, after p2a, 8d
 
@@ -152,35 +152,30 @@ gantt
 
 ---
 
-### Phase 2: Core Free Features (In Progress)
+### Phase 2: Core Free Features ✅
 
-| Feature                 | Duration  | Depends On | Notes                                    |
-| ----------------------- | --------- | ---------- | ---------------------------------------- |
-| 5c. CTP / Longest Drive | 1 week    | —          | ✅ Shipped                               |
-| 6c. Group Roles         | 1 week    | —          | ✅ Shipped (admin/member, simplified)    |
-| 7c. Handicap Auto-Adj   | 1 week    | —          | Rolling calc from recent scores          |
-| 1c. Round Replay        | 1.5 weeks | —          | Summary view, hole-by-hole breakdown     |
-| 3a. Community Courses   | 2 weeks   | —          | Shared courses, search, basic moderation |
+| Feature                 | Duration  | Depends On | Notes                                                            |
+| ----------------------- | --------- | ---------- | ---------------------------------------------------------------- |
+| 5c. CTP / Longest Drive | 1 week    | —          | ✅ Shipped                                                       |
+| 6c. Group Roles         | 1 week    | —          | ✅ Shipped (admin/member, simplified)                            |
+| 7c. Handicap Auto-Adj   | 1 week    | —          | ✅ Shipped — GA/WHS rolling calc, auto-updates on round complete |
+| 1c. Round Replay        | 1.5 weeks | —          | ✅ Shipped — scorecard, progression chart, per-player stats      |
+| 3a. Community Courses   | 2 weeks   | —          | ✅ Shipped — shared courses, reviews, ratings, reports           |
 
-**Remaining: ~4.5 weeks** (some can run in parallel)
-
-These are the features that make the free tier genuinely compelling.
+**Phase complete.**
 
 ---
 
-### Phase 3: Free Features with Dependencies (Weeks 7-12)
+### Phase 3: Free Features with Dependencies (In Progress)
 
-| Feature                  | Duration  | Depends On | Notes                            |
-| ------------------------ | --------- | ---------- | -------------------------------- |
-| 2c. Scheduled Rounds     | 2 weeks   | 6c         | Date/time/course + RSVP          |
-| 9a. Calendar Integration | 1 week    | 2c         | .ics export + calendar API       |
-| 4a. Activity Feed        | 2 weeks   | 1c         | Group round feed + likes         |
-| 4c. Achievement Badges   | 1.5 weeks | 1c         | Badge definitions + unlock logic |
+| Feature                  | Duration  | Depends On | Notes                                                                 |
+| ------------------------ | --------- | ---------- | --------------------------------------------------------------------- |
+| 2c. Scheduled Rounds     | 2 weeks   | 6c         | ✅ Shipped — date/time/course, RSVP, auto-start with accepted players |
+| 9a. Calendar Integration | 1 week    | 2c         | ✅ Shipped — .ics export, Google Calendar OAuth sync, iCal feed URL   |
+| 4a. Activity Feed        | 2 weeks   | 1c         | Group round feed + likes                                              |
+| 4c. Achievement Badges   | 1.5 weeks | 1c         | Badge definitions + unlock logic                                      |
 
-**Phase total: ~5 weeks** (overlaps with late Phase 2)
-
-Can start some of these before Phase 2 finishes since they only depend
-on specific Phase 2 items.
+**Remaining: ~3.5 weeks** (Activity Feed + Achievement Badges)
 
 ---
 
@@ -267,13 +262,13 @@ the following **5-6 months**.
 
 | Category           | Features                | Est. Weeks      |
 | ------------------ | ----------------------- | --------------- |
-| FREE (shipped)     | 5 features ✅           | ~0 weeks        |
-| FREE (remaining)   | 10 features             | ~12.5 weeks     |
+| FREE (shipped)     | 12 features ✅          | ~0 weeks        |
+| FREE (remaining)   | 2 features              | ~3.5 weeks      |
 | PRO Infrastructure | Payment + gating        | ~3 weeks        |
 | PRO                | 10 features             | ~24 weeks       |
-| **Remaining**      | **20 features + infra** | **~39.5 weeks** |
+| **Remaining**      | **12 features + infra** | **~30.5 weeks** |
 
-**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles.
+**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration (plus location autocomplete and course reviews).
 
-At part-time pace (~15-20 hrs/week), remaining work is roughly **9-10 months** of
+At part-time pace (~15-20 hrs/week), remaining work is roughly **7-8 months** of
 calendar time with some parallelism.

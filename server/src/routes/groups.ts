@@ -23,6 +23,7 @@ import {
 import {
   MAX_MEMBERS_PER_GROUP,
   getViewerUser,
+  parsePagination,
   requireUser,
   validateHandicap,
   validateName,
@@ -55,8 +56,7 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
       const viewer = await getViewerUser(req);
       const g = await getGroup(req.params.id);
       if (!g) return reply.code(404).send({ error: "group not found" });
-      const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
-      const offset = Math.max(Number(req.query.offset) || 0, 0);
+      const { limit, offset } = parsePagination(req.query);
       return listGroupCompletedRounds(g.id, viewer?.id ?? null, limit, offset);
     },
   );

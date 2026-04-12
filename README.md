@@ -13,6 +13,7 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 - **Live leaderboard** — everyone sees the standings update in real time as scores come in
 - **Round replay** — post-round summary with full scorecard, leaderboard progression chart, per-player stats, and competition results; browse past rounds via personal history or group pages
 - **Hole competitions** — closest-to-pin and longest drive contests on selected holes
+- **Community courses** — shared course database with search, star ratings, reviews, and reporting; location autocomplete via Nominatim (OpenStreetMap)
 - **Weather** — live weather conditions displayed for the course location
 - **Handicap tracker** — track your last 20 rounds and auto-calculate your GA Handicap Index using Australia's World Handicap System; optionally auto-updates when you complete rounds
 - **Groups** — create groups, invite members, assign admin/member roles, and track rounds together
@@ -42,7 +43,7 @@ A player with handicap _H_ receives strokes on the hardest holes first (by strok
 
 - **Frontend:** React 18 + Vite + TypeScript, mobile-first responsive layout
 - **Backend:** Node.js + Fastify + WebSocket (`@fastify/websocket`)
-- **Database:** PostgreSQL (production) / SQLite (local development)
+- **Database:** PostgreSQL (requires `DATABASE_URL`)
 - **Shared:** `@dad-golf/shared` package with types, Stableford scoring logic, and room code generation
 - **Tooling:** ESLint 9 (flat config) + Prettier + strict TypeScript
 - **Hosting:** Railway
@@ -54,7 +55,7 @@ dad-golf/
 ├── client/                  # React + Vite frontend
 │   └── src/
 │       ├── pages/           # Route pages (Home, Round, Courses, Groups, Admin, …)
-│       ├── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Replay, Scorecard, Weather)
+│       ├── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Replay, Scorecard, Weather, Calendar)
 │       ├── AuthContext.tsx   # Session & user state
 │       └── ThemeContext.tsx  # Dark / light mode
 ├── server/                  # Fastify backend
@@ -62,6 +63,8 @@ dad-golf/
 │       ├── db/              # Database layer (pool, schema, per-domain modules)
 │       │   ├── users.ts     # User CRUD, auth, sessions
 │       │   ├── courses.ts   # Course CRUD + favourites
+│       │   ├── courseReviews.ts # Course star ratings + review text
+│       │   ├── courseReports.ts # Course reports (duplicate, inappropriate, etc.)
 │       │   ├── groups.ts    # Groups, members, invites
 │       │   ├── rounds.ts    # Round lifecycle
 │       │   ├── players.ts   # Player management
@@ -74,9 +77,9 @@ dad-golf/
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
-│       │   ├── courses.ts   # /api/courses/*
+│       │   ├── courses.ts   # /api/courses/* (includes reviews + reports)
 │       │   ├── groups.ts    # /api/groups/*
-│       │   ├── rounds.ts    # /api/rounds/*
+│       │   ├── rounds.ts    # /api/rounds/* (includes competitions)
 │       │   ├── weather.ts   # /api/weather/*
 │       │   ├── handicap.ts  # /api/handicap/*
 │       │   ├── scheduledRounds.ts # /api/groups/:groupId/scheduled-rounds/*
@@ -86,6 +89,7 @@ dad-golf/
 │       ├── calendar.ts      # iCalendar (.ics) generation
 │       ├── calendarSync.ts  # Google Calendar sync logic (fire-and-forget)
 │       ├── googleCalendar.ts # Google Calendar API client (raw fetch)
+│       ├── weather.ts       # Open-Meteo weather + Nominatim geocoding
 │       ├── hub.ts           # WebSocket pub/sub hub
 │       ├── ws.ts            # WebSocket handler for live round updates
 │       └── seed.ts          # Sample data seeding
@@ -120,7 +124,7 @@ can create a round immediately.
 | `PORT`                 | `3001`    | Server port                                               |
 | `HOST`                 | `0.0.0.0` | Server bind address                                       |
 | `DATABASE_URL`         | —         | PostgreSQL connection string                              |
-| `ADMIN_USER`           | —         | Username to bootstrap as admin                            |
+| `ADMIN_PASSWORD`       | —         | Password for the bootstrapped `admin` user (min 6 chars)  |
 | `GOOGLE_CLIENT_ID`     | —         | Google OAuth client ID (enables Google Calendar sync)     |
 | `GOOGLE_CLIENT_SECRET` | —         | Google OAuth client secret                                |
 | `APP_URL`              | —         | Base URL of the app (for OAuth redirect + calendar links) |
@@ -141,7 +145,7 @@ npm run lint           # ESLint check
 npm run lint:fix       # ESLint auto-fix
 npm run format:check   # Prettier check
 npm run format         # Prettier auto-format
-npm test               # Stableford scoring unit tests
+npm test               # Stableford scoring + handicap unit tests
 ```
 
 ### Deploying to Railway

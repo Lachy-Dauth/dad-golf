@@ -46,14 +46,14 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 > Fun for competitive groups. Natural upsell from the stats dashboard.
 
-### 1c. Round Replay & Hole-by-Hole Breakdown — FREE
+### 1c. Round Replay & Hole-by-Hole Breakdown — FREE ✅
 
 - Post-round detailed breakdown with visualisations
 - Hole-by-hole scoring summary for each player
 
-> A proper end-of-round summary should be part of the core experience. The
-> data is already there — just needs a good summary view. (Sharing as an
-> image/card is covered separately in 4b.)
+> Shipped. Post-round summary with full scorecard, leaderboard progression
+> chart, per-player stats (best/worst holes, score distribution), and
+> competition results. Browse past rounds via personal history or group pages.
 
 ---
 
@@ -77,28 +77,31 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 > Natural extension of leagues. Awards are fun and low effort once leagues exist.
 
-### 2c. Scheduled Rounds — FREE
+### 2c. Scheduled Rounds — FREE ✅
 
 - Pre-schedule rounds for a league (date, time, course)
 - RSVP / availability tracking
 
-> Useful for regular groups to coordinate upcoming rounds. Keeps round
-> planning inside the app instead of scattered across group chats.
+> Shipped. Group admins schedule rounds with date, time, course, and
+> optional duration. Members RSVP (going/maybe/can't). Admins start the
+> round and accepted players are added automatically. Dedicated Upcoming
+> Rounds page shows all scheduled rounds across groups.
 
 ---
 
 ## 3. Course Database & GPS
 
-### 3a. Community Course Database — FREE
+### 3a. Community Course Database — FREE ✅
 
 - Crowdsourced course data — when a user creates a course, it becomes available
   to all users (with moderation/verification)
 - Search courses by location, name, number of holes
 - Course ratings/reviews from the community
 
-> Courses are already user-created — making them shared is a natural evolution.
-> Grows the platform and reduces friction for new users. Needs basic moderation
-> but nothing heavy.
+> Shipped. Courses are shared across all users with star ratings, review text,
+> and a reporting system (duplicate, incorrect, inappropriate). Location
+> autocomplete via Nominatim (OpenStreetMap) with coordinate storage for
+> weather integration.
 
 ### 3b. Course GPS & Hole Maps — WON'T DO
 
@@ -111,11 +114,12 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ### 3c. Course Condition Reports — WON'T DO
 
-- Users can tag course conditions (wet, dry, fast greens, etc.)
-- Recent reports shown when selecting a course
+- ~~Users can tag course conditions (wet, dry, fast greens, etc.)~~
+- ~~Recent reports shown when selecting a course~~
 
-> Simple tagging feature. Low effort to build and useful context when
-> picking a course. Grows in value as the user base grows.
+> Replaced by the general course reporting system in 3a (reports for
+> incorrect info, duplicates, inappropriate content). Condition tagging
+> not planned.
 
 ---
 
@@ -230,14 +234,14 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 > Pairs well with Ambrose/Scramble from 7a. Fun for larger groups.
 
-### 7c. Handicap Auto-Adjustment — FREE
+### 7c. Handicap Auto-Adjustment — FREE ✅
 
 - Track unofficial "Dad Golf Handicap" based on recent rounds
 - Automatically suggest handicap adjustments
 
-> Natural extension of the existing handicap system. The app already tracks
-> rounds and scores — computing a running handicap is straightforward and
-> makes the core product better for everyone.
+> Shipped. GA/World Handicap System calculation using score differentials
+> from last 20 rounds. Auto-updates user handicap when a round completes
+> (opt-in via handicap settings). Manual handicap round entry also supported.
 
 ---
 
@@ -286,13 +290,15 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ## 9. Integrations
 
-### 9a. Calendar Integration — FREE
+### 9a. Calendar Integration — FREE ✅
 
 - Add scheduled rounds to Google/Apple Calendar
 - One-tap RSVP
 
-> Natural companion to Scheduled Rounds (2c). Low effort — just generate
-> an .ics link or use a calendar API. Makes scheduling feel complete.
+> Shipped. Three tiers: (1) .ics file download for any calendar app,
+> (2) Google Calendar OAuth sync that auto-creates/updates/deletes events
+> on RSVP, (3) subscribable iCal feed URL for auto-sync in Apple Calendar,
+> Google Calendar, Outlook, etc.
 
 ### 9b. Weather Integration — FREE ✅
 
@@ -340,11 +346,11 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | --- | ------------------------------ | ------------ |
 | 1a  | Personal Stats Dashboard       | **PRO**      |
 | 1b  | Head-to-Head Comparisons       | **PRO**      |
-| 1c  | Round Replay / Breakdown       | **FREE**     |
+| 1c  | Round Replay / Breakdown       | **FREE** ✅  |
 | 2a  | Recurring Leagues              | **PRO**      |
 | 2b  | League Leaderboard & Awards    | **PRO**      |
-| 2c  | Scheduled Rounds               | **FREE**     |
-| 3a  | Community Course Database      | **FREE**     |
+| 2c  | Scheduled Rounds               | **FREE** ✅  |
+| 3a  | Community Course Database      | **FREE** ✅  |
 | 3b  | Course GPS & Hole Maps         | **WON'T DO** |
 | 3c  | Course Condition Reports       | **WON'T DO** |
 | 4a  | Activity Feed                  | **FREE**     |
@@ -358,16 +364,16 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 6d  | Group Chat / Noticeboard       | **WON'T DO** |
 | 7a  | Multiple Scoring Formats       | **PRO**      |
 | 7b  | Team Rounds                    | **PRO**      |
-| 7c  | Handicap Auto-Adjustment       | **FREE**     |
+| 7c  | Handicap Auto-Adjustment       | **FREE** ✅  |
 | 8a  | Offline Mode                   | **WON'T DO** |
 | 8b  | Apple Watch Companion          | **WON'T DO** |
 | 8c  | Dark Mode / Themes             | **FREE** ✅  |
 | 8d  | PWA Install Prompt             | **FREE** ✅  |
 | 8e  | PDF Scorecards                 | **PRO**      |
-| 9a  | Calendar Integration           | **FREE**     |
+| 9a  | Calendar Integration           | **FREE** ✅  |
 | 9b  | Weather Integration            | **FREE** ✅  |
 | 9c  | Photo Attachment               | **WON'T DO** |
 | 10a | Club/Organisation Account      | **WON'T DO** |
 | 10b | Tournament Mode                | **WON'T DO** |
 
-**Totals: 14 FREE, 10 PRO, 8 WON'T DO**
+**Totals: 14 FREE (12 shipped), 10 PRO, 8 WON'T DO**

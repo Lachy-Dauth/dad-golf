@@ -13,7 +13,7 @@ import {
   listAllUsers,
   listCourseReports,
 } from "../db/index.js";
-import { requireAdmin } from "./validation.js";
+import { parsePagination, requireAdmin } from "./validation.js";
 
 export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   app.get("/api/admin/stats", async (req, reply) => {
@@ -47,12 +47,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/admin/rounds", async (req, reply) => {
     const user = await requireAdmin(req, reply);
     if (!user) return;
-    const parsedLimit = Number(req.query.limit);
-    const parsedOffset = Number(req.query.offset);
-    const limit = Number.isFinite(parsedLimit)
-      ? Math.max(0, Math.min(Math.floor(parsedLimit), 200))
-      : 50;
-    const offset = Number.isFinite(parsedOffset) ? Math.max(0, Math.floor(parsedOffset)) : 0;
+    const { limit, offset } = parsePagination(req.query, { limit: 50, maxLimit: 200 });
     return await listAllRounds(limit, offset);
   });
 

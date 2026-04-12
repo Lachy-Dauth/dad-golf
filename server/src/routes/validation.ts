@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import type { CourseReportReason, Hole, User } from "@dad-golf/shared";
-import { getUserBySession } from "../db/index.js";
+import type { CourseReportReason, Hole, Round, User } from "@dad-golf/shared";
+import { normalizeRoomCode } from "@dad-golf/shared";
+import { getRoundByRoomCode, getUserBySession } from "../db/index.js";
 
 export const MAX_PLAYERS_PER_ROUND = 32;
 export const MAX_MEMBERS_PER_GROUP = 64;
@@ -199,4 +200,31 @@ export async function requireAdmin(req: FastifyRequest, reply: FastifyReply): Pr
     return null;
   }
   return user;
+}
+
+/**
+ * Normalize the room code from `req.params.code`, look up the round, and
+ * return both. Sends a 404 reply and returns `null` when the round doesn't
+ * exist, matching the `requireUser` / `requireAdmin` pattern.
+ */
+export async function requireRound(
+  req: FastifyRequest<{ Params: { code: string } }>,
+  reply: FastifyReply,
+): Promise<{ code: string; round: Round } | null> {
+  const code = normalizeRoomCode(req.params.code);
+  const round = await getRoundByRoomCode(code);
+  if (!round) {
+    reply.code(404).send({ error: "round not found" });
+    return null;
+  }
+  return { code, round };
+}
+
+export function parsePagination(
+  query: { limit?: string; offset?: string },
+  defaults: { limit: number; maxLimit: number } = { limit: 20, maxLimit: 50 },
+): { limit: number; offset: number } {
+  const limit = Math.min(Math.max(Number(query.limit) || defaults.limit, 1), defaults.maxLimit);
+  const offset = Math.max(Number(query.offset) || 0, 0);
+  return { limit, offset };
 }
