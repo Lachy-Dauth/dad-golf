@@ -118,10 +118,12 @@ export async function updateCourse(
   rating: number,
   slope: number,
   holes: Hole[],
+  latitude: number | null = null,
+  longitude: number | null = null,
 ): Promise<void> {
   await pool.query(
-    `UPDATE courses SET name = $1, location = $2, latitude = NULL, longitude = NULL, rating = $3, slope = $4, holes_json = $5 WHERE id = $6`,
-    [name, location, rating, slope, JSON.stringify(holes), id],
+    `UPDATE courses SET name = $1, location = $2, latitude = $3, longitude = $4, rating = $5, slope = $6, holes_json = $7 WHERE id = $8`,
+    [name, location, latitude, longitude, rating, slope, JSON.stringify(holes), id],
   );
 }
 
@@ -138,6 +140,14 @@ export async function updateCourseCoords(
 
 export async function deleteCourse(id: string): Promise<void> {
   await pool.query(`DELETE FROM courses WHERE id = $1`, [id]);
+}
+
+export async function getCourseRoundCount(courseId: string): Promise<number> {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*) AS n FROM rounds WHERE course_id = $1`,
+    [courseId],
+  );
+  return Number((rows[0] as { n: string }).n);
 }
 
 export async function getCourseFavoriteCount(courseId: string): Promise<number> {

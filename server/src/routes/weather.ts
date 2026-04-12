@@ -24,7 +24,12 @@ export async function registerWeatherRoutes(app: FastifyInstance): Promise<void>
         if (!course.location) {
           return reply.code(422).send({ error: "course has no location set" });
         }
-        const geo = await geocodeLocation(course.location);
+        let geo: Awaited<ReturnType<typeof geocodeLocation>>;
+        try {
+          geo = await geocodeLocation(course.location);
+        } catch {
+          return reply.code(502).send({ error: "geocoding service unavailable" });
+        }
         if (!geo) {
           return reply.code(502).send({ error: "could not geocode course location" });
         }

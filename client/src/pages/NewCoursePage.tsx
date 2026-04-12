@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import type { Hole } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
@@ -14,6 +14,8 @@ function defaultHoles(count: 9 | 18): Hole[] {
 
 export default function NewCoursePage() {
   const nav = useNavigate();
+  const { id } = useParams<{ id?: string }>();
+  const isEdit = !!id;
   const { user, loading } = useAuth();
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
@@ -23,6 +25,37 @@ export default function NewCoursePage() {
   const [holes, setHoles] = useState<Hole[]>(defaultHoles(18));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loadingCourse, setLoadingCourse] = useState(isEdit);
+
+  useEffect(() => {
+    if (!id) {
+      setError(null);
+      setLoadingCourse(false);
+      return;
+    }
+
+    setLoadingCourse(true);
+    setError(null);
+    setName("");
+    setLocation("");
+    setRating("72.0");
+    setSlope("113");
+    setHoleCount(18);
+    setHoles(defaultHoles(18));
+
+    api
+      .getCourse(id)
+      .then(({ course }) => {
+        setName(course.name);
+        setLocation(course.location ?? "");
+        setRating(course.rating.toFixed(1));
+        setSlope(String(course.slope));
+        setHoleCount(course.holes.length as 9 | 18);
+        setHoles(course.holes);
+      })
+      .catch((e) => setError((e as Error).message))
+      .finally(() => setLoadingCourse(false));
+  }, [id]);
 
   function handleHoleCountChange(count: 9 | 18) {
     setHoleCount(count);
@@ -56,13 +89,18 @@ export default function NewCoursePage() {
     }
     setSaving(true);
     try {
-      await api.createCourse({
+      const payload = {
         name: name.trim(),
         location: location.trim() || null,
         rating: ratingNum,
         slope: slopeNum,
         holes,
-      });
+      };
+      if (isEdit && id) {
+        await api.updateCourse(id, payload);
+      } else {
+        await api.createCourse(payload);
+      }
       nav("/courses");
     } catch (e) {
       setError((e as Error).message);
@@ -71,7 +109,7 @@ export default function NewCoursePage() {
     }
   }
 
-  if (loading) {
+  if (loading || loadingCourse) {
     return (
       <div className="page">
         <div className="muted">Loading…</div>
@@ -82,9 +120,9 @@ export default function NewCoursePage() {
   if (!user) {
     return (
       <div className="page">
-        <h1>New course</h1>
-        <p className="muted">You need to log in to create a course.</p>
-        <Link to={`/login?next=${encodeURIComponent("/courses/new")}`} className="btn btn-primary">
+        <h1>{isEdit ? "Edit course" : "New course"}</h1>
+        <p className="muted">You need to log in to {isEdit ? "edit" : "create"} a course.</p>
+        <Link to={`/login?next=${encodeURIComponent(isEdit ? `/courses/${id}/edit` : "/courses/new")}`} className="btn btn-primary">
           Log in
         </Link>
       </div>
@@ -93,7 +131,7 @@ export default function NewCoursePage() {
 
   return (
     <div className="page">
-      <h1>New course</h1>
+      <h1>{isEdit ? "Edit course" : "New course"}</h1>
       <div className="form">
         <label className="field">
           <span>Course name</span>
@@ -198,7 +236,7 @@ export default function NewCoursePage() {
             Cancel
           </Link>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-            {saving ? "Saving…" : "Save course"}
+            {saving ? "Saving…" : isEdit ? "Update course" : "Save course"}
           </button>
         </div>
       </div>

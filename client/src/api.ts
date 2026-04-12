@@ -367,6 +367,11 @@ export const api = {
     fetch("/api/admin/groups", { headers: authHeaders() }).then((r) =>
       json<{ groups: AdminGroup[] }>(r),
     ),
+  adminDeleteRound: (id: string) =>
+    fetch(`/api/admin/rounds/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
   adminActivity: (limit = 50) =>
     fetch(`/api/admin/activity?limit=${limit}`, {
       headers: authHeaders(),

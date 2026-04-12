@@ -80,6 +80,7 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/new" element={<NewCoursePage />} />
+            <Route path="/courses/:id/edit" element={<NewCoursePage />} />
             <Route path="/groups" element={<GroupsPage />} />
             <Route path="/groups/:id" element={<GroupDetailPage />} />
             <Route path="/groups/join/:token" element={<AcceptInvitePage />} />
