@@ -1,4 +1,4 @@
-import type { Round, RoundStatus, RoundSummary } from "@dad-golf/shared";
+import type { Round, RoundStatus, RoundSummary, Player, Score, Course } from "@dad-golf/shared";
 import { computeLeaderboard } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
@@ -142,6 +142,52 @@ async function buildRoundSummaries(
   historyRows: RoundHistoryRow[],
   viewerUserId: string | null,
 ): Promise<RoundSummary[]> {
+  if (historyRows.length === 0) return [];
+
+  const roundIds = historyRows.map((row) => row.id);
+
+  // Batch-fetch all players and scores for the page of rounds (2 queries total)
+  const { rows: allPlayerRows } = await pool.query(
+    `SELECT * FROM players WHERE round_id = ANY($1) ORDER BY joined_at ASC`,
+    [roundIds],
+  );
+  const playersByRound = new Map<string, Player[]>();
+  for (const p of allPlayerRows as Record<string, unknown>[]) {
+    const roundId = p.round_id as string;
+    const player: Player = {
+      id: p.id as string,
+      roundId,
+      userId: p.user_id as string | null,
+      name: p.name as string,
+      handicap: Number(p.handicap),
+      joinedAt: p.joined_at as string,
+      isGuest: p.user_id === null,
+    };
+    const list = playersByRound.get(roundId);
+    if (list) list.push(player);
+    else playersByRound.set(roundId, [player]);
+  }
+
+  const { rows: allScoreRows } = await pool.query(
+    `SELECT * FROM scores WHERE round_id = ANY($1) ORDER BY hole_number ASC`,
+    [roundIds],
+  );
+  const scoresByRound = new Map<string, Score[]>();
+  for (const s of allScoreRows as Record<string, unknown>[]) {
+    const roundId = s.round_id as string;
+    const score: Score = {
+      id: s.id as string,
+      roundId,
+      playerId: s.player_id as string,
+      holeNumber: Number(s.hole_number),
+      strokes: Number(s.strokes),
+      createdAt: s.created_at as string,
+    };
+    const list = scoresByRound.get(roundId);
+    if (list) list.push(score);
+    else scoresByRound.set(roundId, [score]);
+  }
+
   const summaries: RoundSummary[] = [];
   for (const row of historyRows) {
     const round = rowToRound(row as unknown as RoundListRow);
@@ -150,41 +196,16 @@ async function buildRoundSummaries(
       par: number;
       strokeIndex: number;
     }[];
-    const course = { holes, slope: Number(row.course_slope), rating: Number(row.course_rating) };
+    const course = {
+      holes,
+      slope: Number(row.course_slope),
+      rating: Number(row.course_rating),
+    } as Pick<Course, "holes" | "slope" | "rating"> as Course;
 
-    // Load players + scores to compute leaderboard
-    const { rows: playerRows } = await pool.query(
-      `SELECT * FROM players WHERE round_id = $1 ORDER BY joined_at ASC`,
-      [round.id],
-    );
-    const players = playerRows.map((p: Record<string, unknown>) => ({
-      id: p.id as string,
-      roundId: p.round_id as string,
-      userId: p.user_id as string | null,
-      name: p.name as string,
-      handicap: Number(p.handicap),
-      joinedAt: p.joined_at as string,
-      isGuest: p.user_id === null,
-    }));
+    const players = playersByRound.get(round.id) ?? [];
+    const scores = scoresByRound.get(round.id) ?? [];
 
-    const { rows: scoreRows } = await pool.query(
-      `SELECT * FROM scores WHERE round_id = $1 ORDER BY hole_number ASC`,
-      [round.id],
-    );
-    const scores = scoreRows.map((s: Record<string, unknown>) => ({
-      id: s.id as string,
-      roundId: s.round_id as string,
-      playerId: s.player_id as string,
-      holeNumber: Number(s.hole_number),
-      strokes: Number(s.strokes),
-      createdAt: s.created_at as string,
-    }));
-
-    const leaderboard = computeLeaderboard(
-      course as Parameters<typeof computeLeaderboard>[0],
-      players,
-      scores,
-    );
+    const leaderboard = computeLeaderboard(course, players, scores);
     const winner = leaderboard[0] ?? null;
 
     let viewerPosition: number | null = null;
@@ -237,8 +258,8 @@ export async function listUserCompletedRounds(
      FROM rounds r
      LEFT JOIN users u ON u.id = r.leader_user_id
      JOIN courses c ON c.id = r.course_id
-     JOIN players p ON p.round_id = r.id AND p.user_id = $1
      WHERE r.status = 'complete'
+       AND EXISTS (SELECT 1 FROM players p WHERE p.round_id = r.id AND p.user_id = $1)
      ORDER BY r.completed_at DESC
      LIMIT $2 OFFSET $3`,
     [userId, limit, offset],

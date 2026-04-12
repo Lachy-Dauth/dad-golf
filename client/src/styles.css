@@ -1430,7 +1430,7 @@ input:-webkit-autofill:focus {
   border-radius: 50%;
 }
 
-/* ---- Scorecard ---- */
+/* ---- Scorecard (vertical layout: holes as rows, players as columns) ---- */
 .scorecard-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -1441,13 +1441,11 @@ input:-webkit-autofill:focus {
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   width: 100%;
-  min-width: max-content;
 }
 .scorecard th,
 .scorecard td {
-  padding: 6px 4px;
+  padding: 6px 8px;
   text-align: center;
-  min-width: 28px;
   border-bottom: 1px solid var(--border-dim);
 }
 .scorecard thead th {
@@ -1456,34 +1454,34 @@ input:-webkit-autofill:focus {
   text-transform: uppercase;
   color: var(--text-dim);
 }
-.scorecard .player-name-col {
-  position: sticky;
-  left: 0;
-  background: var(--surface);
-  z-index: 1;
+.scorecard .hole-col {
   text-align: left;
-  min-width: 80px;
-  max-width: 120px;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 44px;
+}
+.scorecard thead .hole-col {
+  font-weight: 700;
+}
+.scorecard .par-cell {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.scorecard .player-col {
+  min-width: 52px;
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 600;
-  padding-left: 8px;
-  padding-right: 8px;
 }
-.scorecard thead .player-name-col {
+.scorecard .subtotal-row td {
   font-weight: 700;
+  border-top: 2px solid var(--border);
 }
-.scorecard .par-row td {
-  color: var(--text-dim);
-  font-size: 12px;
-}
-.scorecard .subtotal-col {
-  border-left: 2px solid var(--border);
+.scorecard .subtotal-cell {
   font-weight: 700;
 }
 .scorecard-totals {
-  min-width: unset;
   width: auto;
 }
 .scorecard-totals th,

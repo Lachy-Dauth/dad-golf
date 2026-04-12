@@ -1,19 +1,19 @@
-import type { RoundState } from "@dad-golf/shared";
-import { computePlayerHoles } from "@dad-golf/shared";
+import type { RoundState, PlayerHoleResult } from "@dad-golf/shared";
 
 interface Props {
   state: RoundState;
+  playerHolesMap: Map<string, PlayerHoleResult[]>;
 }
 
-export default function PlayerStatsView({ state }: Props) {
-  const { course, players, scores, leaderboard } = state;
+export default function PlayerStatsView({ state, playerHolesMap }: Props) {
+  const { course, players, leaderboard } = state;
 
   return (
     <div className="section">
       <h2>Player Stats</h2>
       <div className="player-stats-grid">
         {players.map((p) => {
-          const holes = computePlayerHoles(course, p, scores);
+          const holes = playerHolesMap.get(p.id) ?? [];
           const played = holes.filter((h) => h.strokes != null);
           const lbRow = leaderboard.find((r) => r.playerId === p.id);
 

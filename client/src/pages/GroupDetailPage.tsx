@@ -47,6 +47,12 @@ export default function GroupDetailPage() {
   }, [isAdmin, id, loadInvites]);
 
   useEffect(() => {
+    setGroupRounds([]);
+    setGroupRoundsTotal(0);
+    setRoundsOffset(0);
+  }, [id]);
+
+  useEffect(() => {
     if (!id) return;
     api
       .listGroupRounds(id, 20, roundsOffset)
@@ -54,9 +60,7 @@ export default function GroupDetailPage() {
         setGroupRounds((prev) => (roundsOffset === 0 ? res.rounds : [...prev, ...res.rounds]));
         setGroupRoundsTotal(res.total);
       })
-      .catch(() => {
-        /* ignore */
-      });
+      .catch((e: Error) => setError(e.message));
   }, [id, roundsOffset]);
 
   async function handleRemove(memberId: string) {

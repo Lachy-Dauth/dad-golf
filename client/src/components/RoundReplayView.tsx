@@ -1,4 +1,5 @@
-import type { RoundState } from "@dad-golf/shared";
+import { useMemo } from "react";
+import type { RoundState, PlayerHoleResult } from "@dad-golf/shared";
 import { computePlayerHoles } from "@dad-golf/shared";
 import ProgressionChart from "./ProgressionChart.js";
 import PlayerStatsView from "./PlayerStatsView.js";
@@ -31,10 +32,18 @@ export default function RoundReplayView({ state }: Props) {
   const { leaderboard, players, course, scores, round } = state;
   const winner = leaderboard[0];
 
-  const bestHole = (() => {
+  const playerHolesMap = useMemo(() => {
+    const map = new Map<string, PlayerHoleResult[]>();
+    for (const p of players) {
+      map.set(p.id, computePlayerHoles(course, p, scores));
+    }
+    return map;
+  }, [course, players, scores]);
+
+  const bestHole = useMemo(() => {
     let best: { name: string; holeNumber: number; points: number } | null = null;
     for (const p of players) {
-      const holes = computePlayerHoles(course, p, scores);
+      const holes = playerHolesMap.get(p.id) ?? [];
       for (const h of holes) {
         if (h.strokes != null && (best === null || h.points > best.points)) {
           best = { name: p.name, holeNumber: h.holeNumber, points: h.points };
@@ -42,7 +51,7 @@ export default function RoundReplayView({ state }: Props) {
       }
     }
     return best;
-  })();
+  }, [players, playerHolesMap]);
 
   const dateStr = formatDate(round.completedAt ?? round.startedAt ?? round.createdAt);
   const duration = formatDuration(round.startedAt, round.completedAt);
@@ -94,9 +103,9 @@ export default function RoundReplayView({ state }: Props) {
         })}
       </section>
 
-      {players.length >= 2 && <ProgressionChart state={state} />}
+      {players.length >= 2 && <ProgressionChart state={state} playerHolesMap={playerHolesMap} />}
 
-      <PlayerStatsView state={state} />
+      <PlayerStatsView state={state} playerHolesMap={playerHolesMap} />
     </div>
   );
 }

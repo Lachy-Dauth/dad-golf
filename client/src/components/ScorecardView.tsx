@@ -15,54 +15,70 @@ function scoreClass(points: number, hasScore: boolean): string {
   return "score-double";
 }
 
-function HalfTable({
+interface PlayerHoleData {
+  playerId: string;
+  name: string;
+  holes: PlayerHoleResult[];
+  subtotalStrokes: number;
+  subtotalPoints: number;
+}
+
+function VerticalHalfTable({
   label,
   holes,
   playerData,
 }: {
   label: string;
   holes: PlayerHoleResult[];
-  playerData: {
-    name: string;
-    holes: PlayerHoleResult[];
-    subtotalStrokes: number;
-    subtotalPoints: number;
-  }[];
+  playerData: PlayerHoleData[];
 }) {
   return (
     <div className="scorecard-wrapper">
-      <table className="scorecard">
+      <table className="scorecard scorecard-vertical">
         <thead>
           <tr>
-            <th className="player-name-col">{label}</th>
-            {holes.map((h) => (
-              <th key={h.holeNumber}>{h.holeNumber}</th>
+            <th className="hole-col">{label}</th>
+            <th className="hole-col">Par</th>
+            {playerData.map((pd) => (
+              <th key={pd.playerId} className="player-col">
+                {pd.name}
+              </th>
             ))}
-            <th className="subtotal-col">Tot</th>
-            <th className="subtotal-col">Pts</th>
-          </tr>
-          <tr className="par-row">
-            <td className="player-name-col">Par</td>
-            {holes.map((h) => (
-              <td key={h.holeNumber}>{h.par}</td>
-            ))}
-            <td className="subtotal-col">{holes.reduce((s, h) => s + h.par, 0)}</td>
-            <td className="subtotal-col"></td>
           </tr>
         </thead>
         <tbody>
-          {playerData.map((pd) => (
-            <tr key={pd.name}>
-              <td className="player-name-col">{pd.name}</td>
-              {pd.holes.map((h) => (
-                <td key={h.holeNumber} className={scoreClass(h.points, h.strokes != null)}>
-                  {h.strokes ?? "–"}
-                </td>
-              ))}
-              <td className="subtotal-col">{pd.subtotalStrokes || "–"}</td>
-              <td className="subtotal-col">{pd.subtotalPoints}</td>
+          {holes.map((h, hi) => (
+            <tr key={h.holeNumber}>
+              <td className="hole-col">{h.holeNumber}</td>
+              <td className="hole-col par-cell">{h.par}</td>
+              {playerData.map((pd) => {
+                const ph = pd.holes[hi];
+                return (
+                  <td key={pd.playerId} className={scoreClass(ph.points, ph.strokes != null)}>
+                    {ph.strokes ?? "–"}
+                  </td>
+                );
+              })}
             </tr>
           ))}
+          <tr className="subtotal-row">
+            <td className="hole-col">Tot</td>
+            <td className="hole-col par-cell">{holes.reduce((s, h) => s + h.par, 0)}</td>
+            {playerData.map((pd) => (
+              <td key={pd.playerId} className="subtotal-cell">
+                {pd.subtotalStrokes || "–"}
+              </td>
+            ))}
+          </tr>
+          <tr className="subtotal-row">
+            <td className="hole-col">Pts</td>
+            <td className="hole-col"></td>
+            {playerData.map((pd) => (
+              <td key={pd.playerId} className="subtotal-cell">
+                {pd.subtotalPoints}
+              </td>
+            ))}
+          </tr>
         </tbody>
       </table>
     </div>
@@ -82,63 +98,76 @@ export default function ScorecardView({ state }: Props) {
   const front = isFull ? 9 : numHoles;
 
   function buildHalf(start: number, end: number) {
-    // Reference holes from first player (all players share the same course)
     const refHoles = allPlayerHoles[0]?.holes.slice(start, end) ?? [];
-    const playerData = allPlayerHoles.map(({ player, holes }) => {
+    const playerData: PlayerHoleData[] = allPlayerHoles.map(({ player, holes }) => {
       const slice = holes.slice(start, end);
       const subtotalStrokes = slice.reduce((s, h) => s + (h.strokes ?? 0), 0);
       const subtotalPoints = slice.reduce((s, h) => s + h.points, 0);
-      return { name: player.name, holes: slice, subtotalStrokes, subtotalPoints };
+      return {
+        playerId: player.id,
+        name: player.name,
+        holes: slice,
+        subtotalStrokes,
+        subtotalPoints,
+      };
     });
     return { refHoles, playerData };
   }
 
   const frontData = buildHalf(0, front);
 
-  // Totals row (for full 18-hole rounds)
-  const totals = isFull
-    ? allPlayerHoles.map(({ player, holes }) => ({
-        name: player.name,
-        strokes: holes.reduce((s, h) => s + (h.strokes ?? 0), 0),
-        points: holes.reduce((s, h) => s + h.points, 0),
-      }))
-    : null;
-
   return (
     <div className="section">
       <h2>Scorecard</h2>
-      <HalfTable
-        label={isFull ? "Front 9" : "Holes"}
+      <VerticalHalfTable
+        label={isFull ? "Front 9" : "Hole"}
         holes={frontData.refHoles}
         playerData={frontData.playerData}
       />
       {isFull &&
         (() => {
           const backData = buildHalf(9, numHoles);
+          const totals: PlayerHoleData[] = allPlayerHoles.map(({ player, holes }) => ({
+            playerId: player.id,
+            name: player.name,
+            holes,
+            subtotalStrokes: holes.reduce((s, h) => s + (h.strokes ?? 0), 0),
+            subtotalPoints: holes.reduce((s, h) => s + h.points, 0),
+          }));
           return (
             <>
-              <HalfTable
+              <VerticalHalfTable
                 label="Back 9"
                 holes={backData.refHoles}
                 playerData={backData.playerData}
               />
               <div className="scorecard-wrapper">
-                <table className="scorecard scorecard-totals">
+                <table className="scorecard scorecard-vertical scorecard-totals">
                   <thead>
                     <tr>
-                      <th className="player-name-col">Total</th>
-                      <th>Strokes</th>
-                      <th>Points</th>
+                      <th className="hole-col">Total</th>
+                      {totals.map((t) => (
+                        <th key={t.playerId} className="player-col">
+                          {t.name}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {totals!.map((t) => (
-                      <tr key={t.name}>
-                        <td className="player-name-col">{t.name}</td>
-                        <td>{t.strokes || "–"}</td>
-                        <td className="subtotal-col">{t.points}</td>
-                      </tr>
-                    ))}
+                    <tr>
+                      <td className="hole-col">Strokes</td>
+                      {totals.map((t) => (
+                        <td key={t.playerId}>{t.subtotalStrokes || "–"}</td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="hole-col">Points</td>
+                      {totals.map((t) => (
+                        <td key={t.playerId} className="subtotal-cell">
+                          {t.subtotalPoints}
+                        </td>
+                      ))}
+                    </tr>
                   </tbody>
                 </table>
               </div>

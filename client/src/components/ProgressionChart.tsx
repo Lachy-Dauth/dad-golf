@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import type { RoundState } from "@dad-golf/shared";
-import { computePlayerHoles } from "@dad-golf/shared";
+import type { RoundState, PlayerHoleResult } from "@dad-golf/shared";
 
 interface Props {
   state: RoundState;
+  playerHolesMap: Map<string, PlayerHoleResult[]>;
 }
 
 const COLORS = [
@@ -17,12 +17,12 @@ const COLORS = [
   "#a3e635",
 ];
 
-export default function ProgressionChart({ state }: Props) {
-  const { course, players, scores } = state;
+export default function ProgressionChart({ state, playerHolesMap }: Props) {
+  const { course, players } = state;
 
   const data = useMemo(() => {
     return players.map((p, i) => {
-      const holes = computePlayerHoles(course, p, scores);
+      const holes = playerHolesMap.get(p.id) ?? [];
       const cumulative = [0];
       let running = 0;
       for (const h of holes) {
@@ -31,7 +31,7 @@ export default function ProgressionChart({ state }: Props) {
       }
       return { name: p.name, cumulative, color: COLORS[i % COLORS.length] };
     });
-  }, [course, players, scores]);
+  }, [players, playerHolesMap]);
 
   const numHoles = course.holes.length;
   const maxPoints = Math.max(...data.map((d) => d.cumulative[d.cumulative.length - 1]), 1);
