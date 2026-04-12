@@ -85,8 +85,8 @@ function DashboardTab({
         <div className="muted">No activity yet.</div>
       ) : (
         <div className="list">
-          {events.slice(0, 10).map((e, i) => (
-            <div key={i} className="list-row">
+          {events.slice(0, 10).map((e) => (
+            <div key={`${e.timestamp}-${e.description}`} className="list-row">
               <div>
                 <div className="list-primary">{e.description}</div>
                 <div className="list-secondary">{formatDateTime(e.timestamp)}</div>
@@ -256,8 +256,8 @@ function ActivityTab({ events }: { events: ActivityEvent[] }) {
   if (events.length === 0) return <div className="muted">No activity yet.</div>;
   return (
     <div className="list">
-      {events.map((e, i) => (
-        <div key={i} className="list-row">
+      {events.map((e) => (
+        <div key={`${e.timestamp}-${e.type}-${e.description}`} className="list-row">
           <div>
             <div className="list-primary">{e.description}</div>
             <div className="list-secondary">{formatDateTime(e.timestamp)}</div>
@@ -285,11 +285,6 @@ export default function AdminPage() {
   useEffect(() => {
     if (!user?.isAdmin) return;
     loadTab(tab);
-    // Always load stats + activity for dashboard
-    if (tab === "dashboard") {
-      api.adminStats().then(setStats).catch((e) => setError((e as Error).message));
-      api.adminActivity(20).then((r) => setEvents(r.events)).catch(() => {});
-    }
   }, [tab, user]);
 
   function loadTab(t: Tab) {
@@ -349,7 +344,7 @@ export default function AdminPage() {
   }
 
   async function handleDeleteUser(id: string, username: string) {
-    if (!confirm(`Delete user @${username}? This will remove all their data.`)) return;
+    if (!confirm(`Delete user @${username}? This will delete their account. Some related content may remain but no longer be associated with this user.`)) return;
     try {
       await api.adminDeleteUser(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));

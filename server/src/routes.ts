@@ -27,6 +27,7 @@ import {
   getActivityFeed,
   getAdminStats,
   getCourse,
+  getUser,
   getCourseFavoriteCount,
   getGroup,
   getGroupInviteByToken,
@@ -936,6 +937,10 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       if (req.params.id === user.id) {
         return reply.code(400).send({ error: "cannot delete yourself" });
       }
+      const target = getUser(req.params.id);
+      if (!target) {
+        return reply.code(404).send({ error: "user not found" });
+      }
       deleteUserAsAdmin(req.params.id);
       return { ok: true };
     },
@@ -946,8 +951,14 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/admin/rounds", async (req, reply) => {
     const user = requireAdmin(req, reply);
     if (!user) return;
-    const limit = Math.min(Number(req.query.limit) || 50, 200);
-    const offset = Number(req.query.offset) || 0;
+    const parsedLimit = Number(req.query.limit);
+    const parsedOffset = Number(req.query.offset);
+    const limit = Number.isFinite(parsedLimit)
+      ? Math.max(0, Math.min(Math.floor(parsedLimit), 200))
+      : 50;
+    const offset = Number.isFinite(parsedOffset)
+      ? Math.max(0, Math.floor(parsedOffset))
+      : 0;
     return listAllRounds(limit, offset);
   });
 
@@ -968,7 +979,10 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/admin/activity", async (req, reply) => {
     const user = requireAdmin(req, reply);
     if (!user) return;
-    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    const parsed = Number(req.query.limit);
+    const limit = Number.isFinite(parsed)
+      ? Math.max(0, Math.min(Math.floor(parsed), 200))
+      : 50;
     return { events: getActivityFeed(limit) };
   });
 }

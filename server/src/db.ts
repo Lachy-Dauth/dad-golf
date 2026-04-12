@@ -999,7 +999,7 @@ export function listAllRounds(
   const rows = db
     .prepare(
       `SELECT r.id, r.room_code, r.status, r.created_at, r.started_at, r.completed_at,
-              c.name AS course_name,
+              COALESCE(c.name, 'Unknown') AS course_name,
               u.display_name AS leader_name,
               (SELECT COUNT(*) FROM players p WHERE p.round_id = r.id) AS player_count
          FROM rounds r
