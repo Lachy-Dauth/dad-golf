@@ -12,6 +12,13 @@ function defaultHoles(count: 9 | 18): Hole[] {
   }));
 }
 
+interface LocationSuggestion {
+  latitude: number;
+  longitude: number;
+  name: string;
+  displayName: string;
+}
+
 export default function NewCoursePage() {
   const nav = useNavigate();
   const { id } = useParams<{ id?: string }>();
@@ -19,6 +26,15 @@ export default function NewCoursePage() {
   const { user, loading } = useAuth();
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
+  const [selectedCoords, setSelectedCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locationWrapperRef = useRef<HTMLDivElement>(null);
   const [rating, setRating] = useState<string>("72.0");
   const [slope, setSlope] = useState<string>("113");
   const [holeCount, setHoleCount] = useState<9 | 18>(18);
@@ -48,6 +64,57 @@ export default function NewCoursePage() {
     };
   }, [name]);
 
+  // Location autocomplete: debounce search
+  useEffect(() => {
+    if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current);
+    if (selectedCoords || location.trim().length < 2) {
+      setLocationSuggestions([]);
+      setShowLocationDropdown(false);
+      setLocationLoading(false);
+      return;
+    }
+    setLocationLoading(true);
+    locationDebounceRef.current = setTimeout(() => {
+      api
+        .searchLocations(location.trim())
+        .then((res) => {
+          setLocationSuggestions(res.locations);
+          setShowLocationDropdown(res.locations.length > 0);
+        })
+        .catch(() => {
+          setLocationSuggestions([]);
+          setShowLocationDropdown(false);
+        })
+        .finally(() => setLocationLoading(false));
+    }, 350);
+    return () => {
+      if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current);
+    };
+  }, [location, selectedCoords]);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (locationWrapperRef.current && !locationWrapperRef.current.contains(e.target as Node)) {
+        setShowLocationDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function handleSelectLocation(suggestion: LocationSuggestion) {
+    setLocation(suggestion.displayName);
+    setSelectedCoords({ latitude: suggestion.latitude, longitude: suggestion.longitude });
+    setShowLocationDropdown(false);
+    setLocationSuggestions([]);
+  }
+
+  function handleLocationChange(value: string) {
+    setLocation(value);
+    setSelectedCoords(null);
+  }
+
   const similarCourses = useMemo(() => {
     if (isEdit || debouncedName.trim().length < 3) return [];
     const q = debouncedName.toLowerCase().trim();
@@ -75,6 +142,9 @@ export default function NewCoursePage() {
       .then(({ course }) => {
         setName(course.name);
         setLocation(course.location ?? "");
+        if (course.latitude != null && course.longitude != null) {
+          setSelectedCoords({ latitude: course.latitude, longitude: course.longitude });
+        }
         setRating(course.rating.toFixed(1));
         setSlope(String(course.slope));
         setHoleCount(course.holes.length as 9 | 18);
@@ -119,6 +189,8 @@ export default function NewCoursePage() {
       const payload = {
         name: name.trim(),
         location: location.trim() || null,
+        latitude: selectedCoords?.latitude ?? null,
+        longitude: selectedCoords?.longitude ?? null,
         rating: ratingNum,
         slope: slopeNum,
         holes,
@@ -187,14 +259,32 @@ export default function NewCoursePage() {
             </ul>
           </div>
         )}
-        <label className="field">
+        <div className="field" ref={locationWrapperRef}>
           <span>Location (optional)</span>
-          <input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Wembley Downs, Perth"
-          />
-        </label>
+          <div className="location-autocomplete">
+            <input
+              value={location}
+              onChange={(e) => handleLocationChange(e.target.value)}
+              onFocus={() => {
+                if (locationSuggestions.length > 0) setShowLocationDropdown(true);
+              }}
+              placeholder="Search suburb, address or postcode..."
+              autoComplete="off"
+            />
+            {locationLoading && <span className="location-loading">Searching...</span>}
+            {showLocationDropdown && locationSuggestions.length > 0 && (
+              <ul className="location-dropdown">
+                {locationSuggestions.map((s, i) => (
+                  <li key={i}>
+                    <button type="button" onClick={() => handleSelectLocation(s)}>
+                      {s.displayName}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
         <div className="field-row">
           <label className="field">
             <span>Course rating</span>

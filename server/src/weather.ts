@@ -15,6 +15,26 @@ export interface GeocodingResult {
   displayName: string;
 }
 
+interface NominatimResult {
+  lat: string;
+  lon: string;
+  name?: string;
+  display_name: string;
+}
+
+function parseNominatimResult(r: NominatimResult): GeocodingResult | null {
+  const latitude = parseFloat(r.lat);
+  const longitude = parseFloat(r.lon);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  const fallbackName = r.display_name.split(",")[0]?.trim() || r.display_name;
+  return {
+    latitude,
+    longitude,
+    name: r.name?.trim() || fallbackName,
+    displayName: r.display_name,
+  };
+}
+
 export async function geocodeLocation(query: string): Promise<GeocodingResult | null> {
   const params = new URLSearchParams({
     q: query,
@@ -26,24 +46,29 @@ export async function geocodeLocation(query: string): Promise<GeocodingResult | 
     headers: { "User-Agent": NOMINATIM_USER_AGENT },
   });
   if (!res.ok) throw new Error("geocoding service unavailable");
-  const data = (await res.json()) as Array<{
-    lat: string;
-    lon: string;
-    name?: string;
-    display_name: string;
-  }>;
+  const data = (await res.json()) as NominatimResult[];
   if (data.length === 0) return null;
-  const r = data[0];
-  const latitude = parseFloat(r.lat);
-  const longitude = parseFloat(r.lon);
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
-  const fallbackName = r.display_name.split(",")[0]?.trim() || r.display_name;
-  return {
-    latitude,
-    longitude,
-    name: r.name?.trim() || fallbackName,
-    displayName: r.display_name,
-  };
+  return parseNominatimResult(data[0]);
+}
+
+export async function searchLocations(query: string): Promise<GeocodingResult[]> {
+  const params = new URLSearchParams({
+    q: query,
+    format: "json",
+    limit: "5",
+    countrycodes: "au",
+  });
+  const res = await fetch(`${NOMINATIM_URL}?${params}`, {
+    headers: { "User-Agent": NOMINATIM_USER_AGENT },
+  });
+  if (!res.ok) throw new Error("geocoding service unavailable");
+  const data = (await res.json()) as NominatimResult[];
+  const results: GeocodingResult[] = [];
+  for (const r of data) {
+    const parsed = parseNominatimResult(r);
+    if (parsed) results.push(parsed);
+  }
+  return results;
 }
 
 export async function fetchWeather(latitude: number, longitude: number): Promise<Weather | null> {

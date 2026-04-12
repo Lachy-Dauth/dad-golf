@@ -2170,3 +2170,54 @@ input:-webkit-autofill:focus {
 .duplicate-hint a {
   color: var(--primary);
 }
+
+/* -- Location autocomplete -- */
+.location-autocomplete {
+  position: relative;
+}
+.location-loading {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.location-dropdown {
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.location-dropdown li {
+  border-bottom: 1px solid var(--border);
+}
+.location-dropdown li:last-child {
+  border-bottom: none;
+}
+.location-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.location-dropdown button:hover,
+.location-dropdown button:focus {
+  background: var(--primary);
+  color: white;
+  outline: none;
+}
