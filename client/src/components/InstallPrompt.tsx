@@ -35,9 +35,10 @@ export default function InstallPrompt() {
     if (!deferredPrompt) return;
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      setVisible(false);
+    if (outcome === "dismissed") {
+      localStorage.setItem("pwa-install-dismissed", "1");
     }
+    setVisible(false);
     setDeferredPrompt(null);
   };
 
@@ -66,7 +67,7 @@ export default function InstallPrompt() {
         <button className="btn btn-primary" onClick={handleInstall}>
           Install
         </button>
-        <button className="btn-icon" onClick={handleDismiss} title="Dismiss">
+        <button className="btn-icon" onClick={handleDismiss} title="Dismiss" aria-label="Dismiss">
           ✕
         </button>
       </div>
