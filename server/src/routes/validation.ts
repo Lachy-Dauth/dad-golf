@@ -99,9 +99,11 @@ export function validateDate(d: unknown): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
     throw new Error("date must be in YYYY-MM-DD format");
   }
-  const parsed = new Date(trimmed);
-  if (isNaN(parsed.getTime())) {
-    throw new Error("date is not a valid date");
+  // Parse and reconstruct to catch invalid calendar dates (e.g. Feb 31)
+  const [y, m, day] = trimmed.split("-").map(Number);
+  const parsed = new Date(y, m - 1, day);
+  if (parsed.getFullYear() !== y || parsed.getMonth() !== m - 1 || parsed.getDate() !== day) {
+    throw new Error("date is not a valid calendar date");
   }
   return trimmed;
 }

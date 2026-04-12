@@ -68,8 +68,9 @@ export interface HandicapCalculation {
 /**
  * Calculate a WHS Handicap Index from an array of recent round differentials.
  *
- * @param rounds  Up to 20 entries, each with an `id` and `differential`.
- *                Order does not matter — the function selects the lowest N.
+ * @param rounds  Entries ordered most-recent-first. Only the first 20 are
+ *                used (the rest are ignored). Among those 20, the function
+ *                selects the lowest N per the WHS lookup table.
  * @returns       The calculation result, or `null` if fewer than 3 rounds.
  */
 export function calculateHandicapIndex(

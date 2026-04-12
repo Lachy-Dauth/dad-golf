@@ -255,9 +255,10 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
         const existing = await findHandicapRoundByRoundId(player.userId, round.id);
         if (existing) continue;
 
-        // Require at least 14 holes scored for a valid handicap round
+        // Require at least 75% of holes scored for a valid handicap round
         const playerScores = state.scores.filter((s) => s.playerId === player.id);
-        if (playerScores.length < 14) continue;
+        const minHoles = Math.ceil(state.course.holes.length * 0.75);
+        if (playerScores.length < minHoles) continue;
 
         // Calculate adjusted gross score: actual strokes + par for unplayed holes
         let adjustedGross = playerScores.reduce((sum, s) => sum + s.strokes, 0);
@@ -279,9 +280,10 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
           await deleteOldestHandicapRound(player.userId);
         }
 
+        const roundDate = (state.round.completedAt ?? new Date().toISOString()).split("T")[0];
         await createHandicapRound(
           player.userId,
-          new Date().toISOString().split("T")[0],
+          roundDate,
           state.course.name,
           adjustedGross,
           state.course.rating,

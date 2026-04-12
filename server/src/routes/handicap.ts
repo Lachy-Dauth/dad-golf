@@ -49,7 +49,10 @@ export async function registerHandicapRoutes(app: FastifyInstance): Promise<void
     const user = await requireUser(req, reply);
     if (!user) return;
 
-    const autoAdjust = Boolean(req.body?.autoAdjust);
+    if (typeof req.body?.autoAdjust !== "boolean") {
+      return reply.code(400).send({ error: "autoAdjust must be a boolean" });
+    }
+    const autoAdjust = req.body.autoAdjust;
     await updateUserHandicapAutoAdjust(user.id, autoAdjust);
 
     const updated = await getUser(user.id);
@@ -112,15 +115,15 @@ export async function registerHandicapRoutes(app: FastifyInstance): Promise<void
     }
   });
 
-  // Edit a handicap round
+  // Edit a handicap round (full update — all fields required)
   app.patch<{
     Params: { id: string };
     Body: {
-      date?: string;
-      courseName?: string;
-      adjustedGrossScore?: number;
-      courseRating?: number;
-      slopeRating?: number;
+      date: string;
+      courseName: string;
+      adjustedGrossScore: number;
+      courseRating: number;
+      slopeRating: number;
     };
   }>("/api/handicap/rounds/:id", async (req, reply) => {
     const user = await requireUser(req, reply);
@@ -201,9 +204,16 @@ export async function registerHandicapRoutes(app: FastifyInstance): Promise<void
       return reply.code(400).send({ error: "orderedIds must be a non-empty array" });
     }
 
-    // Verify all IDs belong to this user
+    // Verify orderedIds is a complete permutation of the user's rounds
     const existingRounds = await listHandicapRounds(user.id);
     const existingIds = new Set(existingRounds.map((r) => r.id));
+    const providedIds = new Set(orderedIds);
+
+    if (orderedIds.length !== existingRounds.length || providedIds.size !== orderedIds.length) {
+      return reply
+        .code(400)
+        .send({ error: "orderedIds must contain all round IDs exactly once" });
+    }
     for (const id of orderedIds) {
       if (!existingIds.has(id)) {
         return reply.code(400).send({ error: `round ${id} not found` });
