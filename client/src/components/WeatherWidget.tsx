@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Weather } from "@dad-golf/shared";
 import { api } from "../api.js";
 
-interface Props {
-  roomCode: string;
-  courseLocation: string | null;
-}
+type Props =
+  | { roomCode: string; courseId?: undefined; courseLocation: string | null }
+  | { roomCode?: undefined; courseId: string; courseLocation: string | null };
 
 /** Map WMO weather codes to a label and a simple text icon. */
 function weatherLabel(code: number, isDay: boolean): { label: string; icon: string } {
@@ -29,31 +28,34 @@ function windCompass(deg: number): string {
   return dirs[Math.round(deg / 45) % 8];
 }
 
-export default function WeatherWidget({ roomCode, courseLocation }: Props) {
+export default function WeatherWidget({ roomCode, courseId, courseLocation }: Props) {
   const [weather, setWeather] = useState<Weather | null>(null);
+
+  const fetchWeather = useCallback(() => {
+    const promise = roomCode ? api.getRoundWeather(roomCode) : api.getCourseWeather(courseId!);
+    return promise.then((res) => res.weather);
+  }, [roomCode, courseId]);
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .getRoundWeather(roomCode)
-      .then((res) => {
-        if (!cancelled) setWeather(res.weather);
+    fetchWeather()
+      .then((w) => {
+        if (!cancelled) setWeather(w);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [roomCode]);
+  }, [fetchWeather]);
 
   // Refresh every 15 minutes
   useEffect(() => {
     let cancelled = false;
     const interval = setInterval(
       () => {
-        api
-          .getRoundWeather(roomCode)
-          .then((res) => {
-            if (!cancelled) setWeather(res.weather);
+        fetchWeather()
+          .then((w) => {
+            if (!cancelled) setWeather(w);
           })
           .catch(() => {});
       },
@@ -63,7 +65,7 @@ export default function WeatherWidget({ roomCode, courseLocation }: Props) {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [roomCode]);
+  }, [fetchWeather]);
 
   if (!weather) return null;
 

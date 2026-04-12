@@ -43,7 +43,23 @@ export interface Course {
   createdByName: string | null;
   favoriteCount: number;
   isFavorite: boolean;
+  avgRating: number | null;
+  ratingCount: number;
+  roundCount: number;
 }
+
+export interface CourseReview {
+  id: string;
+  courseId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  reviewText: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CourseReportReason = "incorrect_info" | "duplicate" | "inappropriate";
 
 export interface Weather {
   temperature: number;

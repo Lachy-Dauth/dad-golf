@@ -7,11 +7,12 @@ import {
   type AdminUser,
   type AdminRound,
   type AdminCourse,
+  type AdminCourseReport,
   type AdminGroup,
   type ActivityEvent,
 } from "../api.js";
 
-type Tab = "dashboard" | "users" | "rounds" | "courses" | "groups" | "activity";
+type Tab = "dashboard" | "users" | "rounds" | "courses" | "groups" | "reports" | "activity";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -284,6 +285,53 @@ function ActivityTab({ events }: { events: ActivityEvent[] }) {
   );
 }
 
+function ReportsTab({
+  reports,
+  onDismiss,
+}: {
+  reports: AdminCourseReport[];
+  onDismiss: (courseId: string) => void;
+}) {
+  if (reports.length === 0) return <div className="muted">No reported courses.</div>;
+  return (
+    <div className="admin-table-wrapper">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Course</th>
+            <th>Location</th>
+            <th>Reports</th>
+            <th>Reasons</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reports.map((r) => (
+            <tr key={r.courseId}>
+              <td>
+                <Link to={`/courses/${r.courseId}`}>{r.courseName}</Link>
+              </td>
+              <td>{r.courseLocation ?? "-"}</td>
+              <td>{r.reportCount}</td>
+              <td>{r.reasons.map((reason) => reason.replace(/_/g, " ")).join(", ")}</td>
+              <td>
+                <div className="row-actions">
+                  <Link to={`/courses/${r.courseId}/edit`} className="btn btn-small">
+                    Edit
+                  </Link>
+                  <button className="btn btn-small" onClick={() => onDismiss(r.courseId)}>
+                    Dismiss
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ---------- Main AdminPage ----------
 
 export default function AdminPage() {
@@ -295,6 +343,7 @@ export default function AdminPage() {
   const [roundsTotal, setRoundsTotal] = useState(0);
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [groups, setGroups] = useState<AdminGroup[]>([]);
+  const [reports, setReports] = useState<AdminCourseReport[]>([]);
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -336,6 +385,12 @@ export default function AdminPage() {
         api
           .adminGroups()
           .then((r) => setGroups(r.groups))
+          .catch((e) => setError((e as Error).message));
+        break;
+      case "reports":
+        api
+          .adminCourseReports()
+          .then((r) => setReports(r.reports))
           .catch((e) => setError((e as Error).message));
         break;
       case "activity":
@@ -398,6 +453,16 @@ export default function AdminPage() {
     }
   }
 
+  async function handleDismissReports(courseId: string) {
+    if (!confirm("Dismiss all reports for this course?")) return;
+    try {
+      await api.adminDismissCourseReports(courseId);
+      setReports((prev) => prev.filter((r) => r.courseId !== courseId));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   async function handleDeleteUser(id: string, username: string) {
     if (
       !confirm(
@@ -424,6 +489,7 @@ export default function AdminPage() {
     { key: "rounds", label: "Rounds" },
     { key: "courses", label: "Courses" },
     { key: "groups", label: "Groups" },
+    { key: "reports", label: "Reports" },
     { key: "activity", label: "Activity" },
   ];
 
@@ -456,6 +522,7 @@ export default function AdminPage() {
         )}
         {tab === "courses" && <CoursesTab courses={courses} />}
         {tab === "groups" && <GroupsTab groups={groups} />}
+        {tab === "reports" && <ReportsTab reports={reports} onDismiss={handleDismissReports} />}
         {tab === "activity" && <ActivityTab events={events} />}
       </div>
       <Link to="/" className="back-link">

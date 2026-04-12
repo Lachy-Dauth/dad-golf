@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api.js";
 import type { Course, Group, GroupMember } from "@dad-golf/shared";
 import { addRecentRound } from "../localStore.js";
 import { useAuth } from "../AuthContext.js";
+import CoursePicker from "../components/CoursePicker.js";
 
 export default function NewRoundPage() {
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [groups, setGroups] = useState<Array<Group & { members: GroupMember[] }>>([]);
@@ -23,11 +25,17 @@ export default function NewRoundPage() {
       .then(([c, g]) => {
         setCourses(c.courses);
         setGroups(g.groups);
-        if (c.courses[0]) setCourseId(c.courses[0].id);
+        // Pre-select from query param or default to first course
+        const preselect = searchParams.get("courseId");
+        if (preselect && c.courses.some((course) => course.id === preselect)) {
+          setCourseId(preselect);
+        } else if (c.courses[0]) {
+          setCourseId(c.courses[0].id);
+        }
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [authLoading]);
+  }, [authLoading, searchParams]);
 
   const myGroups = useMemo(() => {
     if (!user) return [];
@@ -97,7 +105,7 @@ export default function NewRoundPage() {
   if (authLoading || loading) {
     return (
       <div className="page">
-        <div className="muted">Loading…</div>
+        <div className="muted">Loading...</div>
       </div>
     );
   }
@@ -126,16 +134,10 @@ export default function NewRoundPage() {
         </div>
       ) : (
         <div className="form">
-          <label className="field">
+          <div className="field">
             <span>Course</span>
-            <select value={courseId} onChange={(e) => setCourseId(e.target.value)}>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.holes.length} holes)
-                </option>
-              ))}
-            </select>
-          </label>
+            <CoursePicker courses={courses} value={courseId} onChange={setCourseId} />
+          </div>
 
           <label className="field">
             <span>Golf group (optional)</span>
@@ -176,7 +178,9 @@ export default function NewRoundPage() {
                       >
                         <div className="player-name">{m.name}</div>
                         <div className="player-hcp">GA HCP {m.handicap.toFixed(1)}</div>
-                        <div className="player-toggle">{checked ? "✓ added" : "tap to add"}</div>
+                        <div className="player-toggle">
+                          {checked ? "\u2713 added" : "tap to add"}
+                        </div>
                       </li>
                     );
                   })}
@@ -196,7 +200,7 @@ export default function NewRoundPage() {
               Cancel
             </Link>
             <button className="btn btn-primary" onClick={handleCreate} disabled={creating}>
-              {creating ? "Creating…" : "Create round"}
+              {creating ? "Creating..." : "Create round"}
             </button>
           </div>
         </div>
