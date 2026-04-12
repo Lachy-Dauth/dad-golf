@@ -12,6 +12,7 @@ import {
   getGroupInviteByToken,
   getGroupMember,
   getUserRoleInGroup,
+  listGroupCompletedRounds,
   listGroupInvites,
   listGroupMembers,
   listGroups,
@@ -21,6 +22,7 @@ import {
 } from "../db/index.js";
 import {
   MAX_MEMBERS_PER_GROUP,
+  getViewerUser,
   requireUser,
   validateHandicap,
   validateName,
@@ -46,6 +48,18 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
     const members = await listGroupMembers(g.id);
     return { group: g, members };
   });
+
+  app.get<{ Params: { id: string }; Querystring: { limit?: string; offset?: string } }>(
+    "/api/groups/:id/rounds",
+    async (req, reply) => {
+      const viewer = await getViewerUser(req);
+      const g = await getGroup(req.params.id);
+      if (!g) return reply.code(404).send({ error: "group not found" });
+      const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
+      const offset = Math.max(Number(req.query.offset) || 0, 0);
+      return listGroupCompletedRounds(g.id, viewer?.id ?? null, limit, offset);
+    },
+  );
 
   app.post<{ Body: { name?: string } }>("/api/groups", async (req, reply) => {
     const user = await requireUser(req, reply);

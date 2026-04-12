@@ -11,6 +11,7 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 - **Score on your phone** — every player enters their own scores for each hole on their own device
 - **Stableford scoring** — points are calculated automatically using the player's handicap and the course's stroke index
 - **Live leaderboard** — everyone sees the standings update in real time as scores come in
+- **Round replay** — post-round summary with full scorecard, leaderboard progression chart, per-player stats, and competition results; browse past rounds via personal history or group pages
 - **Hole competitions** — closest-to-pin and longest drive contests on selected holes
 - **Weather** — live weather conditions displayed for the course location
 - **Handicap tracker** — track your last 20 rounds and auto-calculate your GA Handicap Index using Australia's World Handicap System; optionally auto-updates when you complete rounds
@@ -51,7 +52,7 @@ dad-golf/
 ├── client/                  # React + Vite frontend
 │   └── src/
 │       ├── pages/           # Route pages (Home, Round, Courses, Groups, Admin, …)
-│       ├── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Summary, Weather)
+│       ├── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Replay, Scorecard, Weather)
 │       ├── AuthContext.tsx   # Session & user state
 │       └── ThemeContext.tsx  # Dark / light mode
 ├── server/                  # Fastify backend

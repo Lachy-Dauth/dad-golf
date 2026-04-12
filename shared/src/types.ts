@@ -160,6 +160,17 @@ export interface RoundState {
   competitions: HoleCompetition[];
 }
 
+export interface RoundSummary {
+  roomCode: string;
+  courseName: string;
+  courseLocation: string | null;
+  date: string;
+  playerCount: number;
+  winnerName: string | null;
+  viewerPosition: number | null;
+  viewerPoints: number | null;
+}
+
 export type WsClientMessage = { type: "hello"; roomCode: string } | { type: "ping" };
 
 export type WsServerMessage =

@@ -1,4 +1,5 @@
-import type { Round, RoundStatus } from "@dad-golf/shared";
+import type { Round, RoundStatus, RoundSummary } from "@dad-golf/shared";
+import { computeLeaderboard } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 import { getUser } from "./users.js";
@@ -123,4 +124,156 @@ export async function listRecentRounds(limit = 20): Promise<Round[]> {
     [limit],
   );
   return (rows as RoundListRow[]).map(rowToRound);
+}
+
+// ---- Round history queries ----
+
+interface RoundHistoryRow extends RoundRow {
+  leader_name: string | null;
+  course_name: string;
+  course_location: string | null;
+  course_rating: number;
+  course_slope: number;
+  holes_json: string;
+  player_count: number;
+}
+
+async function buildRoundSummaries(
+  historyRows: RoundHistoryRow[],
+  viewerUserId: string | null,
+): Promise<RoundSummary[]> {
+  const summaries: RoundSummary[] = [];
+  for (const row of historyRows) {
+    const round = rowToRound(row as unknown as RoundListRow);
+    const holes = JSON.parse(row.holes_json) as {
+      number: number;
+      par: number;
+      strokeIndex: number;
+    }[];
+    const course = { holes, slope: Number(row.course_slope), rating: Number(row.course_rating) };
+
+    // Load players + scores to compute leaderboard
+    const { rows: playerRows } = await pool.query(
+      `SELECT * FROM players WHERE round_id = $1 ORDER BY joined_at ASC`,
+      [round.id],
+    );
+    const players = playerRows.map((p: Record<string, unknown>) => ({
+      id: p.id as string,
+      roundId: p.round_id as string,
+      userId: p.user_id as string | null,
+      name: p.name as string,
+      handicap: Number(p.handicap),
+      joinedAt: p.joined_at as string,
+      isGuest: p.user_id === null,
+    }));
+
+    const { rows: scoreRows } = await pool.query(
+      `SELECT * FROM scores WHERE round_id = $1 ORDER BY hole_number ASC`,
+      [round.id],
+    );
+    const scores = scoreRows.map((s: Record<string, unknown>) => ({
+      id: s.id as string,
+      roundId: s.round_id as string,
+      playerId: s.player_id as string,
+      holeNumber: Number(s.hole_number),
+      strokes: Number(s.strokes),
+      createdAt: s.created_at as string,
+    }));
+
+    const leaderboard = computeLeaderboard(
+      course as Parameters<typeof computeLeaderboard>[0],
+      players,
+      scores,
+    );
+    const winner = leaderboard[0] ?? null;
+
+    let viewerPosition: number | null = null;
+    let viewerPoints: number | null = null;
+    if (viewerUserId) {
+      const viewerPlayer = players.find((p) => p.userId === viewerUserId);
+      if (viewerPlayer) {
+        const viewerRow = leaderboard.find((r) => r.playerId === viewerPlayer.id);
+        if (viewerRow) {
+          viewerPosition = viewerRow.position;
+          viewerPoints = viewerRow.totalPoints;
+        }
+      }
+    }
+
+    summaries.push({
+      roomCode: round.roomCode,
+      courseName: row.course_name,
+      courseLocation: row.course_location,
+      date: round.completedAt ?? round.startedAt ?? round.createdAt,
+      playerCount: Number(row.player_count),
+      winnerName: winner?.name ?? null,
+      viewerPosition,
+      viewerPoints,
+    });
+  }
+  return summaries;
+}
+
+export async function listUserCompletedRounds(
+  userId: string,
+  viewerUserId: string | null,
+  limit: number,
+  offset: number,
+): Promise<{ rounds: RoundSummary[]; total: number }> {
+  const countResult = await pool.query(
+    `SELECT COUNT(DISTINCT r.id)::int AS total
+     FROM rounds r
+     JOIN players p ON p.round_id = r.id
+     WHERE r.status = 'complete' AND p.user_id = $1`,
+    [userId],
+  );
+  const total = Number(countResult.rows[0]?.total ?? 0);
+
+  const { rows } = await pool.query(
+    `SELECT r.*, u.display_name AS leader_name,
+            c.name AS course_name, c.location AS course_location,
+            c.rating AS course_rating, c.slope AS course_slope, c.holes_json,
+            (SELECT COUNT(*)::int FROM players p2 WHERE p2.round_id = r.id) AS player_count
+     FROM rounds r
+     LEFT JOIN users u ON u.id = r.leader_user_id
+     JOIN courses c ON c.id = r.course_id
+     JOIN players p ON p.round_id = r.id AND p.user_id = $1
+     WHERE r.status = 'complete'
+     ORDER BY r.completed_at DESC
+     LIMIT $2 OFFSET $3`,
+    [userId, limit, offset],
+  );
+
+  const rounds = await buildRoundSummaries(rows as RoundHistoryRow[], viewerUserId);
+  return { rounds, total };
+}
+
+export async function listGroupCompletedRounds(
+  groupId: string,
+  viewerUserId: string | null,
+  limit: number,
+  offset: number,
+): Promise<{ rounds: RoundSummary[]; total: number }> {
+  const countResult = await pool.query(
+    `SELECT COUNT(*)::int AS total FROM rounds WHERE status = 'complete' AND group_id = $1`,
+    [groupId],
+  );
+  const total = Number(countResult.rows[0]?.total ?? 0);
+
+  const { rows } = await pool.query(
+    `SELECT r.*, u.display_name AS leader_name,
+            c.name AS course_name, c.location AS course_location,
+            c.rating AS course_rating, c.slope AS course_slope, c.holes_json,
+            (SELECT COUNT(*)::int FROM players p2 WHERE p2.round_id = r.id) AS player_count
+     FROM rounds r
+     LEFT JOIN users u ON u.id = r.leader_user_id
+     JOIN courses c ON c.id = r.course_id
+     WHERE r.status = 'complete' AND r.group_id = $1
+     ORDER BY r.completed_at DESC
+     LIMIT $2 OFFSET $3`,
+    [groupId, limit, offset],
+  );
+
+  const rounds = await buildRoundSummaries(rows as RoundHistoryRow[], viewerUserId);
+  return { rounds, total };
 }

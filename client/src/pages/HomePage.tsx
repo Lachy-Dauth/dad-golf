@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { getRecentRounds } from "../localStore.js";
+import { useAuth } from "../AuthContext.js";
 
 export default function HomePage() {
+  const { user } = useAuth();
   const recent = getRecentRounds();
   return (
     <div className="page">
@@ -34,6 +36,13 @@ export default function HomePage() {
           <span className="action-label">Golf groups</span>
           <span className="action-sub">Save your regulars</span>
         </Link>
+        {user && (
+          <Link to="/rounds" className="action-tile">
+            <span className="action-icon">📋</span>
+            <span className="action-label">My rounds</span>
+            <span className="action-sub">Past round history</span>
+          </Link>
+        )}
       </div>
 
       <div className="home-footer">

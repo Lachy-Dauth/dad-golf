@@ -23,6 +23,7 @@ import {
   listGroupMembers,
   listPlayers,
   listRecentRounds,
+  listUserCompletedRounds,
   removePlayer,
   setClaimWinner,
   updatePlayer,
@@ -52,6 +53,17 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   app.get("/api/rounds/recent", async () => {
     return { rounds: await listRecentRounds(20) };
   });
+
+  app.get<{ Querystring: { limit?: string; offset?: string } }>(
+    "/api/users/me/rounds",
+    async (req, reply) => {
+      const user = await requireUser(req, reply);
+      if (!user) return;
+      const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
+      const offset = Math.max(Number(req.query.offset) || 0, 0);
+      return listUserCompletedRounds(user.id, user.id, limit, offset);
+    },
+  );
 
   app.post<{
     Body: {
