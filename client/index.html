@@ -16,6 +16,22 @@
     <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Stableford — live golf scoring</title>
+    <script>
+      (function () {
+        try {
+          var p = localStorage.getItem("dg:theme") || "system";
+          var t =
+            p === "system"
+              ? window.matchMedia("(prefers-color-scheme: light)").matches
+                ? "light"
+                : "dark"
+              : p;
+          document.documentElement.setAttribute("data-theme", t);
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute("content", t === "light" ? "#f4f7f5" : "#1f7a3d");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

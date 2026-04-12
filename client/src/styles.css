@@ -3,15 +3,43 @@
   --surface: #162520;
   --surface-2: #1f322b;
   --border: #2d4740;
+  --border-dim: rgba(45, 71, 64, 0.5);
   --text: #e7f0ec;
   --text-dim: #91a8a1;
   --primary: #3bc16b;
   --primary-dim: #1f7a3d;
+  --primary-hover: #4fd07b;
+  --primary-fg: #062012;
   --accent: #ffcf5c;
   --danger: #e5484d;
   --shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  --shadow-strong: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  --header-bg: rgba(15, 23, 19, 0.9);
+  --surface-hover: #263e36;
   --radius: 12px;
   --radius-sm: 8px;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f4f7f5;
+  --surface: #ffffff;
+  --surface-2: #e8eeeb;
+  --border: #c8d5cf;
+  --border-dim: rgba(0, 0, 0, 0.06);
+  --text: #1a2b24;
+  --text-dim: #5e7a70;
+  --primary: #2a9d54;
+  --primary-dim: #8ed4a6;
+  --primary-hover: #228b47;
+  --primary-fg: #062012;
+  --accent: #d49b0a;
+  --danger: #d93036;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-strong: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  --header-bg: rgba(244, 247, 245, 0.92);
+  --surface-hover: #dce5e0;
+  color-scheme: light;
 }
 
 * {
@@ -66,7 +94,7 @@ p {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(15, 23, 19, 0.9);
+  background: var(--header-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
   padding: env(safe-area-inset-top) 16px 0;
@@ -219,7 +247,7 @@ p {
   min-height: 44px;
 }
 .btn:hover {
-  background: #263e36;
+  background: var(--surface-hover);
 }
 .btn:disabled {
   opacity: 0.5;
@@ -229,10 +257,10 @@ p {
 .btn-primary {
   background: var(--primary);
   border-color: var(--primary);
-  color: #062012;
+  color: var(--primary-fg);
 }
 .btn-primary:hover {
-  background: #4fd07b;
+  background: var(--primary-hover);
 }
 .btn-primary:disabled {
   background: var(--primary-dim);
@@ -420,7 +448,7 @@ input:-webkit-autofill:focus {
 }
 .segmented button.active {
   background: var(--primary);
-  color: #062012;
+  color: var(--primary-fg);
   font-weight: 600;
 }
 
@@ -505,10 +533,11 @@ input:-webkit-autofill:focus {
 .action-tile.primary {
   background: linear-gradient(135deg, var(--primary), var(--primary-dim));
   border-color: var(--primary);
-  color: #062012;
+  color: var(--primary-fg);
 }
 .action-tile.primary .action-sub {
-  color: #063318;
+  color: var(--primary-fg);
+  opacity: 0.7;
 }
 .action-icon {
   font-size: 28px;
@@ -747,12 +776,12 @@ input:-webkit-autofill:focus {
   min-height: 60px;
 }
 .stroke-btn:hover {
-  background: #263e36;
+  background: var(--surface-hover);
 }
 .stroke-btn.selected {
   background: var(--primary);
   border-color: var(--primary);
-  color: #062012;
+  color: var(--primary-fg);
   font-weight: 700;
 }
 .stroke-num {
@@ -834,7 +863,7 @@ input:-webkit-autofill:focus {
   border-bottom: 1px solid var(--border);
 }
 .lb-row {
-  border-bottom: 1px solid rgba(45, 71, 64, 0.5);
+  border-bottom: 1px solid var(--border-dim);
 }
 .lb-row:last-child {
   border-bottom: none;
@@ -1116,7 +1145,7 @@ input:-webkit-autofill:focus {
 }
 .admin-table td {
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(45, 71, 64, 0.4);
+  border-bottom: 1px solid var(--border-dim);
   vertical-align: middle;
 }
 .admin-table tr:last-child td {
@@ -1170,7 +1199,7 @@ input:-webkit-autofill:focus {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-strong);
   animation: install-slide-up 0.3s ease-out;
 }
 @keyframes install-slide-up {
@@ -1210,4 +1239,34 @@ input:-webkit-autofill:focus {
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+}
+
+/* ---------- Theme toggle ---------- */
+.theme-toggle {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  appearance: none;
+  padding: 0;
+}
+.theme-toggle:hover {
+  color: var(--text);
+  border-color: var(--primary);
+}
+
+/* ---------- Theme selector (profile) ---------- */
+.theme-section {
+  margin-top: 16px;
+}
+.theme-section h2 {
+  margin-bottom: 12px;
 }

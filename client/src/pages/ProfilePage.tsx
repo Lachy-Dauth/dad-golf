@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext.js";
+import { useTheme } from "../ThemeContext.js";
+import type { ThemePref } from "../localStore.js";
 
 export default function ProfilePage() {
   const { user, updateProfile, signOut } = useAuth();
@@ -47,6 +49,8 @@ export default function ProfilePage() {
     }
   }
 
+  const { pref: themePref, setPref: setThemePref } = useTheme();
+
   async function handleSignOut() {
     await signOut();
     nav("/", { replace: true });
@@ -91,6 +95,22 @@ export default function ProfilePage() {
             {busy ? "Saving…" : "Save"}
           </button>
         </div>
+      </div>
+      <div className="form theme-section">
+        <label className="field">
+          <span>Theme</span>
+          <div className="segmented">
+            {(["system", "light", "dark"] as ThemePref[]).map((opt) => (
+              <button
+                key={opt}
+                className={themePref === opt ? "active" : ""}
+                onClick={() => setThemePref(opt)}
+              >
+                {opt === "system" ? "System" : opt === "light" ? "Light" : "Dark"}
+              </button>
+            ))}
+          </div>
+        </label>
       </div>
       <Link to="/" className="back-link">
         ← Home
