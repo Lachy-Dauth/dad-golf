@@ -11,6 +11,7 @@ import HelpPage from "./pages/HelpPage.js";
 import LoginPage from "./pages/LoginPage.js";
 import ProfilePage from "./pages/ProfilePage.js";
 import AcceptInvitePage from "./pages/AcceptInvitePage.js";
+import AdminPage from "./pages/AdminPage.js";
 import { AuthProvider, useAuth } from "./AuthContext.js";
 
 function HeaderUser() {
@@ -24,9 +25,16 @@ function HeaderUser() {
     );
   }
   return (
-    <Link to="/profile" className="header-text-link" title="Profile">
-      @{user.username}
-    </Link>
+    <>
+      {user.isAdmin && (
+        <Link to="/admin" className="header-text-link" title="Admin">
+          Admin
+        </Link>
+      )}
+      <Link to="/profile" className="header-text-link" title="Profile">
+        @{user.username}
+      </Link>
+    </>
   );
 }
 
@@ -60,6 +68,7 @@ export default function App() {
             <Route path="/rounds/new" element={<NewRoundPage />} />
             <Route path="/join" element={<JoinRoundPage />} />
             <Route path="/r/:code" element={<RoundPage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </main>
       </div>

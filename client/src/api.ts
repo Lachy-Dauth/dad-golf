@@ -9,6 +9,64 @@ import type {
   Score,
   User,
 } from "@dad-golf/shared";
+
+// Admin types
+export interface AdminStats {
+  users: number;
+  courses: number;
+  groups: number;
+  rounds: { total: number; waiting: number; inProgress: number; complete: number };
+  scores: number;
+  sessions: number;
+}
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  displayName: string;
+  handicap: number;
+  isAdmin: boolean;
+  createdAt: string;
+  roundCount: number;
+  courseCount: number;
+}
+
+export interface AdminRound {
+  id: string;
+  roomCode: string;
+  courseName: string;
+  leaderName: string | null;
+  playerCount: number;
+  status: string;
+  createdAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export interface AdminCourse {
+  id: string;
+  name: string;
+  location: string | null;
+  holeCount: number;
+  createdByName: string | null;
+  favoriteCount: number;
+  roundCount: number;
+  createdAt: string;
+}
+
+export interface AdminGroup {
+  id: string;
+  name: string;
+  ownerName: string | null;
+  memberCount: number;
+  createdAt: string;
+}
+
+export interface ActivityEvent {
+  type: string;
+  description: string;
+  timestamp: string;
+}
 import { getAuthToken } from "./authStore.js";
 
 async function json<T>(res: Response): Promise<T> {
@@ -264,4 +322,35 @@ export const api = {
       headers: jsonHeaders(),
       body: JSON.stringify({ playerId, holeNumber }),
     }).then((r) => json<{ ok: boolean }>(r)),
+
+  // admin
+  adminStats: () =>
+    fetch("/api/admin/stats", { headers: authHeaders() }).then((r) =>
+      json<AdminStats>(r),
+    ),
+  adminUsers: () =>
+    fetch("/api/admin/users", { headers: authHeaders() }).then((r) =>
+      json<{ users: AdminUser[] }>(r),
+    ),
+  adminDeleteUser: (id: string) =>
+    fetch(`/api/admin/users/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  adminRounds: (limit = 50, offset = 0) =>
+    fetch(`/api/admin/rounds?limit=${limit}&offset=${offset}`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ rounds: AdminRound[]; total: number }>(r)),
+  adminCourses: () =>
+    fetch("/api/admin/courses", { headers: authHeaders() }).then((r) =>
+      json<{ courses: AdminCourse[] }>(r),
+    ),
+  adminGroups: () =>
+    fetch("/api/admin/groups", { headers: authHeaders() }).then((r) =>
+      json<{ groups: AdminGroup[] }>(r),
+    ),
+  adminActivity: (limit = 50) =>
+    fetch(`/api/admin/activity?limit=${limit}`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ events: ActivityEvent[] }>(r)),
 };

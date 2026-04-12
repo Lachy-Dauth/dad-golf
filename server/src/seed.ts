@@ -2,6 +2,7 @@ import type { Hole } from "@dad-golf/shared";
 import {
   createCourse,
   createUser,
+  ensureAdminUser,
   getUserByUsername,
   listCourses,
 } from "./db.js";
@@ -84,4 +85,18 @@ export async function seedIfEmpty(): Promise<void> {
     await createCourse(c.name, c.location, c.rating, c.slope, c.holes, seedUser.id);
   }
   console.log(`Seeded ${SEED_COURSES.length} courses`);
+}
+
+export async function bootstrapAdmin(): Promise<void> {
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password) {
+    console.log("ADMIN_PASSWORD not set – skipping admin user bootstrap");
+    return;
+  }
+  if (password.length < 6) {
+    console.warn("WARNING: ADMIN_PASSWORD is shorter than 6 characters – skipping");
+    return;
+  }
+  await ensureAdminUser(password);
+  console.log("Admin user 'admin' bootstrapped");
 }
