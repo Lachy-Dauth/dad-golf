@@ -27,7 +27,7 @@ import {
   validateReviewText,
   validateStarRating,
 } from "./validation.js";
-import { fetchWeather, geocodeLocation } from "../weather.js";
+import { fetchWeather, geocodeLocation, searchLocations } from "../weather.js";
 
 export async function registerCourseRoutes(app: FastifyInstance): Promise<void> {
   app.get("/api/courses", async (req) => {
@@ -46,10 +46,27 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     return { course: c, viewerReview };
   });
 
+  app.get<{ Querystring: { q?: string } }>("/api/locations/search", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const query = req.query.q?.trim();
+    if (!query || query.length < 2) {
+      return reply.code(400).send({ error: "q parameter must be at least 2 characters" });
+    }
+    try {
+      const locations = await searchLocations(query);
+      return { locations };
+    } catch {
+      return reply.code(502).send({ error: "geocoding service unavailable" });
+    }
+  });
+
   app.post<{
     Body: {
       name?: string;
       location?: string;
+      latitude?: number;
+      longitude?: number;
       rating?: number;
       slope?: number;
       holes?: unknown;
@@ -66,7 +83,20 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
       const holes = validateHoles(req.body?.holes);
       let latitude: number | null = null;
       let longitude: number | null = null;
-      if (location) {
+      const bodyLat = req.body?.latitude;
+      const bodyLng = req.body?.longitude;
+      if (
+        typeof bodyLat === "number" &&
+        typeof bodyLng === "number" &&
+        Number.isFinite(bodyLat) &&
+        Number.isFinite(bodyLng)
+      ) {
+        if (bodyLat < -90 || bodyLat > 90 || bodyLng < -180 || bodyLng > 180) {
+          return reply.code(400).send({ error: "invalid coordinates" });
+        }
+        latitude = bodyLat;
+        longitude = bodyLng;
+      } else if (location) {
         let geo: Awaited<ReturnType<typeof geocodeLocation>>;
         try {
           geo = await geocodeLocation(location);
@@ -104,6 +134,8 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     Body: {
       name?: string;
       location?: string;
+      latitude?: number;
+      longitude?: number;
       rating?: number;
       slope?: number;
       holes?: unknown;
@@ -125,7 +157,20 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
       const holes = validateHoles(req.body?.holes);
       let latitude: number | null = null;
       let longitude: number | null = null;
-      if (location) {
+      const bodyLat = req.body?.latitude;
+      const bodyLng = req.body?.longitude;
+      if (
+        typeof bodyLat === "number" &&
+        typeof bodyLng === "number" &&
+        Number.isFinite(bodyLat) &&
+        Number.isFinite(bodyLng)
+      ) {
+        if (bodyLat < -90 || bodyLat > 90 || bodyLng < -180 || bodyLng > 180) {
+          return reply.code(400).send({ error: "invalid coordinates" });
+        }
+        latitude = bodyLat;
+        longitude = bodyLng;
+      } else if (location) {
         let geo: Awaited<ReturnType<typeof geocodeLocation>>;
         try {
           geo = await geocodeLocation(location);
