@@ -573,17 +573,39 @@ input:-webkit-autofill:focus {
   display: flex;
   align-items: center;
 }
-.conn-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+/* weather widget */
+.weather-widget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
 }
-.conn-dot.on {
-  background: var(--primary);
-  box-shadow: 0 0 8px var(--primary);
+.weather-icon {
+  font-size: 22px;
+  line-height: 1;
 }
-.conn-dot.off {
-  background: var(--danger);
+.weather-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.weather-temp {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.weather-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+.weather-wind {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.2;
 }
 
 /* player grid (handles 16+ players cleanly) */

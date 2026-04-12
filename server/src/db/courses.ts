@@ -10,19 +10,23 @@ export async function createCourse(
   slope: number,
   holes: Hole[],
   createdByUserId: string,
+  latitude: number | null = null,
+  longitude: number | null = null,
 ): Promise<Course> {
   const id = newId();
   const createdAt = now();
   await pool.query(
-    `INSERT INTO courses (id, name, location, rating, slope, holes_json, created_at, created_by_user_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    [id, name, location, rating, slope, JSON.stringify(holes), createdAt, createdByUserId],
+    `INSERT INTO courses (id, name, location, latitude, longitude, rating, slope, holes_json, created_at, created_by_user_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [id, name, location, latitude, longitude, rating, slope, JSON.stringify(holes), createdAt, createdByUserId],
   );
   const creator = await getUser(createdByUserId);
   return {
     id,
     name,
     location,
+    latitude,
+    longitude,
     rating,
     slope,
     holes,
@@ -38,6 +42,8 @@ interface CourseRow {
   id: string;
   name: string;
   location: string | null;
+  latitude: number | null;
+  longitude: number | null;
   rating: number;
   slope: number;
   holes_json: string;
@@ -56,6 +62,8 @@ function rowToCourse(row: CourseListRow): Course {
     id: row.id,
     name: row.name,
     location: row.location,
+    latitude: row.latitude != null ? Number(row.latitude) : null,
+    longitude: row.longitude != null ? Number(row.longitude) : null,
     rating: Number(row.rating),
     slope: Number(row.slope),
     holes: JSON.parse(row.holes_json) as Hole[],
@@ -112,8 +120,19 @@ export async function updateCourse(
   holes: Hole[],
 ): Promise<void> {
   await pool.query(
-    `UPDATE courses SET name = $1, location = $2, rating = $3, slope = $4, holes_json = $5 WHERE id = $6`,
+    `UPDATE courses SET name = $1, location = $2, latitude = NULL, longitude = NULL, rating = $3, slope = $4, holes_json = $5 WHERE id = $6`,
     [name, location, rating, slope, JSON.stringify(holes), id],
+  );
+}
+
+export async function updateCourseCoords(
+  id: string,
+  latitude: number,
+  longitude: number,
+): Promise<void> {
+  await pool.query(
+    `UPDATE courses SET latitude = $1, longitude = $2 WHERE id = $3`,
+    [latitude, longitude, id],
   );
 }
 

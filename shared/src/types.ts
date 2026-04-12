@@ -17,6 +17,8 @@ export interface Course {
   id: string;
   name: string;
   location: string | null;
+  latitude: number | null;
+  longitude: number | null;
   rating: number;
   slope: number;
   holes: Hole[];
@@ -25,6 +27,16 @@ export interface Course {
   createdByName: string | null;
   favoriteCount: number;
   isFavorite: boolean;
+}
+
+export interface Weather {
+  temperature: number;
+  apparentTemperature: number;
+  humidity: number;
+  windSpeed: number;
+  windDirection: number;
+  weatherCode: number;
+  isDay: boolean;
 }
 
 export type RoundStatus = "waiting" | "in_progress" | "complete";

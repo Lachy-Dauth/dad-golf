@@ -14,6 +14,7 @@ import LobbyView from "../components/LobbyView.js";
 import ScoringView from "../components/ScoringView.js";
 import LeaderboardView from "../components/LeaderboardView.js";
 import SummaryView from "../components/SummaryView.js";
+import WeatherWidget from "../components/WeatherWidget.js";
 
 type Tab = "scoring" | "leaderboard" | "players";
 
@@ -23,7 +24,7 @@ export default function RoundPage() {
   const { user: viewer } = useAuth();
   const [initial, setInitial] = useState<RoundState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const { state, setState, connected } = useRoundSocket(roomCode, initial);
+  const { state, setState } = useRoundSocket(roomCode, initial);
   const [tab, setTab] = useState<Tab>("scoring");
   const [activePlayerId, setActivePlayer] = useState<string | null>(
     roomCode ? getActivePlayerId(roomCode) : null,
@@ -192,10 +193,7 @@ export default function RoundPage() {
           </div>
           {round.leaderName && <div className="round-meta muted">Leader: {round.leaderName}</div>}
         </div>
-        <div
-          className={`conn-dot ${connected ? "on" : "off"}`}
-          title={connected ? "Live" : "Reconnecting…"}
-        />
+        {roomCode && <WeatherWidget roomCode={roomCode} courseLocation={course.location} />}
       </div>
 
       {actionError && <div className="error">{actionError}</div>}
