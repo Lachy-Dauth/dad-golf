@@ -23,6 +23,7 @@ import { buildRoundState } from "../roundState.js";
 import {
   MAX_PLAYERS_PER_ROUND,
   requireUser,
+  validateDurationMinutes,
   validateScheduledDate,
   validateScheduledTime,
 } from "./validation.js";
@@ -77,6 +78,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       courseId?: string;
       scheduledDate?: string;
       scheduledTime?: string;
+      durationMinutes?: number;
       notes?: string;
     };
   }>("/api/groups/:groupId/scheduled-rounds", async (req, reply) => {
@@ -90,13 +92,20 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         return reply.code(403).send({ error: "only group admins can schedule rounds" });
       }
 
-      const { courseId, scheduledDate: rawDate, scheduledTime: rawTime, notes } = req.body ?? {};
+      const {
+        courseId,
+        scheduledDate: rawDate,
+        scheduledTime: rawTime,
+        durationMinutes: rawDuration,
+        notes,
+      } = req.body ?? {};
       if (!courseId) throw new Error("courseId is required");
       const course = await getCourse(courseId, user.id);
       if (!course) throw new Error("course not found");
 
       const scheduledDate = validateScheduledDate(rawDate);
       const scheduledTime = rawTime ? validateScheduledTime(rawTime) : null;
+      const durationMinutes = validateDurationMinutes(rawDuration);
       const trimmedNotes = typeof notes === "string" ? notes.trim() || null : null;
 
       const scheduledRound = await createScheduledRound(
@@ -104,6 +113,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         course.id,
         scheduledDate,
         scheduledTime,
+        durationMinutes,
         trimmedNotes,
         user.id,
       );
@@ -120,6 +130,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       courseId?: string;
       scheduledDate?: string;
       scheduledTime?: string | null;
+      durationMinutes?: number | null;
       notes?: string | null;
     };
   }>("/api/groups/:groupId/scheduled-rounds/:id", async (req, reply) => {
@@ -142,7 +153,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
 
       const fields: Parameters<typeof updateScheduledRound>[1] = {};
-      const { courseId, scheduledDate, scheduledTime, notes } = req.body ?? {};
+      const { courseId, scheduledDate, scheduledTime, durationMinutes, notes } = req.body ?? {};
 
       if (courseId !== undefined) {
         const course = await getCourse(courseId, user.id);
@@ -154,6 +165,9 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
       if (scheduledTime !== undefined) {
         fields.scheduledTime = scheduledTime ? validateScheduledTime(scheduledTime) : null;
+      }
+      if (durationMinutes !== undefined) {
+        fields.durationMinutes = validateDurationMinutes(durationMinutes);
       }
       if (notes !== undefined) {
         fields.notes = typeof notes === "string" ? notes.trim() || null : null;

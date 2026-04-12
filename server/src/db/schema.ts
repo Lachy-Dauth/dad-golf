@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS scheduled_rounds (
   course_id TEXT NOT NULL REFERENCES courses(id),
   scheduled_date TEXT NOT NULL,
   scheduled_time TEXT,
+  duration_minutes INTEGER,
   notes TEXT,
   status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'started', 'cancelled')),
   round_id TEXT REFERENCES rounds(id) ON DELETE SET NULL,

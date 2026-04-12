@@ -361,6 +361,8 @@ input[type="email"],
 input[type="search"],
 input[type="tel"],
 input[type="url"],
+input[type="date"],
+input[type="time"],
 input:not([type]),
 select {
   appearance: none;
@@ -1462,14 +1464,20 @@ input:-webkit-autofill:focus {
 .rsvp-names {
   font-size: 13px;
 }
+.scheduled-round-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 .rsvp-buttons {
   display: flex;
   gap: 6px;
 }
-.scheduled-round-actions {
+.scheduled-round-admin-actions {
   display: flex;
   gap: 6px;
-  margin-top: 4px;
 }
 
 .hole-chip {

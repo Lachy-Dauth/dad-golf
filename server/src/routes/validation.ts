@@ -109,6 +109,15 @@ export function validateScheduledTime(time: unknown): string {
   return trimmed;
 }
 
+export function validateDurationMinutes(d: unknown): number | null {
+  if (d === undefined || d === null || d === "") return null;
+  const n = Number(d);
+  if (!Number.isInteger(n) || n < 30 || n > 600) {
+    throw new Error("duration must be an integer between 30 and 600 minutes");
+  }
+  return n;
+}
+
 export function validateAdjustedGrossScore(s: unknown): number {
   const n = Number(s);
   if (!Number.isInteger(n) || n < 30 || n > 200) {

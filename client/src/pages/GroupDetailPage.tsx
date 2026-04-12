@@ -33,6 +33,7 @@ export default function GroupDetailPage() {
     courseId: "",
     scheduledDate: "",
     scheduledTime: "",
+    durationMinutes: "",
     notes: "",
   });
 
@@ -139,14 +140,22 @@ export default function GroupDetailPage() {
   async function handleCreateScheduledRound() {
     if (!id) return;
     try {
+      const dur = scheduleForm.durationMinutes ? Number(scheduleForm.durationMinutes) : undefined;
       await api.createScheduledRound(id, {
         courseId: scheduleForm.courseId,
         scheduledDate: scheduleForm.scheduledDate,
         scheduledTime: scheduleForm.scheduledTime || undefined,
+        durationMinutes: dur,
         notes: scheduleForm.notes || undefined,
       });
       setShowScheduleForm(false);
-      setScheduleForm({ courseId: "", scheduledDate: "", scheduledTime: "", notes: "" });
+      setScheduleForm({
+        courseId: "",
+        scheduledDate: "",
+        scheduledTime: "",
+        durationMinutes: "",
+        notes: "",
+      });
       loadScheduledRounds();
     } catch (e) {
       setError((e as Error).message);
@@ -270,46 +279,81 @@ export default function GroupDetailPage() {
           </div>
 
           {showScheduleForm && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: 12 }}>
-              <select
-                value={scheduleForm.courseId}
-                onChange={(e) => setScheduleForm((f) => ({ ...f, courseId: e.target.value }))}
-              >
-                <option value="">Select course...</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="date"
-                value={scheduleForm.scheduledDate}
-                onChange={(e) => setScheduleForm((f) => ({ ...f, scheduledDate: e.target.value }))}
-              />
-              <input
-                type="time"
-                value={scheduleForm.scheduledTime}
-                onChange={(e) => setScheduleForm((f) => ({ ...f, scheduledTime: e.target.value }))}
-                placeholder="Time (optional)"
-              />
-              <input
-                type="text"
-                value={scheduleForm.notes}
-                onChange={(e) => setScheduleForm((f) => ({ ...f, notes: e.target.value }))}
-                placeholder="Notes (optional)"
-                maxLength={200}
-              />
-              <div style={{ display: "flex", gap: "8px" }}>
+            <div className="form" style={{ marginBottom: 12 }}>
+              <label className="field">
+                <span>Course</span>
+                <select
+                  value={scheduleForm.courseId}
+                  onChange={(e) => setScheduleForm((f) => ({ ...f, courseId: e.target.value }))}
+                >
+                  <option value="">Select course...</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Date</span>
+                <input
+                  type="date"
+                  value={scheduleForm.scheduledDate}
+                  onChange={(e) =>
+                    setScheduleForm((f) => ({ ...f, scheduledDate: e.target.value }))
+                  }
+                />
+              </label>
+              <div className="field-row">
+                <label className="field">
+                  <span>Time (optional)</span>
+                  <input
+                    type="time"
+                    value={scheduleForm.scheduledTime}
+                    onChange={(e) =>
+                      setScheduleForm((f) => ({ ...f, scheduledTime: e.target.value }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Duration (optional)</span>
+                  <select
+                    value={scheduleForm.durationMinutes}
+                    onChange={(e) =>
+                      setScheduleForm((f) => ({ ...f, durationMinutes: e.target.value }))
+                    }
+                  >
+                    <option value="">--</option>
+                    <option value="120">2 hours</option>
+                    <option value="150">2.5 hours</option>
+                    <option value="180">3 hours</option>
+                    <option value="210">3.5 hours</option>
+                    <option value="240">4 hours</option>
+                    <option value="270">4.5 hours</option>
+                    <option value="300">5 hours</option>
+                  </select>
+                </label>
+              </div>
+              <label className="field">
+                <span>Notes (optional)</span>
+                <input
+                  type="text"
+                  value={scheduleForm.notes}
+                  onChange={(e) => setScheduleForm((f) => ({ ...f, notes: e.target.value }))}
+                  placeholder="e.g. Meet at pro shop"
+                  maxLength={200}
+                />
+              </label>
+              <div className="form-actions">
+                <button className="btn" onClick={() => setShowScheduleForm(false)}>
+                  Cancel
+                </button>
                 <button
                   className="btn btn-primary"
                   disabled={!scheduleForm.courseId || !scheduleForm.scheduledDate}
                   onClick={handleCreateScheduledRound}
                 >
-                  Create
-                </button>
-                <button className="btn" onClick={() => setShowScheduleForm(false)}>
-                  Cancel
+                  Schedule
                 </button>
               </div>
             </div>

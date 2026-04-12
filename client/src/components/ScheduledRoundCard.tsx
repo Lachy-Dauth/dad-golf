@@ -23,6 +23,14 @@ function formatTime(timeStr: string): string {
   return `${display}:${m}${suffix}`;
 }
 
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
 export default function ScheduledRoundCard({
   scheduledRound: sr,
   rsvps,
@@ -45,6 +53,7 @@ export default function ScheduledRoundCard({
           <div className="list-secondary">
             {formatDate(sr.scheduledDate)}
             {sr.scheduledTime && ` at ${formatTime(sr.scheduledTime)}`}
+            {sr.durationMinutes && ` · ${formatDuration(sr.durationMinutes)}`}
           </div>
           {sr.notes && <div className="list-secondary">{sr.notes}</div>}
         </div>
@@ -71,39 +80,41 @@ export default function ScheduledRoundCard({
         </div>
       )}
 
-      {currentUserId && (
-        <div className="rsvp-buttons">
-          <button
-            className={`btn-sm${myRsvp?.status === "accepted" ? " btn-primary" : ""}`}
-            onClick={() => onRsvp("accepted")}
-          >
-            Going
-          </button>
-          <button
-            className={`btn-sm${myRsvp?.status === "tentative" ? " btn-primary" : ""}`}
-            onClick={() => onRsvp("tentative")}
-          >
-            Maybe
-          </button>
-          <button
-            className={`btn-sm${myRsvp?.status === "declined" ? " btn-primary" : ""}`}
-            onClick={() => onRsvp("declined")}
-          >
-            Can't
-          </button>
-        </div>
-      )}
+      <div className="scheduled-round-actions-row">
+        {currentUserId && (
+          <div className="rsvp-buttons">
+            <button
+              className={`btn-sm${myRsvp?.status === "accepted" ? " btn-primary" : ""}`}
+              onClick={() => onRsvp("accepted")}
+            >
+              Going
+            </button>
+            <button
+              className={`btn-sm${myRsvp?.status === "tentative" ? " btn-primary" : ""}`}
+              onClick={() => onRsvp("tentative")}
+            >
+              Maybe
+            </button>
+            <button
+              className={`btn-sm${myRsvp?.status === "declined" ? " btn-primary" : ""}`}
+              onClick={() => onRsvp("declined")}
+            >
+              Can't
+            </button>
+          </div>
+        )}
 
-      {isAdmin && (
-        <div className="scheduled-round-actions">
-          <button className="btn btn-primary btn-small" onClick={onStart}>
-            Start round
-          </button>
-          <button className="btn btn-small" onClick={onCancel}>
-            Cancel
-          </button>
-        </div>
-      )}
+        {isAdmin && (
+          <div className="scheduled-round-admin-actions">
+            <button className="btn-sm btn-primary" onClick={onStart}>
+              Start round
+            </button>
+            <button className="btn-sm" onClick={onCancel}>
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

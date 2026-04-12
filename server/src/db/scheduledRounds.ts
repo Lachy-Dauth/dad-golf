@@ -13,6 +13,7 @@ interface ScheduledRoundRow {
   course_id: string;
   scheduled_date: string;
   scheduled_time: string | null;
+  duration_minutes: number | null;
   notes: string | null;
   status: ScheduledRoundStatus;
   round_id: string | null;
@@ -33,6 +34,7 @@ function rowToScheduledRound(row: ScheduledRoundListRow): ScheduledRound {
     courseName: row.course_name,
     scheduledDate: row.scheduled_date,
     scheduledTime: row.scheduled_time,
+    durationMinutes: row.duration_minutes ? Number(row.duration_minutes) : null,
     notes: row.notes,
     status: row.status,
     roundId: row.round_id,
@@ -76,15 +78,26 @@ export async function createScheduledRound(
   courseId: string,
   scheduledDate: string,
   scheduledTime: string | null,
+  durationMinutes: number | null,
   notes: string | null,
   createdByUserId: string,
 ): Promise<ScheduledRound> {
   const id = newId();
   const createdAt = now();
   await pool.query(
-    `INSERT INTO scheduled_rounds (id, group_id, course_id, scheduled_date, scheduled_time, notes, status, created_by_user_id, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8)`,
-    [id, groupId, courseId, scheduledDate, scheduledTime, notes, createdByUserId, createdAt],
+    `INSERT INTO scheduled_rounds (id, group_id, course_id, scheduled_date, scheduled_time, duration_minutes, notes, status, created_by_user_id, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'scheduled', $8, $9)`,
+    [
+      id,
+      groupId,
+      courseId,
+      scheduledDate,
+      scheduledTime,
+      durationMinutes,
+      notes,
+      createdByUserId,
+      createdAt,
+    ],
   );
   const { rows } = await pool.query(`${SCHEDULED_ROUND_SELECT} WHERE sr.id = $1`, [id]);
   return rowToScheduledRound(rows[0] as ScheduledRoundListRow);
@@ -112,6 +125,7 @@ export async function updateScheduledRound(
     courseId?: string;
     scheduledDate?: string;
     scheduledTime?: string | null;
+    durationMinutes?: number | null;
     notes?: string | null;
   },
 ): Promise<void> {
@@ -130,6 +144,10 @@ export async function updateScheduledRound(
   if (fields.scheduledTime !== undefined) {
     sets.push(`scheduled_time = $${idx++}`);
     params.push(fields.scheduledTime);
+  }
+  if (fields.durationMinutes !== undefined) {
+    sets.push(`duration_minutes = $${idx++}`);
+    params.push(fields.durationMinutes);
   }
   if (fields.notes !== undefined) {
     sets.push(`notes = $${idx++}`);

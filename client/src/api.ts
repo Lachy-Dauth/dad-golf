@@ -267,7 +267,13 @@ export const api = {
     ),
   createScheduledRound: (
     groupId: string,
-    payload: { courseId: string; scheduledDate: string; scheduledTime?: string; notes?: string },
+    payload: {
+      courseId: string;
+      scheduledDate: string;
+      scheduledTime?: string;
+      durationMinutes?: number;
+      notes?: string;
+    },
   ) =>
     fetch(`/api/groups/${groupId}/scheduled-rounds`, {
       method: "POST",
@@ -281,6 +287,7 @@ export const api = {
       courseId?: string;
       scheduledDate?: string;
       scheduledTime?: string | null;
+      durationMinutes?: number | null;
       notes?: string | null;
     },
   ) =>

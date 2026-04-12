@@ -128,6 +128,7 @@ export interface ScheduledRound {
   courseName: string;
   scheduledDate: string;
   scheduledTime: string | null;
+  durationMinutes: number | null;
   notes: string | null;
   status: ScheduledRoundStatus;
   roundId: string | null;
