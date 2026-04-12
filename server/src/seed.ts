@@ -2,7 +2,6 @@ import type { Hole } from "@dad-golf/shared";
 import {
   createCourse,
   createUser,
-  db,
   ensureAdminUser,
   getUserByUsername,
   listCourses,
@@ -71,24 +70,24 @@ const SEED_COURSES: Array<{
 
 const SEED_USERNAME = "stableford";
 
-export function seedIfEmpty(): void {
-  const existing = listCourses(null);
+export async function seedIfEmpty(): Promise<void> {
+  const existing = await listCourses(null);
   if (existing.length > 0) return;
 
-  let seedUser = getUserByUsername(SEED_USERNAME);
+  let seedUser = await getUserByUsername(SEED_USERNAME);
   if (!seedUser) {
-    createUser(SEED_USERNAME, "stableford", "Stableford", 18);
-    seedUser = getUserByUsername(SEED_USERNAME);
+    await createUser(SEED_USERNAME, "stableford", "Stableford", 18);
+    seedUser = await getUserByUsername(SEED_USERNAME);
   }
   if (!seedUser) return;
 
   for (const c of SEED_COURSES) {
-    createCourse(c.name, c.location, c.rating, c.slope, c.holes, seedUser.id);
+    await createCourse(c.name, c.location, c.rating, c.slope, c.holes, seedUser.id);
   }
   console.log(`Seeded ${SEED_COURSES.length} courses`);
 }
 
-export function bootstrapAdmin(): void {
+export async function bootstrapAdmin(): Promise<void> {
   const password = process.env.ADMIN_PASSWORD;
   if (!password) {
     console.log("ADMIN_PASSWORD not set – skipping admin user bootstrap");
@@ -98,6 +97,6 @@ export function bootstrapAdmin(): void {
     console.warn("WARNING: ADMIN_PASSWORD is shorter than 6 characters – skipping");
     return;
   }
-  ensureAdminUser(password);
+  await ensureAdminUser(password);
   console.log("Admin user 'admin' bootstrapped");
 }
