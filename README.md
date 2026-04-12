@@ -17,7 +17,7 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 - **Handicap tracker** — track your last 20 rounds and auto-calculate your GA Handicap Index using Australia's World Handicap System; optionally auto-updates when you complete rounds
 - **Groups** — create groups, invite members, assign admin/member roles, and track rounds together
 - **Schedule rounds** — group admins schedule upcoming rounds (date, time, course); members RSVP (going/maybe/can't); admins start the round and accepted players are added automatically; dedicated Upcoming Rounds page shows all scheduled rounds across groups
-- **Calendar integration** — export scheduled rounds to .ics (Apple Calendar), Google Calendar (web link), or Outlook; optional Google Calendar OAuth sync automatically creates/updates/deletes events when you RSVP
+- **Calendar integration** — export scheduled rounds to .ics (Apple Calendar), Google Calendar (web link), or Outlook; optional Google Calendar OAuth sync automatically creates/updates/deletes events when you RSVP; subscribable iCal feed URL for auto-sync in any calendar app (Apple Calendar, Google Calendar, Outlook)
 - **Admin dashboard** — view stats, manage users, and monitor activity
 - **Dark / light mode** — theme toggle that respects your preference
 - **PWA support** — install the app to your home screen for a native feel
@@ -70,6 +70,7 @@ dad-golf/
 │       │   ├── handicapRounds.ts # Handicap round history
 │       │   ├── scheduledRounds.ts # Scheduled rounds + RSVPs
 │       │   ├── googleCalendar.ts # Google Calendar OAuth connections
+│       │   ├── calendarFeed.ts # Calendar feed token management
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
@@ -80,6 +81,7 @@ dad-golf/
 │       │   ├── handicap.ts  # /api/handicap/*
 │       │   ├── scheduledRounds.ts # /api/groups/:groupId/scheduled-rounds/*
 │       │   ├── googleCalendar.ts # /api/google-calendar/* (OAuth + sync settings)
+│       │   ├── calendarFeed.ts # /api/calendar-feed/* (iCal feed subscription)
 │       │   └── admin.ts     # /api/admin/*
 │       ├── calendar.ts      # iCalendar (.ics) generation
 │       ├── calendarSync.ts  # Google Calendar sync logic (fire-and-forget)

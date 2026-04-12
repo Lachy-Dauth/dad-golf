@@ -100,6 +100,7 @@ export {
   listRsvps,
   listAcceptedRsvpUserIds,
   listScheduledRoundsForUser,
+  listScheduledRoundsForFeed,
 } from "./scheduledRounds.js";
 export type {
   AdminStats,
@@ -133,6 +134,12 @@ export {
   clearAllGoogleEventIds,
   listRsvpsWithGoogleEvents,
 } from "./googleCalendar.js";
+export {
+  getCalendarFeedToken,
+  getUserByFeedToken,
+  createCalendarFeedToken,
+  deleteCalendarFeedToken,
+} from "./calendarFeed.js";
 export {
   listHandicapRounds,
   getHandicapRound,

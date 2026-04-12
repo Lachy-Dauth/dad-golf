@@ -4,6 +4,7 @@ import { useAuth } from "../AuthContext.js";
 import { useTheme } from "../ThemeContext.js";
 import type { ThemePref } from "../localStore.js";
 import GoogleCalendarSection from "../components/GoogleCalendarSection.js";
+import CalendarFeedSection from "../components/CalendarFeedSection.js";
 
 export default function ProfilePage() {
   const { user, updateProfile, signOut } = useAuth();
@@ -123,6 +124,7 @@ export default function ProfilePage() {
       </div>
 
       <GoogleCalendarSection />
+      <CalendarFeedSection />
 
       <Link to="/" className="back-link">
         ← Home

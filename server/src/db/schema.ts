@@ -252,6 +252,17 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
   await pool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS google_calendar_connected INTEGER NOT NULL DEFAULT 0;
   `);
+
+  // Migration: calendar feed subscription tokens
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS calendar_feed_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_cal_feed_user ON calendar_feed_tokens(user_id);
+  `);
 }
 
 export async function closeDb(): Promise<void> {

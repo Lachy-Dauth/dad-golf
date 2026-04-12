@@ -49,17 +49,9 @@ function formatUtcTimestamp(): string {
   );
 }
 
-/** Generate a single-event VCALENDAR string (RFC 5545). */
-export function generateIcsEvent(params: IcsEventParams): string {
-  const lines: string[] = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Stableford//Calendar//EN",
-    "METHOD:PUBLISH",
-    "BEGIN:VEVENT",
-    `UID:${params.uid}`,
-    `DTSTAMP:${formatUtcTimestamp()}`,
-  ];
+/** Build VEVENT lines for a single event (shared by single-event and feed generators). */
+function buildVeventLines(params: IcsEventParams): string[] {
+  const lines: string[] = ["BEGIN:VEVENT", `UID:${params.uid}`, `DTSTAMP:${formatUtcTimestamp()}`];
 
   if (params.allDay) {
     lines.push(`DTSTART;VALUE=DATE:${params.dtstart}`);
@@ -87,8 +79,36 @@ export function generateIcsEvent(params: IcsEventParams): string {
 
   lines.push(`STATUS:${params.status}`);
   lines.push("END:VEVENT");
-  lines.push("END:VCALENDAR");
+  return lines;
+}
 
+/** Generate a single-event VCALENDAR string (RFC 5545). */
+export function generateIcsEvent(params: IcsEventParams): string {
+  const lines: string[] = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Stableford//Calendar//EN",
+    "METHOD:PUBLISH",
+    ...buildVeventLines(params),
+    "END:VCALENDAR",
+  ];
+  return lines.map(foldLine).join("\r\n") + "\r\n";
+}
+
+/** Generate a multi-event VCALENDAR feed string (RFC 5545). */
+export function generateIcsFeed(events: IcsEventParams[], calendarName: string): string {
+  const lines: string[] = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Stableford//Calendar//EN",
+    "METHOD:PUBLISH",
+    "CALSCALE:GREGORIAN",
+    `X-WR-CALNAME:${escapeText(calendarName)}`,
+  ];
+  for (const event of events) {
+    lines.push(...buildVeventLines(event));
+  }
+  lines.push("END:VCALENDAR");
   return lines.map(foldLine).join("\r\n") + "\r\n";
 }
 

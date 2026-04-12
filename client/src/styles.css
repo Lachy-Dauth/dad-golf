@@ -2253,3 +2253,25 @@ input:-webkit-autofill:focus {
   content: "\2713";
   font-weight: 700;
 }
+
+/* ---- Calendar Feed ---- */
+.feed-url-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.feed-url-input {
+  flex: 1;
+  min-width: 0;
+  font-family: monospace;
+  font-size: 13px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+.feed-actions {
+  display: flex;
+  gap: 8px;
+}

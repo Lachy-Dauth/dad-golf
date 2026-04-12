@@ -31,7 +31,7 @@ export interface UserRow {
   is_admin: number;
 }
 
-function rowToUser(row: UserRow): User {
+export function rowToUser(row: UserRow): User {
   return {
     id: row.id,
     username: row.username,

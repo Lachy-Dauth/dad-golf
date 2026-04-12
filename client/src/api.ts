@@ -605,4 +605,20 @@ export const api = {
       method: "DELETE",
       headers: authHeaders(),
     }).then((r) => json<{ ok: boolean }>(r)),
+
+  // calendar feed
+  calendarFeedStatus: () =>
+    fetch("/api/calendar-feed/status", { headers: authHeaders() }).then((r) =>
+      json<{ enabled: boolean; url: string | null }>(r),
+    ),
+  calendarFeedEnable: () =>
+    fetch("/api/calendar-feed/enable", {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ url: string }>(r)),
+  calendarFeedDisable: () =>
+    fetch("/api/calendar-feed", {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
 };
