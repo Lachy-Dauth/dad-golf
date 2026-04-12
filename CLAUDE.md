@@ -17,9 +17,11 @@ npm run lint:fix        # auto-fix
 npm run format:check    # check
 npm run format          # auto-fix
 
-# Tests (Node test runner, shared package only)
-npm test
-npm run test --workspace=shared    # same thing, explicit
+# Tests (Node built-in test runner, all packages)
+npm test                            # run all workspace tests
+npm run test --workspace=shared     # shared only
+npm run test --workspace=server     # server only
+npm run test --workspace=client     # client only
 
 # Run a single workspace
 npm run dev:server      # server only (tsx watch)
@@ -66,6 +68,16 @@ Auth state in `AuthContext.tsx` (token in localStorage key `"sf:token"`). Theme 
 ### Database
 
 Raw parameterized SQL (`pool.query(sql, [params])`). Schema auto-created via `initDb()` in `db/schema.ts` (CREATE IF NOT EXISTS). Course holes stored as JSON text column. Booleans are INTEGER 0/1.
+
+## Testing
+
+- **Runner**: Node built-in test runner (`node:test`) with `tsx` for TypeScript
+- **Assertions**: `node:assert/strict`
+- **Location**: co-located next to source (`module.test.ts`)
+- **Pattern**: flat `test()` calls, no nested `describe` blocks
+- **Imports**: use `.js` extension in test imports (ESM resolution)
+- **New features**: every new pure function or utility must include a `.test.ts` file with tests covering happy paths, edge cases, and error paths
+- **What to test**: pure functions, validators, data transformations. DB/HTTP/DOM-dependent code is excluded from unit tests.
 
 ## Code Style
 

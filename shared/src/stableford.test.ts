@@ -4,7 +4,9 @@ import {
   strokesReceived,
   stablefordPoints,
   computeLeaderboard,
+  computePlayerHoles,
   calculateDailyHandicap,
+  totalPar,
 } from "./stableford.js";
 import type { Course, Player, Score } from "./types.js";
 
@@ -60,6 +62,14 @@ test("stableford points - handicap lifts par 5 → net eagle", () => {
 
 test("stableford points - unplayed hole returns 0", () => {
   assert.equal(stablefordPoints(0, 4, 10, 1), 0);
+});
+
+test("stableford points - negative strokes returns 0", () => {
+  assert.equal(stablefordPoints(-1, 4, 0, 1), 0);
+});
+
+test("strokesReceived negative handicap returns 0", () => {
+  assert.equal(strokesReceived(-5, 1), 0);
 });
 
 function makeCourse(slope = 113): Course {
@@ -148,6 +158,93 @@ test("leaderboard sort - higher points first, tie-break by net strokes", () => {
   assert.equal(lb[0].name, "Alice");
   assert.equal(lb[0].position, 1);
   assert.equal(lb[1].position, 1);
+});
+
+test("calculateDailyHandicap - invalid inputs return 0", () => {
+  assert.equal(calculateDailyHandicap(NaN, 113), 0);
+  assert.equal(calculateDailyHandicap(18, NaN), 0);
+  assert.equal(calculateDailyHandicap(18, 0), 0);
+  assert.equal(calculateDailyHandicap(18, -1), 0);
+});
+
+test("computePlayerHoles returns correct results for each hole", () => {
+  const course = makeCourse();
+  const player: Player = { id: "p1", roundId: "r1", name: "Alice", handicap: 0, joinedAt: "" };
+  const scores: Score[] = [
+    { id: "s1", roundId: "r1", playerId: "p1", holeNumber: 1, strokes: 5, createdAt: "" },
+    { id: "s2", roundId: "r1", playerId: "p1", holeNumber: 2, strokes: 4, createdAt: "" },
+  ];
+  const result = computePlayerHoles(course, player, scores);
+  assert.equal(result.length, 18);
+  // Hole 1: par 5, strokes 5, scratch → net 5, 2 pts (par)
+  assert.equal(result[0].holeNumber, 1);
+  assert.equal(result[0].strokes, 5);
+  assert.equal(result[0].net, 5);
+  assert.equal(result[0].points, 2);
+  // Hole 2: par 4, strokes 4 → 2 pts
+  assert.equal(result[1].strokes, 4);
+  assert.equal(result[1].points, 2);
+  // Hole 3: no score → null strokes, 0 points
+  assert.equal(result[2].strokes, null);
+  assert.equal(result[2].net, null);
+  assert.equal(result[2].points, 0);
+});
+
+test("computePlayerHoles filters scores for the correct player", () => {
+  const course = makeCourse();
+  const player: Player = { id: "p1", roundId: "r1", name: "Alice", handicap: 0, joinedAt: "" };
+  const scores: Score[] = [
+    { id: "s1", roundId: "r1", playerId: "p1", holeNumber: 1, strokes: 5, createdAt: "" },
+    { id: "s2", roundId: "r1", playerId: "p2", holeNumber: 1, strokes: 3, createdAt: "" },
+  ];
+  const result = computePlayerHoles(course, player, scores);
+  assert.equal(result[0].strokes, 5); // only p1's score
+});
+
+test("computePlayerHoles with handicap receives strokes", () => {
+  const course = makeCourse();
+  // handicap 18 on slope 113 → daily handicap 18 → 1 stroke received per hole
+  const player: Player = { id: "p1", roundId: "r1", name: "Bob", handicap: 18, joinedAt: "" };
+  const scores: Score[] = [
+    { id: "s1", roundId: "r1", playerId: "p1", holeNumber: 1, strokes: 6, createdAt: "" },
+  ];
+  const result = computePlayerHoles(course, player, scores);
+  assert.equal(result[0].strokesReceived, 1);
+  assert.equal(result[0].net, 5); // 6 - 1
+});
+
+test("totalPar sums all hole pars", () => {
+  const course = makeCourse();
+  const expected = course.holes.reduce((sum, h) => sum + h.par, 0);
+  assert.equal(totalPar(course), expected);
+});
+
+test("totalPar for a par-72 course", () => {
+  const holes = Array.from({ length: 18 }, (_, i) => ({
+    number: i + 1,
+    par: 4,
+    strokeIndex: i + 1,
+  }));
+  const course: Course = {
+    id: "c1",
+    name: "Flat",
+    location: null,
+    rating: 72,
+    slope: 113,
+    holes,
+    createdAt: "",
+    createdByUserId: null,
+    createdByName: null,
+    favoriteCount: 0,
+    isFavorite: false,
+  };
+  assert.equal(totalPar(course), 72);
+});
+
+test("leaderboard with empty players list", () => {
+  const course = makeCourse();
+  const lb = computeLeaderboard(course, [], []);
+  assert.deepEqual(lb, []);
 });
 
 test("leaderboard position with gaps", () => {

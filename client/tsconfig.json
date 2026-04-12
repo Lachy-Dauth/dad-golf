@@ -9,5 +9,6 @@
     "jsx": "react-jsx",
     "useDefineForClassFields": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["**/*.test.ts"]
 }

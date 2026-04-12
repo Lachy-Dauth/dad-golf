@@ -119,6 +119,76 @@ test("handicap index - 20 rounds: avg lowest 8", () => {
   assert.equal(result.adjustment, 0);
 });
 
+test("handicap index - 7 rounds: avg lowest 2 no adjustment", () => {
+  const result = calculateHandicapIndex(makeRounds([15, 10, 20, 18, 12, 25, 22]));
+  assert.ok(result);
+  // Lowest 2: 10, 12 → avg = 11.0
+  assert.equal(result.handicapIndex, 11.0);
+  assert.equal(result.roundsUsed, 2);
+  assert.equal(result.adjustment, 0);
+});
+
+test("handicap index - 9 rounds: avg lowest 3", () => {
+  const result = calculateHandicapIndex(makeRounds([15, 10, 20, 18, 12, 25, 22, 16, 14]));
+  assert.ok(result);
+  assert.equal(result.roundsUsed, 3);
+});
+
+test("handicap index - 11 rounds: avg lowest 3", () => {
+  const result = calculateHandicapIndex(makeRounds([15, 10, 20, 18, 12, 25, 22, 16, 14, 11, 19]));
+  assert.ok(result);
+  assert.equal(result.roundsUsed, 3);
+});
+
+test("handicap index - 12 rounds: avg lowest 4", () => {
+  const diffs = [15, 10, 20, 18, 12, 25, 22, 16, 14, 11, 19, 23];
+  const result = calculateHandicapIndex(makeRounds(diffs));
+  assert.ok(result);
+  assert.equal(result.roundsUsed, 4);
+});
+
+test("handicap index - 14 rounds: avg lowest 4", () => {
+  const diffs = [15, 10, 20, 18, 12, 25, 22, 16, 14, 11, 19, 23, 17, 13];
+  const result = calculateHandicapIndex(makeRounds(diffs));
+  assert.ok(result);
+  assert.equal(result.roundsUsed, 4);
+});
+
+test("handicap index - 15 rounds: avg lowest 5", () => {
+  const diffs = [15, 10, 20, 18, 12, 25, 22, 16, 14, 11, 19, 23, 17, 13, 21];
+  const result = calculateHandicapIndex(makeRounds(diffs));
+  assert.ok(result);
+  assert.equal(result.roundsUsed, 5);
+});
+
+test("handicap index - 16 rounds: avg lowest 5", () => {
+  const diffs = [15, 10, 20, 18, 12, 25, 22, 16, 14, 11, 19, 23, 17, 13, 21, 24];
+  const result = calculateHandicapIndex(makeRounds(diffs));
+  assert.ok(result);
+  assert.equal(result.roundsUsed, 5);
+});
+
+test("handicap index - 17 rounds: avg lowest 6", () => {
+  const diffs = [15, 10, 20, 18, 12, 25, 22, 16, 14, 11, 19, 23, 17, 13, 21, 24, 9];
+  const result = calculateHandicapIndex(makeRounds(diffs));
+  assert.ok(result);
+  assert.equal(result.roundsUsed, 6);
+});
+
+test("handicap index - 18 rounds: avg lowest 6", () => {
+  const diffs = [15, 10, 20, 18, 12, 25, 22, 16, 14, 11, 19, 23, 17, 13, 21, 24, 9, 26];
+  const result = calculateHandicapIndex(makeRounds(diffs));
+  assert.ok(result);
+  assert.equal(result.roundsUsed, 6);
+});
+
+test("handicap index - 19 rounds: avg lowest 7", () => {
+  const diffs = [15, 10, 20, 18, 12, 25, 22, 16, 14, 11, 19, 23, 17, 13, 21, 24, 9, 26, 8];
+  const result = calculateHandicapIndex(makeRounds(diffs));
+  assert.ok(result);
+  assert.equal(result.roundsUsed, 7);
+});
+
 test("handicap index - clamped at 54.0", () => {
   // 3 rounds with very high differentials
   const result = calculateHandicapIndex(makeRounds([58.0, 60.0, 62.0]));
