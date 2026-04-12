@@ -1,4 +1,9 @@
-import type { ActivityComment, ActivityEventType, ActivityFeedItem } from "@dad-golf/shared";
+import type {
+  ActivityComment,
+  ActivityEventType,
+  ActivityFeedItem,
+  ActivityVisibility,
+} from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 
@@ -7,7 +12,7 @@ export async function createActivityEvent(
   userId: string,
   groupId: string | null,
   roundId: string | null,
-  visibility: string,
+  visibility: ActivityVisibility,
   data: Record<string, unknown>,
 ): Promise<string> {
   const id = newId();

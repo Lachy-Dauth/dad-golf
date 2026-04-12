@@ -540,6 +540,21 @@ export const api = {
       method: "DELETE",
       headers: authHeaders(),
     }).then((r) => json<{ ok: boolean }>(r)),
+  adminSeedActivity: () =>
+    fetch("/api/admin/seed-activity", {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) =>
+      json<{
+        ok: boolean;
+        usersCreated: number;
+        groupsCreated: number;
+        membersAdded: number;
+        eventsCreated: number;
+        badgesAwarded: number;
+        summary: string;
+      }>(r),
+    ),
 
   // handicap
   getHandicap: () =>

@@ -46,7 +46,19 @@ function StatusBadge({ status }: { status: string }) {
 
 // ---------- Tab content components ----------
 
-function DashboardTab({ stats, events }: { stats: AdminStats | null; events: ActivityEvent[] }) {
+function DashboardTab({
+  stats,
+  events,
+  onSeed,
+  seeding,
+  seedResult,
+}: {
+  stats: AdminStats | null;
+  events: ActivityEvent[];
+  onSeed: () => void;
+  seeding: boolean;
+  seedResult: string | null;
+}) {
   if (!stats) return <div className="muted">Loading...</div>;
   return (
     <>
@@ -76,6 +88,18 @@ function DashboardTab({ stats, events }: { stats: AdminStats | null; events: Act
           <div className="admin-stat-label">Scores</div>
         </div>
       </div>
+      <h2 style={{ marginTop: 24 }}>Seed Demo Data</h2>
+      <p className="muted" style={{ marginBottom: 8 }}>
+        Create fake users, groups, activity events, and badges for testing.
+      </p>
+      <button className="btn btn-primary" onClick={onSeed} disabled={seeding}>
+        {seeding ? "Seeding..." : "Seed Demo Data"}
+      </button>
+      {seedResult && (
+        <div className="success" style={{ marginTop: 8 }}>
+          {seedResult}
+        </div>
+      )}
       <h2 style={{ marginTop: 24 }}>Recent Activity</h2>
       {events.length === 0 ? (
         <div className="muted">No activity yet.</div>
@@ -346,6 +370,8 @@ export default function AdminPage() {
   const [reports, setReports] = useState<AdminCourseReport[]>([]);
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [seedResult, setSeedResult] = useState<string | null>(null);
 
   const loadTab = useCallback((t: Tab) => {
     setError(null);
@@ -483,6 +509,29 @@ export default function AdminPage() {
     }
   }
 
+  async function handleSeedActivity() {
+    setSeeding(true);
+    setSeedResult(null);
+    setError(null);
+    try {
+      const result = await api.adminSeedActivity();
+      setSeedResult(result.summary);
+      // Refresh stats and activity
+      api
+        .adminStats()
+        .then(setStats)
+        .catch(() => {});
+      api
+        .adminActivity(20)
+        .then((r) => setEvents(r.events))
+        .catch(() => {});
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSeeding(false);
+    }
+  }
+
   const tabs: Array<{ key: Tab; label: string }> = [
     { key: "dashboard", label: "Dashboard" },
     { key: "users", label: "Users" },
@@ -513,7 +562,15 @@ export default function AdminPage() {
         </div>
       )}
       <div className="admin-content">
-        {tab === "dashboard" && <DashboardTab stats={stats} events={events} />}
+        {tab === "dashboard" && (
+          <DashboardTab
+            stats={stats}
+            events={events}
+            onSeed={handleSeedActivity}
+            seeding={seeding}
+            seedResult={seedResult}
+          />
+        )}
         {tab === "users" && (
           <UsersTab users={users} currentUserId={user.id} onDelete={handleDeleteUser} />
         )}

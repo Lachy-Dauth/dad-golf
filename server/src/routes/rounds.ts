@@ -272,12 +272,16 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
 
     // Auto-add handicap rounds for players with auto-adjust enabled
     if (state) {
-      // Fire round_completed activity event
+      // Fire round_completed activity event (fire-and-forget)
       if (round.groupId) {
         const winner = state.leaderboard[0];
-        await createActivityEvent(
+        const winnerPlayer = winner
+          ? state.players.find((p) => p.id === winner.playerId)
+          : null;
+        const winnerId = winnerPlayer?.userId ?? user.id;
+        createActivityEvent(
           "round_completed",
-          user.id,
+          winnerId,
           round.groupId,
           round.id,
           user.activityVisibility,
@@ -288,7 +292,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
             winnerName: winner?.name ?? null,
             winnerPoints: winner?.totalPoints ?? null,
           },
-        );
+        ).catch(() => {});
       }
 
       for (const player of state.players) {
@@ -345,19 +349,24 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
         if (calc) {
           const oldHandicap = playerUser.handicap;
           await updateUserHandicap(player.userId, calc.handicapIndex);
-          // Fire handicap_change if significant change
+          // Fire handicap_change if significant change (fire-and-forget)
           if (Math.abs(calc.handicapIndex - oldHandicap) >= 0.1) {
-            const userGroups = await getUserGroupIds(player.userId);
-            for (const gId of userGroups) {
-              await createActivityEvent(
-                "handicap_change",
-                player.userId,
-                gId,
-                round.id,
-                playerUser.activityVisibility,
-                { oldHandicap, newHandicap: calc.handicapIndex },
-              );
-            }
+            getUserGroupIds(player.userId)
+              .then((userGroups) =>
+                Promise.allSettled(
+                  userGroups.map((gId) =>
+                    createActivityEvent(
+                      "handicap_change",
+                      player.userId!,
+                      gId,
+                      round.id,
+                      playerUser.activityVisibility,
+                      { oldHandicap, newHandicap: calc.handicapIndex },
+                    ),
+                  ),
+                ),
+              )
+              .catch(() => {});
           }
         }
       }

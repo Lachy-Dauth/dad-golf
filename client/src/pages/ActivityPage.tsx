@@ -42,7 +42,7 @@ function eventDescription(item: ActivityFeedItem): string {
   const d = item.data;
   switch (item.type) {
     case "round_completed":
-      return `won at ${d.courseName ?? "a course"} with ${d.winnerPoints ?? "?"} pts (${d.playerCount ?? "?"} players)`;
+      return `completed a round at ${d.courseName ?? "a course"} — ${d.winnerName ?? "Winner"} won with ${d.winnerPoints ?? "?"} pts (${d.playerCount ?? "?"} players)`;
     case "round_started":
       return `started a round at ${d.courseName ?? "a course"}`;
     case "member_joined":

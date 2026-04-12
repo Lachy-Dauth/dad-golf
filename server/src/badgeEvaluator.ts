@@ -1,4 +1,4 @@
-import type { RoundState } from "@dad-golf/shared";
+import type { ActivityVisibility, RoundState } from "@dad-golf/shared";
 import { computeLeaderboard } from "@dad-golf/shared";
 import { pool } from "./db/pool.js";
 import { awardBadge } from "./db/badges.js";
@@ -10,7 +10,7 @@ interface EvaluateContext {
   groupId?: string;
   roundState?: RoundState;
   userId: string;
-  visibility: string;
+  visibility: ActivityVisibility;
 }
 
 /**
@@ -77,19 +77,15 @@ export async function evaluateBadges(ctx: EvaluateContext): Promise<string[]> {
         return false;
       });
 
+      // Compute leaderboard once for both on_fire and champion checks
+      const leaderboard = computeLeaderboard(state.course, state.players, state.scores);
+      const playerRow = leaderboard.find((r) => r.playerId === player.id);
+
       // On Fire: 36+ Stableford points
-      await tryAward("on_fire", async () => {
-        const leaderboard = computeLeaderboard(state.course, state.players, state.scores);
-        const row = leaderboard.find((r) => r.playerId === player.id);
-        return (row?.totalPoints ?? 0) >= 36;
-      });
+      await tryAward("on_fire", async () => (playerRow?.totalPoints ?? 0) >= 36);
 
       // Champion: position 1
-      await tryAward("champion", async () => {
-        const leaderboard = computeLeaderboard(state.course, state.players, state.scores);
-        const row = leaderboard.find((r) => r.playerId === player.id);
-        return row?.position === 1;
-      });
+      await tryAward("champion", async () => playerRow?.position === 1);
     }
 
     // Explorer: 5 different courses

@@ -28,6 +28,8 @@ export default function UserProfilePage() {
   useEffect(() => {
     if (!username) return;
     setLoading(true);
+    setError(null);
+    setProfile(null);
     api
       .getUserProfile(username)
       .then((res) => setProfile(res.profile))
