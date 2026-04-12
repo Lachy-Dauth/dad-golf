@@ -122,7 +122,10 @@ export default function NewCoursePage() {
       <div className="page">
         <h1>{isEdit ? "Edit course" : "New course"}</h1>
         <p className="muted">You need to log in to {isEdit ? "edit" : "create"} a course.</p>
-        <Link to={`/login?next=${encodeURIComponent(isEdit ? `/courses/${id}/edit` : "/courses/new")}`} className="btn btn-primary">
+        <Link
+          to={`/login?next=${encodeURIComponent(isEdit ? `/courses/${id}/edit` : "/courses/new")}`}
+          className="btn btn-primary"
+        >
           Log in
         </Link>
       </div>

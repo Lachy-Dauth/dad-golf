@@ -25,6 +25,7 @@ export interface UserRow {
   password_hash: string;
   display_name: string;
   handicap: number;
+  handicap_auto_adjust: number;
   created_at: string;
   is_admin: number;
 }
@@ -35,6 +36,7 @@ function rowToUser(row: UserRow): User {
     username: row.username,
     displayName: row.display_name,
     handicap: Number(row.handicap),
+    handicapAutoAdjust: Boolean(row.handicap_auto_adjust),
     createdAt: row.created_at,
     isAdmin: Boolean(row.is_admin),
   };
@@ -59,6 +61,7 @@ export async function createUser(
     username: username.toLowerCase(),
     displayName,
     handicap,
+    handicapAutoAdjust: false,
     createdAt,
     isAdmin: false,
   };
@@ -119,4 +122,18 @@ export async function getUserBySession(token: string): Promise<User | null> {
 
 export async function deleteSession(token: string): Promise<void> {
   await pool.query(`DELETE FROM sessions WHERE token = $1`, [token]);
+}
+
+export async function updateUserHandicapAutoAdjust(
+  userId: string,
+  enabled: boolean,
+): Promise<void> {
+  await pool.query(`UPDATE users SET handicap_auto_adjust = $1 WHERE id = $2`, [
+    enabled ? 1 : 0,
+    userId,
+  ]);
+}
+
+export async function updateUserHandicap(userId: string, handicap: number): Promise<void> {
+  await pool.query(`UPDATE users SET handicap = $1 WHERE id = $2`, [handicap, userId]);
 }

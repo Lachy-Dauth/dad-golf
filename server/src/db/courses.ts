@@ -18,7 +18,18 @@ export async function createCourse(
   await pool.query(
     `INSERT INTO courses (id, name, location, latitude, longitude, rating, slope, holes_json, created_at, created_by_user_id)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-    [id, name, location, latitude, longitude, rating, slope, JSON.stringify(holes), createdAt, createdByUserId],
+    [
+      id,
+      name,
+      location,
+      latitude,
+      longitude,
+      rating,
+      slope,
+      JSON.stringify(holes),
+      createdAt,
+      createdByUserId,
+    ],
   );
   const creator = await getUser(createdByUserId);
   return {
@@ -132,10 +143,11 @@ export async function updateCourseCoords(
   latitude: number,
   longitude: number,
 ): Promise<void> {
-  await pool.query(
-    `UPDATE courses SET latitude = $1, longitude = $2 WHERE id = $3`,
-    [latitude, longitude, id],
-  );
+  await pool.query(`UPDATE courses SET latitude = $1, longitude = $2 WHERE id = $3`, [
+    latitude,
+    longitude,
+    id,
+  ]);
 }
 
 export async function deleteCourse(id: string): Promise<void> {
@@ -143,10 +155,9 @@ export async function deleteCourse(id: string): Promise<void> {
 }
 
 export async function getCourseRoundCount(courseId: string): Promise<number> {
-  const { rows } = await pool.query(
-    `SELECT COUNT(*) AS n FROM rounds WHERE course_id = $1`,
-    [courseId],
-  );
+  const { rows } = await pool.query(`SELECT COUNT(*) AS n FROM rounds WHERE course_id = $1`, [
+    courseId,
+  ]);
   return Number((rows[0] as { n: string }).n);
 }
 

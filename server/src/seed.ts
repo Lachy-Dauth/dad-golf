@@ -65,7 +65,16 @@ export async function seedIfEmpty(log: Logger): Promise<void> {
   if (!seedUser) return;
 
   for (const c of SEED_COURSES) {
-    await createCourse(c.name, c.location, c.rating, c.slope, c.holes, seedUser.id, c.latitude, c.longitude);
+    await createCourse(
+      c.name,
+      c.location,
+      c.rating,
+      c.slope,
+      c.holes,
+      seedUser.id,
+      c.latitude,
+      c.longitude,
+    );
   }
   log.info(`Seeded ${SEED_COURSES.length} courses`);
 }

@@ -38,7 +38,12 @@ export default function CompetitionPanel({
     if (!activePlayer || !claimText.trim()) return;
     setSubmitting(true);
     try {
-      const res = await api.submitClaim(roomCode, competition.id, activePlayer.id, claimText.trim());
+      const res = await api.submitClaim(
+        roomCode,
+        competition.id,
+        activePlayer.id,
+        claimText.trim(),
+      );
       onStateUpdate(res.state);
     } catch {
       /* ignore */
@@ -87,9 +92,16 @@ export default function CompetitionPanel({
       {competition.claims.length > 0 && (
         <ul className="competition-claims">
           {competition.claims.map((claim) => (
-            <li key={claim.id} className={`competition-claim-row ${claim.isWinner ? "winner" : ""}`}>
+            <li
+              key={claim.id}
+              className={`competition-claim-row ${claim.isWinner ? "winner" : ""}`}
+            >
               <div className="claim-info">
-                {claim.isWinner && <span className="winner-icon" title="Winner">&#9733;</span>}
+                {claim.isWinner && (
+                  <span className="winner-icon" title="Winner">
+                    &#9733;
+                  </span>
+                )}
                 <span className="claim-player">{claim.playerName}</span>
                 <span className="claim-text">{claim.claim}</span>
               </div>
@@ -100,7 +112,10 @@ export default function CompetitionPanel({
                       clear
                     </button>
                   ) : (
-                    <button className="btn-sm btn-primary" onClick={() => handleSetWinner(claim.playerId)}>
+                    <button
+                      className="btn-sm btn-primary"
+                      onClick={() => handleSetWinner(claim.playerId)}
+                    >
                       winner
                     </button>
                   )}

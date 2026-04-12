@@ -54,9 +54,7 @@ export default function ScoringView({
     onSetCurrentHole(n).catch(() => {});
   }
 
-  const holeCompetitions = (state.competitions ?? []).filter(
-    (c) => c.holeNumber === currentHole,
-  );
+  const holeCompetitions = (state.competitions ?? []).filter((c) => c.holeNumber === currentHole);
 
   // Set of hole numbers that have competitions (for chip indicators)
   const competitionHoles = new Set((state.competitions ?? []).map((c) => c.holeNumber));

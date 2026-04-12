@@ -57,15 +57,30 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
         try {
           geo = await geocodeLocation(location);
         } catch {
-          return reply.code(503).send({ error: "could not verify location at this time — please try again later" });
+          return reply
+            .code(503)
+            .send({ error: "could not verify location at this time — please try again later" });
         }
         if (!geo) {
-          return reply.code(400).send({ error: "could not verify location — please enter a valid place name or address" });
+          return reply
+            .code(400)
+            .send({
+              error: "could not verify location — please enter a valid place name or address",
+            });
         }
         latitude = geo.latitude;
         longitude = geo.longitude;
       }
-      const course = await createCourse(name, location, rating, slope, holes, user.id, latitude, longitude);
+      const course = await createCourse(
+        name,
+        location,
+        rating,
+        slope,
+        holes,
+        user.id,
+        latitude,
+        longitude,
+      );
       return reply.code(201).send({ course });
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
@@ -103,10 +118,16 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
         try {
           geo = await geocodeLocation(location);
         } catch {
-          return reply.code(503).send({ error: "could not verify location at this time — please try again later" });
+          return reply
+            .code(503)
+            .send({ error: "could not verify location at this time — please try again later" });
         }
         if (!geo) {
-          return reply.code(400).send({ error: "could not verify location — please enter a valid place name or address" });
+          return reply
+            .code(400)
+            .send({
+              error: "could not verify location — please enter a valid place name or address",
+            });
         }
         latitude = geo.latitude;
         longitude = geo.longitude;
