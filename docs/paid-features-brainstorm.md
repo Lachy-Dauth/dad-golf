@@ -174,15 +174,6 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Simple, fun feature. Just a flag on a hole + a text field. Low effort,
 > makes rounds more engaging for everyone.
 
-### 5d. Drink Tracker — FREE
-
-- Track drink purchases owed (e.g., "buy a round if you 3-putt")
-- Settlement ledger at end of round
-- Pure fun feature, very on-brand for "Dad Golf"
-
-> This IS the brand. Low effort, high entertainment value. Would feel wrong
-> to charge for it. Great for word-of-mouth.
-
 ---
 
 ## 6. Group Management Upgrades
@@ -361,7 +352,6 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 5a  | Skins Game                     | **PRO**      |
 | 5b  | Nassau / Match Play            | **WON'T DO** |
 | 5c  | Closest to Pin / Longest Drive | **FREE**     |
-| 5d  | Drink Tracker                  | **FREE**     |
 | 6b  | Group Stats & History          | **PRO**      |
 | 6c  | Group Roles & Permissions      | **FREE**     |
 | 6d  | Group Chat / Noticeboard       | **WON'T DO** |
@@ -379,4 +369,4 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 10a | Club/Organisation Account      | **WON'T DO** |
 | 10b | Tournament Mode                | **WON'T DO** |
 
-**Totals: 15 FREE, 10 PRO, 8 WON'T DO**
+**Totals: 14 FREE, 10 PRO, 8 WON'T DO**
