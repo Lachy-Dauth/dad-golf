@@ -122,10 +122,7 @@ export default function ProfilePage() {
         </label>
       </div>
 
-      <section className="section">
-        <h2>Google Calendar</h2>
-        <GoogleCalendarSection />
-      </section>
+      <GoogleCalendarSection />
 
       <Link to="/" className="back-link">
         ← Home

@@ -104,46 +104,52 @@ export default function GoogleCalendarSection() {
 
   if (!connected) {
     return (
-      <div className="gcal-section">
-        <p className="muted">
-          Automatically sync scheduled rounds to your Google Calendar when you RSVP.
-        </p>
-        {error && <div className="error">{error}</div>}
-        {success && <div className="muted">{success}</div>}
-        <button className="btn btn-primary" onClick={handleConnect}>
-          Connect Google Calendar
-        </button>
-      </div>
+      <section className="section">
+        <h2>Google Calendar</h2>
+        <div className="gcal-section">
+          <p className="muted">
+            Automatically sync scheduled rounds to your Google Calendar when you RSVP.
+          </p>
+          {error && <div className="error">{error}</div>}
+          {success && <div className="muted">{success}</div>}
+          <button className="btn btn-primary" onClick={handleConnect}>
+            Connect Google Calendar
+          </button>
+        </div>
+      </section>
     );
   }
 
   return (
-    <div className="gcal-section">
-      {success && <div className="muted">{success}</div>}
-      {error && <div className="error">{error}</div>}
-      <div className="gcal-status">
-        <span className="gcal-connected-dot" />
-        Connected as <strong>{email}</strong>
+    <section className="section">
+      <h2>Google Calendar</h2>
+      <div className="gcal-section">
+        {success && <div className="muted">{success}</div>}
+        {error && <div className="error">{error}</div>}
+        <div className="gcal-status">
+          <span className="gcal-connected-dot" />
+          Connected as <strong>{email}</strong>
+        </div>
+        {calendars.length > 0 && (
+          <label className="field">
+            <span>Calendar</span>
+            <select
+              value={calendarId ?? "primary"}
+              onChange={(e) => handleCalendarChange(e.target.value)}
+            >
+              {calendars.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                  {c.primary ? " (primary)" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <button className="btn" onClick={handleDisconnect} disabled={disconnecting}>
+          {disconnecting ? "Disconnecting..." : "Disconnect"}
+        </button>
       </div>
-      {calendars.length > 0 && (
-        <label className="field">
-          <span>Calendar</span>
-          <select
-            value={calendarId ?? "primary"}
-            onChange={(e) => handleCalendarChange(e.target.value)}
-          >
-            {calendars.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-                {c.primary ? " (primary)" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-      <button className="btn" onClick={handleDisconnect} disabled={disconnecting}>
-        {disconnecting ? "Disconnecting..." : "Disconnect"}
-      </button>
-    </div>
+    </section>
   );
 }
