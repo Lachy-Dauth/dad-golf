@@ -98,6 +98,27 @@ export interface GroupInvite {
   createdAt: string;
 }
 
+export type CompetitionType = "ctp" | "longest_drive";
+
+export interface CompetitionClaim {
+  id: string;
+  competitionId: string;
+  playerId: string;
+  playerName: string;
+  claim: string;
+  isWinner: boolean;
+  createdAt: string;
+}
+
+export interface HoleCompetition {
+  id: string;
+  roundId: string;
+  holeNumber: number;
+  type: CompetitionType;
+  createdAt: string;
+  claims: CompetitionClaim[];
+}
+
 export interface LeaderboardRow {
   playerId: string;
   name: string;
@@ -117,6 +138,7 @@ export interface RoundState {
   players: Player[];
   scores: Score[];
   leaderboard: LeaderboardRow[];
+  competitions: HoleCompetition[];
 }
 
 export type WsClientMessage = { type: "hello"; roomCode: string } | { type: "ping" };
@@ -128,5 +150,6 @@ export type WsServerMessage =
   | { type: "round_started"; state: RoundState }
   | { type: "round_completed"; state: RoundState }
   | { type: "current_hole"; holeNumber: number; state: RoundState }
+  | { type: "competition_update"; state: RoundState }
   | { type: "error"; message: string }
   | { type: "pong" };

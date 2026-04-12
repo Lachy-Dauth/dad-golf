@@ -55,6 +55,16 @@ export {
   removePlayer,
 } from "./players.js";
 export { upsertScore, deleteScore, listScores } from "./scores.js";
+export {
+  createCompetition,
+  deleteCompetition,
+  getCompetition,
+  upsertClaim,
+  deleteClaim,
+  setClaimWinner,
+  clearClaimWinner,
+  listCompetitions,
+} from "./competitions.js";
 export type {
   AdminStats,
   AdminUser,

@@ -1,4 +1,5 @@
 import type {
+  CompetitionType,
   Course,
   Group,
   GroupInvite,
@@ -298,6 +299,42 @@ export const api = {
       method: "DELETE",
       headers: jsonHeaders(),
       body: JSON.stringify({ playerId, holeNumber }),
+    }).then((r) => json<{ ok: boolean }>(r)),
+
+  // competitions
+  createCompetition: (code: string, holeNumber: number, type: CompetitionType) =>
+    fetch(`/api/rounds/${code}/competitions`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ holeNumber, type }),
+    }).then((r) => json<{ state: RoundState }>(r)),
+  deleteCompetition: (code: string, competitionId: string) =>
+    fetch(`/api/rounds/${code}/competitions/${competitionId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  submitClaim: (code: string, competitionId: string, playerId: string, claim: string) =>
+    fetch(`/api/rounds/${code}/competitions/${competitionId}/claims`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ playerId, claim }),
+    }).then((r) => json<{ state: RoundState }>(r)),
+  deleteClaim: (code: string, competitionId: string, playerId: string) =>
+    fetch(`/api/rounds/${code}/competitions/${competitionId}/claims`, {
+      method: "DELETE",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ playerId }),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  setCompetitionWinner: (code: string, competitionId: string, playerId: string) =>
+    fetch(`/api/rounds/${code}/competitions/${competitionId}/winner`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ playerId }),
+    }).then((r) => json<{ state: RoundState }>(r)),
+  clearCompetitionWinner: (code: string, competitionId: string) =>
+    fetch(`/api/rounds/${code}/competitions/${competitionId}/winner`, {
+      method: "DELETE",
+      headers: authHeaders(),
     }).then((r) => json<{ ok: boolean }>(r)),
 
   // weather

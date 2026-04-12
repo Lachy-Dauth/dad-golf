@@ -722,6 +722,7 @@ input:-webkit-autofill:focus {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  margin-bottom: 16px;
 }
 .scoring-name {
   font-weight: 700;
@@ -742,6 +743,7 @@ input:-webkit-autofill:focus {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  margin-bottom: 16px;
 }
 .hole-info {
   text-align: center;
@@ -761,6 +763,7 @@ input:-webkit-autofill:focus {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
+  margin-bottom: 16px;
 }
 .stroke-btn {
   background: var(--surface-2);
@@ -801,13 +804,13 @@ input:-webkit-autofill:focus {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  margin-bottom: 16px;
 }
 
 .hole-chips {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 4px;
-  margin-top: 8px;
 }
 .hole-chip {
   appearance: none;
@@ -1269,4 +1272,160 @@ input:-webkit-autofill:focus {
 }
 .theme-section h2 {
   margin-bottom: 12px;
+}
+
+/* ---------- Competitions (CTP / Longest Drive) ---------- */
+.competition-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.competition-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.competition-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.competition-badge.ctp {
+  background: rgba(59, 193, 107, 0.15);
+  color: var(--primary);
+  border: 1px solid rgba(59, 193, 107, 0.3);
+}
+.competition-badge.longest_drive {
+  background: rgba(255, 207, 92, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(255, 207, 92, 0.3);
+}
+.hole-competition-badges {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-top: 4px;
+}
+.competition-claims {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.competition-claim-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  background: var(--surface-2);
+}
+.competition-claim-row.winner {
+  background: rgba(59, 193, 107, 0.1);
+  border: 1px solid rgba(59, 193, 107, 0.25);
+}
+.claim-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.winner-icon {
+  color: var(--accent);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.claim-player {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.claim-text {
+  color: var(--text-dim);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.claim-actions {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.competition-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.competition-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 14px;
+}
+.competition-input input::placeholder {
+  color: var(--text-dim);
+}
+.competition-input .btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  min-height: auto;
+}
+.competition-add-section {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.competition-add-btn {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.competition-type-picker {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  min-height: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+}
+.btn-sm:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary);
+}
+.btn-sm.btn-primary {
+  background: var(--primary);
+  color: var(--primary-fg);
+  border-color: var(--primary);
+}
+.btn-sm.btn-primary:hover {
+  background: var(--primary-hover);
+}
+.hole-chip {
+  position: relative;
+}
+.comp-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
 }

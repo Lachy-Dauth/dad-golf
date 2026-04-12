@@ -47,7 +47,8 @@ export function useRoundSocket(roomCode: string | null, initialState: RoundState
             msg.type === "player_joined" ||
             msg.type === "round_started" ||
             msg.type === "round_completed" ||
-            msg.type === "current_hole"
+            msg.type === "current_hole" ||
+            msg.type === "competition_update"
           ) {
             setState(msg.state);
           } else if (msg.type === "error") {

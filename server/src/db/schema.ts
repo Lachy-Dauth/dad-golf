@@ -101,6 +101,27 @@ CREATE TABLE IF NOT EXISTS scores (
   UNIQUE(player_id, hole_number)
 );
 CREATE INDEX IF NOT EXISTS idx_scores_round ON scores(round_id);
+
+CREATE TABLE IF NOT EXISTS hole_competitions (
+  id TEXT PRIMARY KEY,
+  round_id TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
+  hole_number INTEGER NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('ctp', 'longest_drive')),
+  created_at TEXT NOT NULL,
+  UNIQUE(round_id, hole_number, type)
+);
+CREATE INDEX IF NOT EXISTS idx_hole_competitions_round ON hole_competitions(round_id);
+
+CREATE TABLE IF NOT EXISTS competition_claims (
+  id TEXT PRIMARY KEY,
+  competition_id TEXT NOT NULL REFERENCES hole_competitions(id) ON DELETE CASCADE,
+  player_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  claim TEXT NOT NULL,
+  is_winner INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  UNIQUE(competition_id, player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_competition_claims_comp ON competition_claims(competition_id);
   `);
 
   // Migration: add lat/lng columns to courses (safe to re-run)

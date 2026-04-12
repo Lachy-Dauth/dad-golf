@@ -1,6 +1,12 @@
 import { computeLeaderboard } from "@dad-golf/shared";
 import type { RoundState } from "@dad-golf/shared";
-import { getCourse, getRoundByRoomCode, listPlayers, listScores } from "./db/index.js";
+import {
+  getCourse,
+  getRoundByRoomCode,
+  listPlayers,
+  listScores,
+  listCompetitions,
+} from "./db/index.js";
 
 export async function buildRoundState(
   roomCode: string,
@@ -13,5 +19,6 @@ export async function buildRoundState(
   const players = await listPlayers(round.id);
   const scores = await listScores(round.id);
   const leaderboard = computeLeaderboard(course, players, scores);
-  return { round, course, players, scores, leaderboard };
+  const competitions = await listCompetitions(round.id);
+  return { round, course, players, scores, leaderboard, competitions };
 }

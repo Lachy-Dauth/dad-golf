@@ -1,39 +1,48 @@
 import { useState } from "react";
-import type { Player, RoundState, User } from "@dad-golf/shared";
+import type { CompetitionType, Player, RoundState, User } from "@dad-golf/shared";
 import {
   calculateDailyHandicap,
   stablefordPoints,
   strokesReceived,
   computePlayerHoles,
 } from "@dad-golf/shared";
+import { api } from "../api.js";
+import CompetitionPanel from "./CompetitionPanel.js";
 
 interface Props {
   state: RoundState;
   activePlayer: Player | null;
   viewer: User | null;
+  isLeader: boolean;
+  roomCode: string;
   onSelectPlayer: (id: string) => void;
   onJoinAsUser: () => Promise<void>;
   onJoinAsGuest: (name: string, handicap: number) => Promise<void>;
   onScore: (holeNumber: number, strokes: number) => Promise<void>;
   onClearScore: (holeNumber: number) => Promise<void>;
   onSetCurrentHole: (holeNumber: number) => Promise<void>;
+  onStateUpdate: (state: RoundState) => void;
 }
 
 export default function ScoringView({
   state,
   activePlayer,
   viewer,
+  isLeader,
+  roomCode,
   onSelectPlayer,
   onJoinAsUser,
   onJoinAsGuest,
   onScore,
   onClearScore,
   onSetCurrentHole,
+  onStateUpdate,
 }: Props) {
   const [currentHole, setCurrentHole] = useState<number>(state.round.currentHole);
   const [submitting, setSubmitting] = useState(false);
   const [joinName, setJoinName] = useState("");
   const [joinHcp, setJoinHcp] = useState("18.0");
+  const [showCompPicker, setShowCompPicker] = useState(false);
 
   const hole = state.course.holes.find((h) => h.number === currentHole);
   if (!hole) return <div className="muted">Invalid hole</div>;
@@ -43,6 +52,23 @@ export default function ScoringView({
     setCurrentHole(n);
     // Persist current hole to server (nice to broadcast but not required)
     onSetCurrentHole(n).catch(() => {});
+  }
+
+  const holeCompetitions = (state.competitions ?? []).filter(
+    (c) => c.holeNumber === currentHole,
+  );
+
+  // Set of hole numbers that have competitions (for chip indicators)
+  const competitionHoles = new Set((state.competitions ?? []).map((c) => c.holeNumber));
+
+  async function handleAddCompetition(type: CompetitionType) {
+    setShowCompPicker(false);
+    try {
+      const res = await api.createCompetition(roomCode, currentHole, type);
+      onStateUpdate(res.state);
+    } catch {
+      /* ignore */
+    }
   }
 
   function joinControls() {
@@ -189,6 +215,15 @@ export default function ScoringView({
             Par {hole.par} · SI {hole.strokeIndex}
             {received > 0 && ` · +${received} stroke${received > 1 ? "s" : ""}`}
           </div>
+          {holeCompetitions.length > 0 && (
+            <div className="hole-competition-badges">
+              {holeCompetitions.map((c) => (
+                <span key={c.id} className={`competition-badge ${c.type}`}>
+                  {c.type === "ctp" ? "CTP" : "LD"}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <button
           className="btn-icon big"
@@ -198,6 +233,43 @@ export default function ScoringView({
           ›
         </button>
       </div>
+
+      {isLeader && holeCompetitions.length < 2 && (
+        <div className="competition-add-section">
+          {showCompPicker ? (
+            <div className="competition-type-picker">
+              {!holeCompetitions.some((c) => c.type === "ctp") && (
+                <button className="btn-sm" onClick={() => handleAddCompetition("ctp")}>
+                  Closest to Pin
+                </button>
+              )}
+              {!holeCompetitions.some((c) => c.type === "longest_drive") && (
+                <button className="btn-sm" onClick={() => handleAddCompetition("longest_drive")}>
+                  Longest Drive
+                </button>
+              )}
+              <button className="btn-sm" onClick={() => setShowCompPicker(false)}>
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button className="btn-sm competition-add-btn" onClick={() => setShowCompPicker(true)}>
+              + Add competition
+            </button>
+          )}
+        </div>
+      )}
+
+      {holeCompetitions.map((comp) => (
+        <CompetitionPanel
+          key={comp.id}
+          competition={comp}
+          activePlayer={activePlayer}
+          isLeader={isLeader}
+          roomCode={roomCode}
+          onStateUpdate={onStateUpdate}
+        />
+      ))}
 
       <div className="stroke-grid">
         {choices.map((n) => {
@@ -238,6 +310,7 @@ export default function ScoringView({
           >
             <span className="chip-num">{h.holeNumber}</span>
             <span className="chip-pts">{h.strokes != null ? h.points : "–"}</span>
+            {competitionHoles.has(h.holeNumber) && <span className="comp-dot" />}
           </button>
         ))}
       </div>
