@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import type {
   Course,
@@ -7,18 +7,15 @@ import type {
   GroupInvite,
   GroupMember,
   GroupRole,
-  RsvpStatus,
   ScheduledRound,
   ScheduledRoundRsvp,
 } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
-import { addRecentRound } from "../localStore.js";
 import ScheduledRoundCard from "../components/ScheduledRoundCard.js";
 
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [invites, setInvites] = useState<GroupInvite[]>([]);
@@ -156,43 +153,6 @@ export default function GroupDetailPage() {
         durationMinutes: "",
         notes: "",
       });
-      loadScheduledRounds();
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
-  async function handleRsvp(scheduledRoundId: string, status: RsvpStatus) {
-    if (!id) return;
-    try {
-      await api.rsvpScheduledRound(id, scheduledRoundId, status);
-      loadScheduledRounds();
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
-  async function handleStartScheduledRound(scheduledRoundId: string, courseName: string) {
-    if (!id) return;
-    if (!confirm("Start this round now? All accepted players will be added.")) return;
-    try {
-      const res = await api.startScheduledRound(id, scheduledRoundId);
-      addRecentRound({
-        roomCode: res.state.round.roomCode,
-        courseName,
-        joinedAt: new Date().toISOString(),
-      });
-      navigate(`/r/${res.state.round.roomCode}`);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
-  async function handleCancelScheduledRound(scheduledRoundId: string) {
-    if (!id) return;
-    if (!confirm("Cancel this scheduled round?")) return;
-    try {
-      await api.cancelScheduledRound(id, scheduledRoundId);
       loadScheduledRounds();
     } catch (e) {
       setError((e as Error).message);
@@ -368,10 +328,6 @@ export default function GroupDetailPage() {
                 scheduledRound={sr}
                 rsvps={rsvpsByRound[sr.id] ?? []}
                 currentUserId={user?.id ?? null}
-                isAdmin={isAdmin}
-                onRsvp={(status) => handleRsvp(sr.id, status)}
-                onStart={() => handleStartScheduledRound(sr.id, sr.courseName)}
-                onCancel={() => handleCancelScheduledRound(sr.id)}
               />
             ))
           )}

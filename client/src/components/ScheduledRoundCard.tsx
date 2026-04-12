@@ -1,13 +1,10 @@
-import type { RsvpStatus, ScheduledRound, ScheduledRoundRsvp } from "@dad-golf/shared";
+import { Link } from "react-router-dom";
+import type { ScheduledRound, ScheduledRoundRsvp } from "@dad-golf/shared";
 
 interface Props {
   scheduledRound: ScheduledRound;
   rsvps: ScheduledRoundRsvp[];
   currentUserId: string | null;
-  isAdmin: boolean;
-  onRsvp: (status: RsvpStatus) => void;
-  onStart: () => void;
-  onCancel: () => void;
 }
 
 function formatDate(dateStr: string): string {
@@ -31,22 +28,17 @@ function formatDuration(minutes: number): string {
   return `${h}h ${m}m`;
 }
 
-export default function ScheduledRoundCard({
-  scheduledRound: sr,
-  rsvps,
-  currentUserId,
-  isAdmin,
-  onRsvp,
-  onStart,
-  onCancel,
-}: Props) {
-  const accepted = rsvps.filter((r) => r.status === "accepted");
-  const tentative = rsvps.filter((r) => r.status === "tentative");
-  const declined = rsvps.filter((r) => r.status === "declined");
+export default function ScheduledRoundCard({ scheduledRound: sr, rsvps, currentUserId }: Props) {
+  const accepted = rsvps.filter((r) => r.status === "accepted").length;
+  const tentative = rsvps.filter((r) => r.status === "tentative").length;
   const myRsvp = currentUserId ? rsvps.find((r) => r.userId === currentUserId) : null;
 
   return (
-    <div className="scheduled-round-card">
+    <Link
+      to={`/groups/${sr.groupId}/schedule/${sr.id}`}
+      className="scheduled-round-card"
+      style={{ textDecoration: "none", color: "inherit" }}
+    >
       <div className="scheduled-round-header">
         <div>
           <div className="list-primary">{sr.courseName}</div>
@@ -55,66 +47,21 @@ export default function ScheduledRoundCard({
             {sr.scheduledTime && ` at ${formatTime(sr.scheduledTime)}`}
             {sr.durationMinutes && ` · ${formatDuration(sr.durationMinutes)}`}
           </div>
-          {sr.notes && <div className="list-secondary">{sr.notes}</div>}
+        </div>
+        <div className="rsvp-summary">
+          {accepted > 0 && <span className="rsvp-count rsvp-accepted">{accepted}</span>}
+          {tentative > 0 && <span className="rsvp-count rsvp-tentative">{tentative}</span>}
+          {myRsvp && (
+            <span className="badge">
+              {myRsvp.status === "accepted"
+                ? "Going"
+                : myRsvp.status === "tentative"
+                  ? "Maybe"
+                  : "Can't"}
+            </span>
+          )}
         </div>
       </div>
-
-      <div className="rsvp-summary">
-        {accepted.length > 0 && (
-          <span className="rsvp-count rsvp-accepted">{accepted.length} going</span>
-        )}
-        {tentative.length > 0 && (
-          <span className="rsvp-count rsvp-tentative">{tentative.length} maybe</span>
-        )}
-        {declined.length > 0 && (
-          <span className="rsvp-count rsvp-declined">{declined.length} can't</span>
-        )}
-        {rsvps.length === 0 && <span className="muted">No responses yet</span>}
-      </div>
-
-      {rsvps.length > 0 && (
-        <div className="rsvp-names muted">
-          {accepted.map((r) => r.userName).join(", ")}
-          {accepted.length > 0 && tentative.length > 0 ? " | " : ""}
-          {tentative.length > 0 && `Maybe: ${tentative.map((r) => r.userName).join(", ")}`}
-        </div>
-      )}
-
-      <div className="scheduled-round-actions-row">
-        {currentUserId && (
-          <div className="rsvp-buttons">
-            <button
-              className={`btn-sm${myRsvp?.status === "accepted" ? " btn-primary" : ""}`}
-              onClick={() => onRsvp("accepted")}
-            >
-              Going
-            </button>
-            <button
-              className={`btn-sm${myRsvp?.status === "tentative" ? " btn-primary" : ""}`}
-              onClick={() => onRsvp("tentative")}
-            >
-              Maybe
-            </button>
-            <button
-              className={`btn-sm${myRsvp?.status === "declined" ? " btn-primary" : ""}`}
-              onClick={() => onRsvp("declined")}
-            >
-              Can't
-            </button>
-          </div>
-        )}
-
-        {isAdmin && (
-          <div className="scheduled-round-admin-actions">
-            <button className="btn-sm btn-primary" onClick={onStart}>
-              Start round
-            </button>
-            <button className="btn-sm" onClick={onCancel}>
-              Cancel
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+    </Link>
   );
 }
