@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { RsvpStatus } from "@dad-golf/shared";
 import { generateRoomCode } from "@dad-golf/shared";
+import { buildScheduledRoundEvent, generateIcsEvent } from "../calendar.js";
 import {
   addPlayer,
   claimScheduledRound,
@@ -72,6 +73,53 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
       const rsvps = await listRsvps(scheduledRound.id);
       return { scheduledRound, rsvps };
+    },
+  );
+
+  // Download .ics calendar file for a scheduled round
+  app.get<{ Params: { groupId: string; id: string } }>(
+    "/api/groups/:groupId/scheduled-rounds/:id/ics",
+    async (req, reply) => {
+      const user = await requireUser(req, reply);
+      if (!user) return;
+      const group = await getGroup(req.params.groupId);
+      if (!group) return reply.code(404).send({ error: "group not found" });
+      const role = await getUserRoleInGroup(group.id, user.id);
+      if (!role) return reply.code(403).send({ error: "you are not a member of this group" });
+
+      const sr = await getScheduledRound(req.params.id);
+      if (!sr || sr.groupId !== group.id) {
+        return reply.code(404).send({ error: "scheduled round not found" });
+      }
+
+      const course = await getCourse(sr.courseId, null);
+      const rsvps = await listRsvps(sr.id);
+
+      const appUrl = process.env.APP_URL || `${req.protocol}://${req.hostname}`;
+      const eventParams = buildScheduledRoundEvent({
+        scheduledRoundId: sr.id,
+        groupId: sr.groupId,
+        courseName: sr.courseName,
+        courseLocation: course?.location ?? null,
+        latitude: course?.latitude ?? null,
+        longitude: course?.longitude ?? null,
+        scheduledDate: sr.scheduledDate,
+        scheduledTime: sr.scheduledTime,
+        durationMinutes: sr.durationMinutes,
+        groupName: group.name,
+        createdByName: sr.createdByName,
+        notes: sr.notes,
+        rsvps,
+        status: sr.status,
+        appUrl,
+      });
+      const ics = generateIcsEvent(eventParams);
+
+      const filename = `golf-${sr.scheduledDate}.ics`;
+      return reply
+        .header("Content-Type", "text/calendar; charset=utf-8")
+        .header("Content-Disposition", `attachment; filename="${filename}"`)
+        .send(ics);
     },
   );
 

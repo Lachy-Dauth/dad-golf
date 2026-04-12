@@ -1,8 +1,14 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import type { GroupMember, RsvpStatus, ScheduledRound, ScheduledRoundRsvp } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
+import {
+  icsDownloadUrl,
+  googleCalendarUrl,
+  outlookCalendarUrl,
+  type CalendarLinkParams,
+} from "../calendarLinks.js";
 import { addRecentRound } from "../localStore.js";
 
 function formatDate(dateStr: string): string {
@@ -70,7 +76,11 @@ export default function ScheduledRoundPage() {
   const [sr, setSr] = useState<ScheduledRound | null>(null);
   const [rsvps, setRsvps] = useState<ScheduledRoundRsvp[]>([]);
   const [members, setMembers] = useState<GroupMember[]>([]);
+  const [groupName, setGroupName] = useState<string>("");
+  const [courseLocation, setCourseLocation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   const myMember = user ? members.find((m) => m.userId === user.id) : null;
   const isAdmin = myMember?.role === "admin";
@@ -82,15 +92,35 @@ export default function ScheduledRoundPage() {
       .then((res) => {
         setSr(res.scheduledRound);
         setRsvps(res.rsvps);
+        // Fetch course location for calendar links
+        api
+          .getCourse(res.scheduledRound.courseId)
+          .then((c) => setCourseLocation(c.course.location))
+          .catch(() => {});
       })
       .catch((e: Error) => setError(e.message));
     api
       .getGroup(groupId)
-      .then((res) => setMembers(res.members))
+      .then((res) => {
+        setMembers(res.members);
+        setGroupName(res.group.name);
+      })
       .catch(() => {});
   }, [groupId, id]);
 
   useEffect(() => load(), [load]);
+
+  // Close calendar dropdown on outside click
+  useEffect(() => {
+    if (!calendarOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+        setCalendarOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [calendarOpen]);
 
   const myRsvp = user ? rsvps.find((r) => r.userId === user.id) : null;
   const accepted = rsvps.filter((r) => r.status === "accepted");
@@ -175,6 +205,57 @@ export default function ScheduledRoundPage() {
           <span>{sr.createdByName}</span>
         </div>
       </section>
+
+      {sr.status === "scheduled" && groupId && id && (
+        <div className="calendar-dropdown-wrap" ref={calendarRef}>
+          <button className="btn btn-sm" onClick={() => setCalendarOpen((v) => !v)}>
+            {"\uD83D\uDCC5"} Add to Calendar
+          </button>
+          {calendarOpen &&
+            (() => {
+              const params: CalendarLinkParams = {
+                courseName: sr.courseName,
+                scheduledDate: sr.scheduledDate,
+                scheduledTime: sr.scheduledTime,
+                durationMinutes: sr.durationMinutes,
+                courseLocation,
+                notes: sr.notes,
+                groupName,
+                groupId,
+                scheduledRoundId: id,
+              };
+              return (
+                <div className="calendar-dropdown">
+                  <a
+                    className="calendar-dropdown-item"
+                    href={googleCalendarUrl(params)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setCalendarOpen(false)}
+                  >
+                    Google Calendar
+                  </a>
+                  <a
+                    className="calendar-dropdown-item"
+                    href={icsDownloadUrl(groupId, id)}
+                    onClick={() => setCalendarOpen(false)}
+                  >
+                    Apple Calendar / .ics
+                  </a>
+                  <a
+                    className="calendar-dropdown-item"
+                    href={outlookCalendarUrl(params)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setCalendarOpen(false)}
+                  >
+                    Outlook
+                  </a>
+                </div>
+              );
+            })()}
+        </div>
+      )}
 
       {error && <div className="error">{error}</div>}
 
