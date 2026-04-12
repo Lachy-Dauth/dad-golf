@@ -135,6 +135,17 @@ CREATE INDEX IF NOT EXISTS idx_competition_claims_comp ON competition_claims(com
     ALTER TABLE group_members ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'member';
   `);
   await pool.query(`
+    DO $$ BEGIN
+      ALTER TABLE group_members ADD CONSTRAINT group_members_role_check
+        CHECK (role IN ('admin', 'member'));
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$;
+  `);
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_group_members_user_group
+      ON group_members (group_id, user_id) WHERE user_id IS NOT NULL;
+  `);
+  await pool.query(`
     UPDATE group_members SET role = 'admin'
     FROM groups
     WHERE group_members.group_id = groups.id

@@ -11,9 +11,6 @@ export default function GroupDetailPage() {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [invites, setInvites] = useState<GroupInvite[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [newName, setNewName] = useState("");
-  const [newHandicap, setNewHandicap] = useState<string>("18.0");
-  const [adding, setAdding] = useState(false);
 
   const myMember = user ? members.find((m) => m.userId === user.id) : null;
   const isAdmin = myMember?.role === "admin";
@@ -36,7 +33,7 @@ export default function GroupDetailPage() {
       .listGroupInvites(id)
       .then((res) => setInvites(res.invites))
       .catch(() => {
-        /* ignore: only owner can list invites */
+        /* ignore: only admins can list invites */
       });
   }, [id]);
 
@@ -46,40 +43,10 @@ export default function GroupDetailPage() {
     else setInvites([]);
   }, [isAdmin, id, loadInvites]);
 
-  async function handleAdd() {
-    if (!id || !newName.trim()) return;
-    const n = Number(newHandicap);
-    if (!Number.isFinite(n) || n < 0 || n > 54) {
-      setError("Handicap must be a number between 0.0 and 54.0");
-      return;
-    }
-    setAdding(true);
-    try {
-      await api.addGroupMember(id, newName.trim(), Math.round(n * 10) / 10);
-      setNewName("");
-      setNewHandicap("18.0");
-      load();
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setAdding(false);
-    }
-  }
-
   async function handleRemove(memberId: string) {
     if (!id) return;
     try {
       await api.removeGroupMember(id, memberId);
-      load();
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
-  async function handleUpdate(m: GroupMember, name: string, handicap: number) {
-    if (!id) return;
-    try {
-      await api.updateGroupMember(id, m.id, name, handicap);
       load();
     } catch (e) {
       setError((e as Error).message);
@@ -142,37 +109,6 @@ export default function GroupDetailPage() {
 
       {isAdmin && (
         <section className="section">
-          <h2>Add member</h2>
-          <div className="form-inline">
-            <input
-              placeholder="Name"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              min={0}
-              max={54}
-              placeholder="GA HCP"
-              value={newHandicap}
-              onChange={(e) => setNewHandicap(e.target.value)}
-              style={{ width: 96 }}
-            />
-            <button
-              className="btn btn-primary"
-              onClick={handleAdd}
-              disabled={adding || !newName.trim()}
-            >
-              Add
-            </button>
-          </div>
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="section">
           <div className="section-header">
             <h2>Invite links</h2>
             <button className="btn btn-primary" onClick={handleCreateInvite}>
@@ -228,7 +164,6 @@ export default function GroupDetailPage() {
               <MemberRow
                 key={m.id}
                 member={m}
-                canEdit={isAdmin || (!!user && m.userId === user.id)}
                 canRemove={
                   isAdmin
                     ? !(m.role === "admin" && adminCount <= 1 && m.userId === user?.id)
@@ -237,7 +172,6 @@ export default function GroupDetailPage() {
                 canChangeRole={isAdmin && m.userId !== null}
                 isLastAdmin={m.role === "admin" && adminCount <= 1}
                 onRemove={() => handleRemove(m.id)}
-                onSave={(name, h) => handleUpdate(m, name, h)}
                 onChangeRole={(role) => handleChangeRole(m.id, role)}
               />
             ))}
@@ -254,65 +188,19 @@ export default function GroupDetailPage() {
 
 function MemberRow({
   member,
-  canEdit,
   canRemove,
   canChangeRole,
   isLastAdmin,
   onRemove,
-  onSave,
   onChangeRole,
 }: {
   member: GroupMember;
-  canEdit: boolean;
   canRemove: boolean;
   canChangeRole: boolean;
   isLastAdmin: boolean;
   onRemove: () => void;
-  onSave: (name: string, handicap: number) => void;
   onChangeRole: (role: GroupRole) => void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(member.name);
-  const [handicap, setHandicap] = useState(member.handicap.toFixed(1));
-
-  if (editing) {
-    return (
-      <li>
-        <div className="list-row">
-          <div className="edit-row">
-            <input value={name} onChange={(e) => setName(e.target.value)} />
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              min={0}
-              max={54}
-              value={handicap}
-              onChange={(e) => setHandicap(e.target.value)}
-              style={{ width: 90 }}
-            />
-          </div>
-          <div className="row-actions">
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                const n = Number(handicap);
-                if (!Number.isFinite(n) || n < 0 || n > 54) return;
-                onSave(name.trim(), Math.round(n * 10) / 10);
-                setEditing(false);
-              }}
-            >
-              Save
-            </button>
-            <button className="btn" onClick={() => setEditing(false)}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      </li>
-    );
-  }
-
   return (
     <li>
       <div className="list-row">
@@ -334,11 +222,6 @@ function MemberRow({
               <option value="member">Member</option>
               <option value="admin">Admin</option>
             </select>
-          )}
-          {canEdit && (
-            <button className="btn" onClick={() => setEditing(true)}>
-              Edit
-            </button>
           )}
           {canRemove && (
             <button className="btn-icon" onClick={onRemove} aria-label="Remove">
