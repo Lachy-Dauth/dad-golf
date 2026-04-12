@@ -586,6 +586,48 @@ input:-webkit-autofill:focus {
   background: var(--danger);
 }
 
+.round-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* weather widget */
+.weather-widget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+.weather-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.weather-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.weather-temp {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.weather-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+.weather-wind {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
 /* player grid (handles 16+ players cleanly) */
 .player-grid {
   list-style: none;

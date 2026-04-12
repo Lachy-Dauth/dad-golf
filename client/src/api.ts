@@ -8,6 +8,7 @@ import type {
   RoundState,
   Score,
   User,
+  Weather,
 } from "@dad-golf/shared";
 
 // Admin types
@@ -298,6 +299,12 @@ export const api = {
       headers: jsonHeaders(),
       body: JSON.stringify({ playerId, holeNumber }),
     }).then((r) => json<{ ok: boolean }>(r)),
+
+  // weather
+  getRoundWeather: (code: string) =>
+    fetch(`/api/rounds/${code}/weather`, { headers: authHeaders() }).then((r) =>
+      json<{ weather: Weather }>(r),
+    ),
 
   // admin
   adminStats: () =>

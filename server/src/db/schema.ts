@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS courses (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   location TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
   rating DOUBLE PRECISION NOT NULL DEFAULT 72.0,
   slope INTEGER NOT NULL DEFAULT 113,
   holes_json TEXT NOT NULL,
@@ -99,6 +101,12 @@ CREATE TABLE IF NOT EXISTS scores (
   UNIQUE(player_id, hole_number)
 );
 CREATE INDEX IF NOT EXISTS idx_scores_round ON scores(round_id);
+  `);
+
+  // Migration: add lat/lng columns to courses (safe to re-run)
+  await pool.query(`
+    ALTER TABLE courses ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
+    ALTER TABLE courses ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
   `);
 }
 

@@ -14,6 +14,7 @@ import LobbyView from "../components/LobbyView.js";
 import ScoringView from "../components/ScoringView.js";
 import LeaderboardView from "../components/LeaderboardView.js";
 import SummaryView from "../components/SummaryView.js";
+import WeatherWidget from "../components/WeatherWidget.js";
 
 type Tab = "scoring" | "leaderboard" | "players";
 
@@ -192,10 +193,13 @@ export default function RoundPage() {
           </div>
           {round.leaderName && <div className="round-meta muted">Leader: {round.leaderName}</div>}
         </div>
-        <div
-          className={`conn-dot ${connected ? "on" : "off"}`}
-          title={connected ? "Live" : "Reconnecting…"}
-        />
+        <div className="round-header-right">
+          {roomCode && <WeatherWidget roomCode={roomCode} courseLocation={course.location} />}
+          <div
+            className={`conn-dot ${connected ? "on" : "off"}`}
+            title={connected ? "Live" : "Reconnecting…"}
+          />
+        </div>
       </div>
 
       {actionError && <div className="error">{actionError}</div>}

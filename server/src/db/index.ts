@@ -14,6 +14,7 @@ export {
   listCourses,
   getCourse,
   updateCourse,
+  updateCourseCoords,
   deleteCourse,
   getCourseFavoriteCount,
   favoriteCourse,
