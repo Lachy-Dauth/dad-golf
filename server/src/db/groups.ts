@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import type { Group, GroupInvite, GroupMember } from "@dad-golf/shared";
+import type { Group, GroupInvite, GroupMember, GroupRole } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 import { getUser } from "./users.js";
@@ -75,6 +75,7 @@ interface GroupMemberRow {
   user_id: string | null;
   name: string;
   handicap: number;
+  role: string;
   created_at: string;
 }
 
@@ -85,6 +86,7 @@ function rowToGroupMember(row: GroupMemberRow): GroupMember {
     userId: row.user_id,
     name: row.name,
     handicap: Number(row.handicap),
+    role: row.role as GroupRole,
     createdAt: row.created_at,
   };
 }
@@ -94,15 +96,16 @@ export async function addGroupMember(
   name: string,
   handicap: number,
   userId: string | null = null,
+  role: GroupRole = "member",
 ): Promise<GroupMember> {
   const id = newId();
   const createdAt = now();
   await pool.query(
-    `INSERT INTO group_members (id, group_id, user_id, name, handicap, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, groupId, userId, name, handicap, createdAt],
+    `INSERT INTO group_members (id, group_id, user_id, name, handicap, role, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [id, groupId, userId, name, handicap, role, createdAt],
   );
-  return { id, groupId, userId, name, handicap, createdAt };
+  return { id, groupId, userId, name, handicap, role, createdAt };
 }
 
 export async function listGroupMembers(groupId: string): Promise<GroupMember[]> {
@@ -159,6 +162,30 @@ export async function updateGroupMember(
 
 export async function removeGroupMember(memberId: string): Promise<void> {
   await pool.query(`DELETE FROM group_members WHERE id = $1`, [memberId]);
+}
+
+export async function updateGroupMemberRole(memberId: string, role: GroupRole): Promise<void> {
+  await pool.query(`UPDATE group_members SET role = $1 WHERE id = $2`, [role, memberId]);
+}
+
+export async function getUserRoleInGroup(
+  groupId: string,
+  userId: string,
+): Promise<GroupRole | null> {
+  const { rows } = await pool.query(
+    `SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2`,
+    [groupId, userId],
+  );
+  const row = rows[0] as { role: string } | undefined;
+  return row ? (row.role as GroupRole) : null;
+}
+
+export async function countGroupAdmins(groupId: string): Promise<number> {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*) AS count FROM group_members WHERE group_id = $1 AND role = 'admin'`,
+    [groupId],
+  );
+  return Number((rows[0] as { count: string }).count);
 }
 
 // ---------- group invites ----------

@@ -1,6 +1,8 @@
 import type { FastifyInstance } from "fastify";
+import type { GroupRole } from "@dad-golf/shared";
 import {
   addGroupMember,
+  countGroupAdmins,
   createGroup,
   createGroupInvite,
   deleteGroup,
@@ -9,11 +11,13 @@ import {
   getGroup,
   getGroupInviteByToken,
   getGroupMember,
+  getUserRoleInGroup,
   listGroupInvites,
   listGroupMembers,
   listGroups,
   removeGroupMember,
   updateGroupMember,
+  updateGroupMemberRole,
 } from "../db/index.js";
 import {
   MAX_MEMBERS_PER_GROUP,
@@ -21,6 +25,8 @@ import {
   validateHandicap,
   validateName,
 } from "./validation.js";
+
+const VALID_ROLES: GroupRole[] = ["admin", "member"];
 
 export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
   app.get("/api/groups", async () => {
@@ -47,8 +53,8 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
     try {
       const name = validateName(req.body?.name, "group name");
       const group = await createGroup(name, user.id);
-      // Auto-add the creator as the first member
-      await addGroupMember(group.id, user.displayName, user.handicap, user.id);
+      // Auto-add the creator as the first admin member
+      await addGroupMember(group.id, user.displayName, user.handicap, user.id, "admin");
       const members = await listGroupMembers(group.id);
       return reply.code(201).send({ group, members });
     } catch (e) {
@@ -61,8 +67,9 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
     if (!user) return;
     const group = await getGroup(req.params.id);
     if (!group) return reply.code(404).send({ error: "group not found" });
-    if (group.ownerUserId !== user.id) {
-      return reply.code(403).send({ error: "only the group owner can delete this group" });
+    const role = await getUserRoleInGroup(group.id, user.id);
+    if (role !== "admin") {
+      return reply.code(403).send({ error: "only group admins can delete this group" });
     }
     await deleteGroup(req.params.id);
     return { ok: true };
@@ -77,8 +84,9 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
     try {
       const group = await getGroup(req.params.id);
       if (!group) return reply.code(404).send({ error: "group not found" });
-      if (group.ownerUserId !== user.id) {
-        return reply.code(403).send({ error: "only the group owner can add members" });
+      const role = await getUserRoleInGroup(group.id, user.id);
+      if (role !== "admin") {
+        return reply.code(403).send({ error: "only group admins can add members" });
       }
       const existing = await listGroupMembers(group.id);
       if (existing.length >= MAX_MEMBERS_PER_GROUP) {
@@ -108,9 +116,9 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
       if (!member || member.groupId !== group.id) {
         return reply.code(404).send({ error: "member not found" });
       }
-      const isOwner = group.ownerUserId === user.id;
+      const callerRole = await getUserRoleInGroup(group.id, user.id);
       const isSelf = member.userId === user.id;
-      if (!isOwner && !isSelf) {
+      if (callerRole !== "admin" && !isSelf) {
         return reply.code(403).send({ error: "not allowed" });
       }
       const name = validateName(req.body?.name);
@@ -133,13 +141,17 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
     if (!member || member.groupId !== group.id) {
       return reply.code(404).send({ error: "member not found" });
     }
-    const isOwner = group.ownerUserId === user.id;
+    const callerRole = await getUserRoleInGroup(group.id, user.id);
     const isSelf = member.userId === user.id;
-    if (!isOwner && !isSelf) {
+    if (callerRole !== "admin" && !isSelf) {
       return reply.code(403).send({ error: "not allowed" });
     }
-    if (isSelf && isOwner) {
-      return reply.code(400).send({ error: "owner cannot leave their own group" });
+    // Prevent the last admin from leaving
+    if (isSelf && callerRole === "admin") {
+      const adminCount = await countGroupAdmins(group.id);
+      if (adminCount <= 1) {
+        return reply.code(400).send({ error: "the last admin cannot leave the group" });
+      }
     }
     await removeGroupMember(req.params.memberId);
     return { ok: true };
@@ -151,8 +163,9 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
     if (!user) return;
     const group = await getGroup(req.params.id);
     if (!group) return reply.code(404).send({ error: "group not found" });
-    if (group.ownerUserId !== user.id) {
-      return reply.code(403).send({ error: "only the group owner can manage invites" });
+    const role = await getUserRoleInGroup(group.id, user.id);
+    if (role !== "admin") {
+      return reply.code(403).send({ error: "only group admins can manage invites" });
     }
     return { invites: await listGroupInvites(group.id) };
   });
@@ -162,8 +175,9 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
     if (!user) return;
     const group = await getGroup(req.params.id);
     if (!group) return reply.code(404).send({ error: "group not found" });
-    if (group.ownerUserId !== user.id) {
-      return reply.code(403).send({ error: "only the group owner can create invites" });
+    const role = await getUserRoleInGroup(group.id, user.id);
+    if (role !== "admin") {
+      return reply.code(403).send({ error: "only group admins can create invites" });
     }
     const invite = await createGroupInvite(group.id);
     return reply.code(201).send({ invite });
@@ -176,13 +190,50 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
       if (!user) return;
       const group = await getGroup(req.params.id);
       if (!group) return reply.code(404).send({ error: "group not found" });
-      if (group.ownerUserId !== user.id) {
+      const role = await getUserRoleInGroup(group.id, user.id);
+      if (role !== "admin") {
         return reply.code(403).send({ error: "not allowed" });
       }
       await deleteGroupInvite(req.params.inviteId);
       return { ok: true };
     },
   );
+
+  // ---------- member role management ----------
+  app.patch<{
+    Params: { id: string; memberId: string };
+    Body: { role?: string };
+  }>("/api/groups/:id/members/:memberId/role", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const group = await getGroup(req.params.id);
+    if (!group) return reply.code(404).send({ error: "group not found" });
+    const callerRole = await getUserRoleInGroup(group.id, user.id);
+    if (callerRole !== "admin") {
+      return reply.code(403).send({ error: "only group admins can change roles" });
+    }
+    const member = await getGroupMember(req.params.memberId);
+    if (!member || member.groupId !== group.id) {
+      return reply.code(404).send({ error: "member not found" });
+    }
+    const newRole = req.body?.role;
+    if (!newRole || !VALID_ROLES.includes(newRole as GroupRole)) {
+      return reply.code(400).send({ error: "role must be admin or member" });
+    }
+    // Prevent demoting the last admin
+    if (member.role === "admin" && newRole !== "admin") {
+      const adminCount = await countGroupAdmins(group.id);
+      if (adminCount <= 1) {
+        return reply.code(400).send({ error: "cannot demote the last admin" });
+      }
+    }
+    // Guest members cannot be promoted to admin
+    if (member.userId === null && newRole !== "member") {
+      return reply.code(400).send({ error: "guest members cannot be given admin role" });
+    }
+    await updateGroupMemberRole(member.id, newRole as GroupRole);
+    return { ok: true };
+  });
 
   app.get<{ Params: { token: string } }>("/api/group-invites/:token", async (req, reply) => {
     const invite = await getGroupInviteByToken(req.params.token);

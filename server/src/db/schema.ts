@@ -129,6 +129,18 @@ CREATE INDEX IF NOT EXISTS idx_competition_claims_comp ON competition_claims(com
     ALTER TABLE courses ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
     ALTER TABLE courses ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
   `);
+
+  // Migration: add role column to group_members (safe to re-run)
+  await pool.query(`
+    ALTER TABLE group_members ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'member';
+  `);
+  await pool.query(`
+    UPDATE group_members SET role = 'admin'
+    FROM groups
+    WHERE group_members.group_id = groups.id
+      AND group_members.user_id = groups.owner_user_id
+      AND group_members.role = 'member';
+  `);
 }
 
 export async function closeDb(): Promise<void> {
