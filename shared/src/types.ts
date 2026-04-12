@@ -132,6 +132,7 @@ export interface ScheduledRound {
   notes: string | null;
   status: ScheduledRoundStatus;
   roundId: string | null;
+  roomCode: string | null;
   createdByUserId: string;
   createdByName: string;
   createdAt: string;

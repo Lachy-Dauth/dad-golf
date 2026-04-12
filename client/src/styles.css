@@ -1526,9 +1526,11 @@ input:-webkit-autofill:focus {
   padding: 4px 0;
   color: var(--text-dim);
 }
-.badge-active {
-  background: var(--primary);
-  color: var(--primary-fg);
+.started-round-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .hole-chip {

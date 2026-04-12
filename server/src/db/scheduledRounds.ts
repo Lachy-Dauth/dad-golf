@@ -25,6 +25,7 @@ interface ScheduledRoundRow {
 interface ScheduledRoundListRow extends ScheduledRoundRow {
   course_name: string;
   created_by_name: string;
+  room_code: string | null;
 }
 
 function rowToScheduledRound(row: ScheduledRoundListRow): ScheduledRound {
@@ -39,6 +40,7 @@ function rowToScheduledRound(row: ScheduledRoundListRow): ScheduledRound {
     notes: row.notes,
     status: row.status,
     roundId: row.round_id,
+    roomCode: row.room_code ?? null,
     createdByUserId: row.created_by_user_id,
     createdByName: row.created_by_name,
     createdAt: row.created_at,
@@ -69,10 +71,12 @@ function rowToRsvp(row: RsvpListRow): ScheduledRoundRsvp {
 }
 
 const SCHEDULED_ROUND_SELECT = `
-  SELECT sr.*, c.name AS course_name, u.display_name AS created_by_name
+  SELECT sr.*, c.name AS course_name, u.display_name AS created_by_name,
+         r.room_code
     FROM scheduled_rounds sr
     JOIN courses c ON c.id = sr.course_id
-    JOIN users u ON u.id = sr.created_by_user_id`;
+    JOIN users u ON u.id = sr.created_by_user_id
+    LEFT JOIN rounds r ON r.id = sr.round_id`;
 
 export async function createScheduledRound(
   groupId: string,
@@ -237,11 +241,12 @@ export async function listAcceptedRsvpUserIds(scheduledRoundId: string): Promise
 export async function listScheduledRoundsForUser(userId: string): Promise<UserScheduledRound[]> {
   const { rows } = await pool.query(
     `SELECT sr.*, c.name AS course_name, u.display_name AS created_by_name,
-            g.name AS group_name, rsvp.status AS rsvp_status
+            r.room_code, g.name AS group_name, rsvp.status AS rsvp_status
        FROM scheduled_round_rsvps rsvp
        JOIN scheduled_rounds sr ON sr.id = rsvp.scheduled_round_id
        JOIN courses c ON c.id = sr.course_id
        JOIN users u ON u.id = sr.created_by_user_id
+       LEFT JOIN rounds r ON r.id = sr.round_id
        JOIN groups g ON g.id = sr.group_id
        WHERE rsvp.user_id = $1 AND sr.status = 'scheduled'
        ORDER BY sr.scheduled_date ASC, sr.scheduled_time ASC NULLS LAST`,

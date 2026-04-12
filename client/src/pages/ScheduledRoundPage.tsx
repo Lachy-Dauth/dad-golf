@@ -231,10 +231,15 @@ export default function ScheduledRoundPage() {
         </section>
       )}
 
-      {sr.status === "started" && sr.roundId && (
-        <div style={{ marginTop: 16 }}>
-          <span className="badge badge-active">Started</span>
-        </div>
+      {sr.status === "started" && sr.roomCode && (
+        <section className="section">
+          <div className="started-round-banner">
+            <span className="badge badge-active">Round started</span>
+            <Link to={`/r/${sr.roomCode}`} className="btn btn-primary">
+              Join round
+            </Link>
+          </div>
+        </section>
       )}
 
       <Link to={`/groups/${groupId}`} className="back-link">
