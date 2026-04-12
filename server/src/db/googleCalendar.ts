@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 
@@ -86,6 +87,9 @@ export async function updateGoogleCalendarId(userId: string, calendarId: string)
 
 export async function deleteGoogleConnection(userId: string): Promise<void> {
   await pool.query(`DELETE FROM google_calendar_connections WHERE user_id = $1`, [userId]);
+  await pool.query(`UPDATE scheduled_round_rsvps SET google_event_id = NULL WHERE user_id = $1`, [
+    userId,
+  ]);
   await pool.query(`UPDATE users SET google_calendar_connected = 0 WHERE id = $1`, [userId]);
 }
 
@@ -126,6 +130,31 @@ export async function clearAllGoogleEventIds(userId: string): Promise<void> {
   await pool.query(`UPDATE scheduled_round_rsvps SET google_event_id = NULL WHERE user_id = $1`, [
     userId,
   ]);
+}
+
+/** Create a short-lived OAuth nonce bound to a user (CSRF protection). */
+export async function createOAuthNonce(userId: string): Promise<string> {
+  const nonce = randomBytes(32).toString("hex");
+  await pool.query(`INSERT INTO oauth_nonces (nonce, user_id, created_at) VALUES ($1, $2, $3)`, [
+    nonce,
+    userId,
+    now(),
+  ]);
+  return nonce;
+}
+
+/** Consume an OAuth nonce and return the user ID. Returns null if expired (>10 min) or not found. */
+export async function consumeOAuthNonce(nonce: string): Promise<string | null> {
+  const { rows } = await pool.query(
+    `DELETE FROM oauth_nonces WHERE nonce = $1 RETURNING user_id, created_at`,
+    [nonce],
+  );
+  const row = rows[0] as { user_id: string; created_at: string } | undefined;
+  if (!row) return null;
+  // Expire after 10 minutes
+  const age = Date.now() - new Date(row.created_at).getTime();
+  if (age > 10 * 60 * 1000) return null;
+  return row.user_id;
 }
 
 /** Get all RSVPs with a google_event_id for a given scheduled round (for bulk sync). */

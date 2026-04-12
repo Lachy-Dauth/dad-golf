@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import type { ScheduledRound, ScheduledRoundRsvp } from "@dad-golf/shared";
-import { icsDownloadUrl } from "../calendarLinks.js";
+import { downloadIcsFile } from "../calendarLinks.js";
 
 interface Props {
   scheduledRound: ScheduledRound;
@@ -58,14 +58,15 @@ export default function ScheduledRoundCard({
           </div>
         </div>
         <div className="rsvp-summary">
-          {sr.status === "scheduled" && !googleCalendarConnected && (
+          {sr.status === "scheduled" && !googleCalendarConnected && currentUserId && (
             <button
               className="calendar-icon-btn"
               title="Download .ics"
+              aria-label="Download calendar file"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                window.location.href = icsDownloadUrl(sr.groupId, sr.id);
+                downloadIcsFile(sr.groupId, sr.id).catch(() => {});
               }}
             >
               {"\uD83D\uDCC5"}

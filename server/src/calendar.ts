@@ -24,6 +24,15 @@ function escapeText(text: string): string {
     .replace(/\n/g, "\\n");
 }
 
+/** Escape HTML special characters to prevent injection in X-ALT-DESC. */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 /**
  * Fold lines longer than 75 octets per RFC 5545 §3.1.
  * Continuation lines start with a single space.
@@ -194,18 +203,18 @@ export function buildScheduledRoundEvent(params: {
 
   // HTML version for calendar clients that support it
   const htmlParts: string[] = [];
-  htmlParts.push(`<b>Group:</b> ${params.groupName}`);
-  htmlParts.push(`<b>Scheduled by:</b> ${params.createdByName}`);
+  htmlParts.push(`<b>Group:</b> ${escapeHtml(params.groupName)}`);
+  htmlParts.push(`<b>Scheduled by:</b> ${escapeHtml(params.createdByName)}`);
   if (params.notes) {
-    htmlParts.push(`<b>Notes:</b> ${params.notes}`);
+    htmlParts.push(`<b>Notes:</b> ${escapeHtml(params.notes)}`);
   }
   if (accepted.length > 0) {
-    htmlParts.push(`<b>Going:</b> ${accepted.map((r) => r.userName).join(", ")}`);
+    htmlParts.push(`<b>Going:</b> ${accepted.map((r) => escapeHtml(r.userName)).join(", ")}`);
   }
   if (tentative.length > 0) {
-    htmlParts.push(`<b>Maybe:</b> ${tentative.map((r) => r.userName).join(", ")}`);
+    htmlParts.push(`<b>Maybe:</b> ${tentative.map((r) => escapeHtml(r.userName)).join(", ")}`);
   }
-  htmlParts.push(`<a href="${roundUrl}">View in Stableford</a>`);
+  htmlParts.push(`<a href="${escapeHtml(roundUrl)}">View in Stableford</a>`);
 
   return {
     uid: `${params.scheduledRoundId}@stableford.app`,

@@ -1,10 +1,12 @@
 import type { FastifyInstance } from "fastify";
 import {
   clearAllGoogleEventIds,
+  consumeOAuthNonce,
   createGoogleConnection,
+  createOAuthNonce,
   deleteGoogleConnection,
   getGoogleConnection,
-  getUserBySession,
+  getUser,
   updateGoogleCalendarId,
   updateGoogleTokens,
 } from "../db/index.js";
@@ -46,10 +48,8 @@ export async function registerGoogleCalendarRoutes(app: FastifyInstance): Promis
       return reply.code(501).send({ error: "Google Calendar integration not configured" });
     }
 
-    // Use the user's session token as OAuth state for CSRF protection
-    const auth = req.headers.authorization;
-    const match = auth ? /^Bearer\s+(.+)$/i.exec(auth) : null;
-    const state = match?.[1] ?? "";
+    // Generate a one-time CSRF nonce bound to this user (not the session token)
+    const state = await createOAuthNonce(user.id);
 
     const params = new URLSearchParams({
       client_id: process.env.GOOGLE_CLIENT_ID!,
@@ -77,8 +77,12 @@ export async function registerGoogleCalendarRoutes(app: FastifyInstance): Promis
         return reply.redirect("/profile?google=error");
       }
 
-      // Validate the state (session token) to identify the user
-      const user = await getUserBySession(state);
+      // Validate the CSRF nonce and identify the user
+      const userId = await consumeOAuthNonce(state);
+      if (!userId) {
+        return reply.redirect("/profile?google=error");
+      }
+      const user = await getUser(userId);
       if (!user) {
         return reply.redirect("/profile?google=error");
       }
@@ -132,6 +136,7 @@ export async function registerGoogleCalendarRoutes(app: FastifyInstance): Promis
         await updateGoogleTokens(user.id, refreshed.accessToken, refreshed.tokenExpiry);
       } catch (err) {
         req.log.warn(err, "Google token refresh failed");
+        await clearAllGoogleEventIds(user.id);
         await deleteGoogleConnection(user.id);
         return reply
           .code(400)

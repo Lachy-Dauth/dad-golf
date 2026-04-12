@@ -18,11 +18,27 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-/** Returns the .ics download URL with auth token as query param for direct browser navigation. */
-export function icsDownloadUrl(groupId: string, scheduledRoundId: string): string {
+/** Download an .ics file using the Authorization header (avoids leaking tokens in URLs). */
+export async function downloadIcsFile(groupId: string, scheduledRoundId: string): Promise<void> {
+  const url = `/api/groups/${groupId}/scheduled-rounds/${scheduledRoundId}/ics`;
   const token = getAuthToken();
-  const base = `/api/groups/${groupId}/scheduled-rounds/${scheduledRoundId}/ics`;
-  return token ? `${base}?token=${encodeURIComponent(token)}` : base;
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    throw new Error(`Failed to download calendar file (${response.status})`);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = `golf-round-${scheduledRoundId}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
 }
 
 /**

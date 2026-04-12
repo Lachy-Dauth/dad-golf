@@ -83,28 +83,47 @@ export async function syncRsvpToGoogle(
   rsvpStatus: RsvpStatus,
   log: FastifyBaseLogger,
 ): Promise<void> {
-  const conn = await getGoogleConnection(userId);
-  if (!conn) return;
+  try {
+    const conn = await getGoogleConnection(userId);
+    if (!conn) return;
 
-  const accessToken = await getValidAccessToken(conn, log);
-  if (!accessToken) return;
+    const accessToken = await getValidAccessToken(conn, log);
+    if (!accessToken) return;
 
-  const existingEventId = await getGoogleEventId(sr.id, userId);
+    const existingEventId = await getGoogleEventId(sr.id, userId);
 
-  if (rsvpStatus === "accepted" || rsvpStatus === "tentative") {
-    const event = await buildGoogleEvent(sr);
-    if (existingEventId) {
-      await updateCalendarEvent(accessToken, conn.calendarId, existingEventId, event);
+    if (rsvpStatus === "accepted" || rsvpStatus === "tentative") {
+      const event = await buildGoogleEvent(sr);
+      if (existingEventId) {
+        try {
+          await updateCalendarEvent(accessToken, conn.calendarId, existingEventId, event);
+        } catch (err) {
+          // Self-heal: if the event no longer exists, create a new one
+          const msg = (err as Error).message ?? "";
+          if (msg.includes("404") || msg.includes("410")) {
+            log.warn({ userId, scheduledRoundId: sr.id }, "Stale Google event ID, recreating");
+            const eventId = await createCalendarEvent(accessToken, conn.calendarId, event);
+            await setGoogleEventId(sr.id, userId, eventId);
+          } else {
+            throw err;
+          }
+        }
+      } else {
+        const eventId = await createCalendarEvent(accessToken, conn.calendarId, event);
+        await setGoogleEventId(sr.id, userId, eventId);
+      }
     } else {
-      const eventId = await createCalendarEvent(accessToken, conn.calendarId, event);
-      await setGoogleEventId(sr.id, userId, eventId);
+      // declined — remove from calendar
+      if (existingEventId) {
+        await deleteCalendarEvent(accessToken, conn.calendarId, existingEventId);
+        await clearGoogleEventId(sr.id, userId);
+      }
     }
-  } else {
-    // declined — remove from calendar
-    if (existingEventId) {
-      await deleteCalendarEvent(accessToken, conn.calendarId, existingEventId);
-      await clearGoogleEventId(sr.id, userId);
-    }
+  } catch (err) {
+    log.error(
+      { err, userId, scheduledRoundId: sr.id, rsvpStatus },
+      "Failed to sync RSVP to Google Calendar",
+    );
   }
 }
 

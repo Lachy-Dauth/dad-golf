@@ -253,6 +253,20 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS google_calendar_connected INTEGER NOT NULL DEFAULT 0;
   `);
 
+  // Migration: index on scheduled_round_rsvps(user_id) for event ID cleanup queries
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_rsvp_user ON scheduled_round_rsvps(user_id);
+  `);
+
+  // Migration: OAuth state nonces for CSRF protection
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS oauth_nonces (
+      nonce TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL
+    );
+  `);
+
   // Migration: calendar feed subscription tokens
   await pool.query(`
     CREATE TABLE IF NOT EXISTS calendar_feed_tokens (

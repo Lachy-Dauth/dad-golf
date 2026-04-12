@@ -44,12 +44,19 @@ export async function exchangeAuthCode(
     expires_in: number;
   };
 
+  if (!data.refresh_token) {
+    throw new Error("Google did not return a refresh token — user may need to re-authorize");
+  }
+
   const tokenExpiry = new Date(Date.now() + data.expires_in * 1000).toISOString();
 
   // Fetch user email
   const infoRes = await fetch(USERINFO_URL, {
     headers: { Authorization: `Bearer ${data.access_token}` },
   });
+  if (!infoRes.ok) {
+    throw new Error(`Google userinfo request failed: ${infoRes.status}`);
+  }
   const info = (await infoRes.json()) as { email?: string };
 
   return {
@@ -105,7 +112,7 @@ export interface GoogleCalendarEvent {
 export function icsParamsToGoogleEvent(params: IcsEventParams): GoogleCalendarEvent {
   const event: GoogleCalendarEvent = {
     summary: params.summary,
-    description: params.htmlDescription,
+    description: params.description,
     start: params.allDay
       ? { date: formatIcsDate(params.dtstart) }
       : { dateTime: formatIcsDateTime(params.dtstart) },

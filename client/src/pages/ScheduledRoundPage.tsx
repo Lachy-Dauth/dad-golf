@@ -4,7 +4,7 @@ import { api } from "../api.js";
 import type { GroupMember, RsvpStatus, ScheduledRound, ScheduledRoundRsvp } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
 import {
-  icsDownloadUrl,
+  downloadIcsFile,
   googleCalendarUrl,
   outlookCalendarUrl,
   type CalendarLinkParams,
@@ -235,13 +235,15 @@ export default function ScheduledRoundPage() {
                   >
                     Google Calendar
                   </a>
-                  <a
+                  <button
                     className="calendar-dropdown-item"
-                    href={icsDownloadUrl(groupId, id)}
-                    onClick={() => setCalendarOpen(false)}
+                    onClick={() => {
+                      setCalendarOpen(false);
+                      downloadIcsFile(groupId!, id!).catch(() => {});
+                    }}
                   >
                     Apple Calendar / .ics
-                  </a>
+                  </button>
                   <a
                     className="calendar-dropdown-item"
                     href={outlookCalendarUrl(params)}
