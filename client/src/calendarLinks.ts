@@ -119,7 +119,7 @@ function buildDescription(params: CalendarLinkParams): string {
   if (params.notes) parts.push(`Notes: ${params.notes}`);
 
   const appUrl = window.location.origin;
-  parts.push(`View in Dad Golf:`);
+  parts.push(`View in Stableford:`);
   parts.push(`${appUrl}/groups/${params.groupId}/schedule/${params.scheduledRoundId}`);
 
   return parts.join("\n");

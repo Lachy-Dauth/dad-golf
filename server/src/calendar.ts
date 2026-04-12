@@ -53,7 +53,7 @@ export function generateIcsEvent(params: IcsEventParams): string {
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//DadGolf//Calendar//EN",
+    "PRODID:-//Stableford//Calendar//EN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${params.uid}`,
@@ -167,11 +167,11 @@ export function buildScheduledRoundEvent(params: {
   }
 
   const roundUrl = `${params.appUrl}/groups/${params.groupId}/schedule/${params.scheduledRoundId}`;
-  descParts.push(`View in Dad Golf:`);
+  descParts.push(`View in Stableford:`);
   descParts.push(roundUrl);
 
   return {
-    uid: `${params.scheduledRoundId}@dadgolf.app`,
+    uid: `${params.scheduledRoundId}@stableford.app`,
     summary: `Golf @ ${params.courseName}`,
     description: descParts.join("\n"),
     location: params.courseLocation,

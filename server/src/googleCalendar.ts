@@ -114,7 +114,7 @@ export function icsParamsToGoogleEvent(params: IcsEventParams): GoogleCalendarEv
       : { dateTime: formatIcsDateTime(params.dtend) },
   };
   if (params.location) event.location = params.location;
-  if (params.url) event.source = { title: "Dad Golf", url: params.url };
+  if (params.url) event.source = { title: "Stableford", url: params.url };
   return event;
 }
 

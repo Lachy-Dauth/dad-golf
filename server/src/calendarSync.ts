@@ -50,7 +50,7 @@ async function buildGoogleEvent(sr: ScheduledRound) {
   const course = await getCourse(sr.courseId, null);
   const group = await getGroup(sr.groupId);
   const rsvps = await listRsvps(sr.id);
-  const appUrl = process.env.APP_URL || "https://dadgolf.app";
+  const appUrl = process.env.APP_URL || "https://stableford.app";
 
   const icsParams = buildScheduledRoundEvent({
     scheduledRoundId: sr.id,
