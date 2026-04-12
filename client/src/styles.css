@@ -1533,6 +1533,57 @@ input:-webkit-autofill:focus {
   gap: 12px;
 }
 
+/* Calendar dropdown */
+.calendar-dropdown-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.calendar-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  margin-top: 4px;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.calendar-dropdown-item {
+  display: block;
+  padding: 10px 14px;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--text);
+  cursor: pointer;
+}
+.calendar-dropdown-item:hover {
+  background: var(--surface-hover);
+}
+.calendar-dropdown-item + .calendar-dropdown-item {
+  border-top: 1px solid var(--border-dim);
+}
+
+/* Calendar icon button on cards */
+.calendar-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.calendar-icon-btn:hover {
+  opacity: 1;
+  background: var(--surface-hover);
+}
+
 .hole-chip {
   position: relative;
 }
@@ -2169,6 +2220,60 @@ input:-webkit-autofill:focus {
 }
 .duplicate-hint a {
   color: var(--primary);
+}
+
+/* ---- Google Calendar ---- */
+.gcal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcal-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.gcal-connected-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+.gcal-synced-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--primary);
+  padding: 6px 0;
+}
+.gcal-synced-badge::before {
+  content: "\2713";
+  font-weight: 700;
+}
+
+/* ---- Calendar Feed ---- */
+.feed-url-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.feed-url-input {
+  flex: 1;
+  min-width: 0;
+  font-family: monospace;
+  font-size: 13px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+.feed-actions {
+  display: flex;
+  gap: 8px;
 }
 
 /* -- Location autocomplete -- */

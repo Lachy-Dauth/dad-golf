@@ -100,6 +100,7 @@ export {
   listRsvps,
   listAcceptedRsvpUserIds,
   listScheduledRoundsForUser,
+  listScheduledRoundsForFeed,
 } from "./scheduledRounds.js";
 export type {
   AdminStats,
@@ -120,6 +121,27 @@ export {
   deleteUserAsAdmin,
   ensureAdminUser,
 } from "./admin.js";
+export type { GoogleCalendarConnection } from "./googleCalendar.js";
+export {
+  getGoogleConnection,
+  createGoogleConnection,
+  updateGoogleTokens,
+  updateGoogleCalendarId,
+  deleteGoogleConnection,
+  getGoogleEventId,
+  setGoogleEventId,
+  clearGoogleEventId,
+  clearAllGoogleEventIds,
+  listRsvpsWithGoogleEvents,
+  createOAuthNonce,
+  consumeOAuthNonce,
+} from "./googleCalendar.js";
+export {
+  getCalendarFeedToken,
+  getUserByFeedToken,
+  createCalendarFeedToken,
+  deleteCalendarFeedToken,
+} from "./calendarFeed.js";
 export {
   listHandicapRounds,
   getHandicapRound,

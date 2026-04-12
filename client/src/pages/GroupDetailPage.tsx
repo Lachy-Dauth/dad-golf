@@ -349,6 +349,7 @@ export default function GroupDetailPage() {
                 scheduledRound={sr}
                 rsvps={rsvpsByRound[sr.id] ?? []}
                 currentUserId={user?.id ?? null}
+                googleCalendarConnected={user?.googleCalendarConnected}
               />
             ))
           )}

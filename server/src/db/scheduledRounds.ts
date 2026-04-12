@@ -261,3 +261,24 @@ export async function listScheduledRoundsForUser(userId: string): Promise<UserSc
     rsvpStatus: row.rsvp_status ?? null,
   }));
 }
+
+/**
+ * List scheduled rounds for a calendar feed. Includes scheduled, started,
+ * and recently cancelled rounds (last 7 days) so calendar apps can update.
+ */
+export async function listScheduledRoundsForFeed(userId: string): Promise<ScheduledRound[]> {
+  const { rows } = await pool.query(
+    `SELECT sr.*, c.name AS course_name, u.display_name AS created_by_name,
+            r.room_code
+       FROM scheduled_rounds sr
+       JOIN courses c ON c.id = sr.course_id
+       JOIN users u ON u.id = sr.created_by_user_id
+       LEFT JOIN rounds r ON r.id = sr.round_id
+       JOIN group_members gm ON gm.group_id = sr.group_id AND gm.user_id = $1
+       WHERE sr.status IN ('scheduled', 'started')
+          OR (sr.status = 'cancelled' AND sr.created_at >= NOW() - INTERVAL '7 days')
+       ORDER BY sr.scheduled_date ASC, sr.scheduled_time ASC NULLS LAST`,
+    [userId],
+  );
+  return (rows as ScheduledRoundListRow[]).map(rowToScheduledRound);
+}

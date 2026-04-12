@@ -227,6 +227,56 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
     );
     CREATE INDEX IF NOT EXISTS idx_course_reports_course ON course_reports(course_id);
   `);
+
+  // Migration: Google Calendar OAuth connections
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS google_calendar_connections (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT NOT NULL,
+      token_expiry TEXT NOT NULL,
+      calendar_id TEXT NOT NULL DEFAULT 'primary',
+      email TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_google_cal_user ON google_calendar_connections(user_id);
+  `);
+
+  // Migration: track Google Calendar event IDs on RSVPs
+  await pool.query(`
+    ALTER TABLE scheduled_round_rsvps ADD COLUMN IF NOT EXISTS google_event_id TEXT;
+  `);
+
+  // Migration: flag for Google Calendar connection on users
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS google_calendar_connected INTEGER NOT NULL DEFAULT 0;
+  `);
+
+  // Migration: index on scheduled_round_rsvps(user_id) for event ID cleanup queries
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_rsvp_user ON scheduled_round_rsvps(user_id);
+  `);
+
+  // Migration: OAuth state nonces for CSRF protection
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS oauth_nonces (
+      nonce TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL
+    );
+  `);
+
+  // Migration: calendar feed subscription tokens
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS calendar_feed_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_cal_feed_user ON calendar_feed_tokens(user_id);
+  `);
 }
 
 export async function closeDb(): Promise<void> {

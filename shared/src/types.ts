@@ -10,8 +10,15 @@ export interface User {
   displayName: string;
   handicap: number;
   handicapAutoAdjust: boolean;
+  googleCalendarConnected: boolean;
   createdAt: string;
   isAdmin: boolean;
+}
+
+export interface GoogleCalendarStatus {
+  connected: boolean;
+  email: string | null;
+  calendarId: string | null;
 }
 
 export interface HandicapRound {

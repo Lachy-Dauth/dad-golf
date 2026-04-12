@@ -1,10 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import type { ScheduledRound, ScheduledRoundRsvp } from "@dad-golf/shared";
+import { downloadIcsFile } from "../calendarLinks.js";
 
 interface Props {
   scheduledRound: ScheduledRound;
   rsvps: ScheduledRoundRsvp[];
   currentUserId: string | null;
+  googleCalendarConnected?: boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -28,7 +30,12 @@ function formatDuration(minutes: number): string {
   return `${h}h ${m}m`;
 }
 
-export default function ScheduledRoundCard({ scheduledRound: sr, rsvps, currentUserId }: Props) {
+export default function ScheduledRoundCard({
+  scheduledRound: sr,
+  rsvps,
+  currentUserId,
+  googleCalendarConnected,
+}: Props) {
   const navigate = useNavigate();
   const accepted = rsvps.filter((r) => r.status === "accepted").length;
   const tentative = rsvps.filter((r) => r.status === "tentative").length;
@@ -51,6 +58,20 @@ export default function ScheduledRoundCard({ scheduledRound: sr, rsvps, currentU
           </div>
         </div>
         <div className="rsvp-summary">
+          {sr.status === "scheduled" && !googleCalendarConnected && currentUserId && (
+            <button
+              className="calendar-icon-btn"
+              title="Download .ics"
+              aria-label="Download calendar file"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                downloadIcsFile(sr.groupId, sr.id).catch(() => {});
+              }}
+            >
+              {"\uD83D\uDCC5"}
+            </button>
+          )}
           {sr.status === "started" && sr.roomCode ? (
             <button
               className="btn btn-primary btn-sm"

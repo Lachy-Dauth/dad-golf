@@ -1,6 +1,12 @@
 import type { FastifyInstance } from "fastify";
 import type { RsvpStatus } from "@dad-golf/shared";
 import { generateRoomCode } from "@dad-golf/shared";
+import { buildScheduledRoundEvent, generateIcsEvent } from "../calendar.js";
+import {
+  syncRsvpToGoogle,
+  syncScheduledRoundUpdateToGoogle,
+  syncScheduledRoundCancelToGoogle,
+} from "../calendarSync.js";
 import {
   addPlayer,
   claimScheduledRound,
@@ -72,6 +78,53 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
       const rsvps = await listRsvps(scheduledRound.id);
       return { scheduledRound, rsvps };
+    },
+  );
+
+  // Download .ics calendar file for a scheduled round
+  app.get<{ Params: { groupId: string; id: string } }>(
+    "/api/groups/:groupId/scheduled-rounds/:id/ics",
+    async (req, reply) => {
+      const user = await requireUser(req, reply);
+      if (!user) return;
+      const group = await getGroup(req.params.groupId);
+      if (!group) return reply.code(404).send({ error: "group not found" });
+      const role = await getUserRoleInGroup(group.id, user.id);
+      if (!role) return reply.code(403).send({ error: "you are not a member of this group" });
+
+      const sr = await getScheduledRound(req.params.id);
+      if (!sr || sr.groupId !== group.id) {
+        return reply.code(404).send({ error: "scheduled round not found" });
+      }
+
+      const course = await getCourse(sr.courseId, null);
+      const rsvps = await listRsvps(sr.id);
+
+      const appUrl = process.env.APP_URL || `${req.protocol}://${req.hostname}`;
+      const eventParams = buildScheduledRoundEvent({
+        scheduledRoundId: sr.id,
+        groupId: sr.groupId,
+        courseName: sr.courseName,
+        courseLocation: course?.location ?? null,
+        latitude: course?.latitude ?? null,
+        longitude: course?.longitude ?? null,
+        scheduledDate: sr.scheduledDate,
+        scheduledTime: sr.scheduledTime,
+        durationMinutes: sr.durationMinutes,
+        groupName: group.name,
+        createdByName: sr.createdByName,
+        notes: sr.notes,
+        rsvps,
+        status: sr.status,
+        appUrl,
+      });
+      const ics = generateIcsEvent(eventParams);
+
+      const filename = `golf-${sr.scheduledDate}.ics`;
+      return reply
+        .header("Content-Type", "text/calendar; charset=utf-8")
+        .header("Content-Disposition", `attachment; filename="${filename}"`)
+        .send(ics);
     },
   );
 
@@ -178,6 +231,9 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
 
       await updateScheduledRound(sr.id, fields);
+      syncScheduledRoundUpdateToGoogle(sr.id, req.log).catch((err) => {
+        req.log.error({ err, scheduledRoundId: sr.id }, "Failed to sync round update to Google");
+      });
       const updated = await getScheduledRound(sr.id);
       return { scheduledRound: updated };
     } catch (e) {
@@ -207,6 +263,9 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
 
       await updateScheduledRoundStatus(sr.id, "cancelled");
+      syncScheduledRoundCancelToGoogle(sr.id, req.log).catch((err) => {
+        req.log.error({ err, scheduledRoundId: sr.id }, "Failed to sync round cancel to Google");
+      });
       return { ok: true };
     },
   );
@@ -238,6 +297,12 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
 
       const rsvp = await upsertRsvp(sr.id, user.id, status);
+      syncRsvpToGoogle(user.id, sr, status, req.log).catch((err) => {
+        req.log.error(
+          { err, userId: user.id, scheduledRoundId: sr.id, status },
+          "Failed to sync RSVP to Google Calendar",
+        );
+      });
       return { rsvp };
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
