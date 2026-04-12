@@ -1,6 +1,13 @@
-import { test } from "node:test";
+import { test, mock } from "node:test";
 import assert from "node:assert/strict";
-import { formatTime, formatDuration, formatElapsedTime } from "./dateFormat.js";
+import {
+  formatTime,
+  formatDuration,
+  formatElapsedTime,
+  formatDate,
+  formatDateTime,
+  relativeTime,
+} from "./dateFormat.js";
 
 // --- formatTime ---
 
@@ -78,4 +85,59 @@ test("formatElapsedTime formats exact hours", () => {
 
 test("formatElapsedTime formats hours and minutes", () => {
   assert.equal(formatElapsedTime("2025-03-15T09:00:00Z", "2025-03-15T11:30:00Z"), "2h 30m");
+});
+
+// --- formatDate ---
+
+test("formatDate returns a non-empty string", () => {
+  const result = formatDate("2025-03-15T10:00:00Z");
+  assert.ok(typeof result === "string" && result.length > 0);
+});
+
+test("formatDate includes year and day", () => {
+  const result = formatDate("2025-03-15T10:00:00Z");
+  assert.ok(result.includes("2025"), `expected year in "${result}"`);
+  assert.ok(result.includes("15"), `expected day in "${result}"`);
+});
+
+// --- formatDateTime ---
+
+test("formatDateTime returns a non-empty string", () => {
+  const result = formatDateTime("2025-03-15T10:30:00Z");
+  assert.ok(typeof result === "string" && result.length > 0);
+});
+
+test("formatDateTime includes year", () => {
+  const result = formatDateTime("2025-03-15T10:30:00Z");
+  assert.ok(result.includes("2025"), `expected year in "${result}"`);
+});
+
+// --- relativeTime ---
+
+test("relativeTime - just now", () => {
+  const now = new Date().toISOString();
+  assert.equal(relativeTime(now), "just now");
+});
+
+test("relativeTime - minutes ago", () => {
+  const fiveMinAgo = new Date(Date.now() - 5 * 60_000).toISOString();
+  assert.equal(relativeTime(fiveMinAgo), "5m ago");
+});
+
+test("relativeTime - hours ago", () => {
+  const threeHoursAgo = new Date(Date.now() - 3 * 3600_000).toISOString();
+  assert.equal(relativeTime(threeHoursAgo), "3h ago");
+});
+
+test("relativeTime - days ago", () => {
+  const twoDaysAgo = new Date(Date.now() - 2 * 86400_000).toISOString();
+  assert.equal(relativeTime(twoDaysAgo), "2d ago");
+});
+
+test("relativeTime - week+ falls back to date string", () => {
+  const tenDaysAgo = new Date(Date.now() - 10 * 86400_000).toISOString();
+  const result = relativeTime(tenDaysAgo);
+  // Should not contain "ago" pattern, should be a formatted date
+  assert.ok(!result.includes("ago"), `expected date string, got "${result}"`);
+  assert.ok(result.length > 0);
 });

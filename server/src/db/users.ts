@@ -9,7 +9,7 @@ export function hashPassword(password: string): string {
   return `${salt.toString("hex")}:${hash.toString("hex")}`;
 }
 
-function verifyPassword(password: string, stored: string): boolean {
+export function verifyPassword(password: string, stored: string): boolean {
   const [saltHex, hashHex] = stored.split(":");
   if (!saltHex || !hashHex) return false;
   const salt = Buffer.from(saltHex, "hex");
