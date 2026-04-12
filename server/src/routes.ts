@@ -19,11 +19,15 @@ import {
   deleteGroupInvite,
   deleteScore,
   deleteSession,
+  deleteUserAsAdmin,
   favoriteCourse,
   findGroupMemberByUser,
   findPlayerByName,
   findPlayerByUserId,
+  getActivityFeed,
+  getAdminStats,
   getCourse,
+  getUser,
   getCourseFavoriteCount,
   getGroup,
   getGroupInviteByToken,
@@ -33,6 +37,10 @@ import {
   getUserByUsername,
   getUserBySession,
   isUserInGroup,
+  listAllCourses,
+  listAllGroups,
+  listAllRounds,
+  listAllUsers,
   listCourses,
   listGroupInvites,
   listGroupMembers,
@@ -155,6 +163,16 @@ function requireUser(req: FastifyRequest, reply: FastifyReply): User | null {
   const user = getViewerUser(req);
   if (!user) {
     reply.code(401).send({ error: "sign in required" });
+    return null;
+  }
+  return user;
+}
+
+function requireAdmin(req: FastifyRequest, reply: FastifyReply): User | null {
+  const user = requireUser(req, reply);
+  if (!user) return null;
+  if (!user.isAdmin) {
+    reply.code(403).send({ error: "admin access required" });
     return null;
   }
   return user;
@@ -896,5 +914,75 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     const state = buildRoundState(code, viewer?.id ?? null);
     if (state) broadcast(code, { type: "state", state });
     return { ok: true };
+  });
+
+  // ---------- admin ----------
+  app.get("/api/admin/stats", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    return getAdminStats();
+  });
+
+  app.get("/api/admin/users", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    return { users: listAllUsers() };
+  });
+
+  app.delete<{ Params: { id: string } }>(
+    "/api/admin/users/:id",
+    async (req, reply) => {
+      const user = requireAdmin(req, reply);
+      if (!user) return;
+      if (req.params.id === user.id) {
+        return reply.code(400).send({ error: "cannot delete yourself" });
+      }
+      const target = getUser(req.params.id);
+      if (!target) {
+        return reply.code(404).send({ error: "user not found" });
+      }
+      deleteUserAsAdmin(req.params.id);
+      return { ok: true };
+    },
+  );
+
+  app.get<{
+    Querystring: { limit?: string; offset?: string };
+  }>("/api/admin/rounds", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    const parsedLimit = Number(req.query.limit);
+    const parsedOffset = Number(req.query.offset);
+    const limit = Number.isFinite(parsedLimit)
+      ? Math.max(0, Math.min(Math.floor(parsedLimit), 200))
+      : 50;
+    const offset = Number.isFinite(parsedOffset)
+      ? Math.max(0, Math.floor(parsedOffset))
+      : 0;
+    return listAllRounds(limit, offset);
+  });
+
+  app.get("/api/admin/courses", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    return { courses: listAllCourses() };
+  });
+
+  app.get("/api/admin/groups", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    return { groups: listAllGroups() };
+  });
+
+  app.get<{
+    Querystring: { limit?: string };
+  }>("/api/admin/activity", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    const parsed = Number(req.query.limit);
+    const limit = Number.isFinite(parsed)
+      ? Math.max(0, Math.min(Math.floor(parsed), 200))
+      : 50;
+    return { events: getActivityFeed(limit) };
   });
 }

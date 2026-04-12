@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { registerRoutes } from "./routes.js";
 import { registerWebsocket } from "./ws.js";
-import { seedIfEmpty } from "./seed.js";
+import { seedIfEmpty, bootstrapAdmin } from "./seed.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -18,6 +18,7 @@ async function main(): Promise<void> {
   await app.register(websocket);
 
   seedIfEmpty();
+  bootstrapAdmin();
 
   await registerRoutes(app);
   await registerWebsocket(app);
