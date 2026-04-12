@@ -112,8 +112,8 @@ gantt
     section Phase 3: Free w/ Deps
     Scheduled Rounds (2c)           :done, p3b, after p2d, 10d
     Calendar Integration (9a)       :done, p3c, after p3b, 5d
-    Activity Feed (4a)              :p3d, after p2a, 10d
-    Achievement Badges (4c)         :p3e, after p2a, 8d
+    Activity Feed (4a)              :done, p3d, after p2a, 10d
+    Achievement Badges (4c)         :done, p3e, after p2a, 8d
 
     section Phase 4: Pro Infra
     Stripe / Payments               :p4a, 2026-07-13, 15d
@@ -166,7 +166,7 @@ gantt
 
 ---
 
-### Phase 3: Free Features with Dependencies (In Progress)
+### Phase 3: Free Features with Dependencies ✅
 
 | Feature                  | Duration  | Depends On | Notes                                                                 |
 | ------------------------ | --------- | ---------- | --------------------------------------------------------------------- |
@@ -251,10 +251,8 @@ Pro Infra (3w) → Scoring Formats (4w) → Team Rounds (3w)
 
 **Longest chain: Pro Infra → Leagues → Awards = ~10 weeks**
 
-Including free features before Pro, total roadmap is approximately
-**8-9 months** at part-time pace. The free features (Phases 1-3) could
-ship within the first **3 months**, with Pro features rolling out over
-the following **5-6 months**.
+All free features (Phases 1-3) are shipped. Remaining Pro work
+(Phases 4-7) is approximately **6-7 months** at part-time pace.
 
 ---
 
@@ -262,13 +260,12 @@ the following **5-6 months**.
 
 | Category           | Features                | Est. Weeks      |
 | ------------------ | ----------------------- | --------------- |
-| FREE (shipped)     | 12 features ✅          | ~0 weeks        |
-| FREE (remaining)   | 2 features              | ~3.5 weeks      |
+| FREE (shipped)     | 14 features ✅          | ~0 weeks        |
 | PRO Infrastructure | Payment + gating        | ~3 weeks        |
 | PRO                | 10 features             | ~24 weeks       |
-| **Remaining**      | **12 features + infra** | **~30.5 weeks** |
+| **Remaining**      | **10 features + infra** | **~27 weeks**   |
 
-**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration (plus location autocomplete and course reviews).
+**All 14 free features shipped:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges (plus location autocomplete and course reviews).
 
-At part-time pace (~15-20 hrs/week), remaining work is roughly **7-8 months** of
+At part-time pace (~15-20 hrs/week), remaining Pro work is roughly **6-7 months** of
 calendar time with some parallelism.

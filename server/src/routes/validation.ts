@@ -87,17 +87,7 @@ export function validatePassword(p: unknown): string {
 }
 
 export function validateScheduledDate(date: unknown): string {
-  if (typeof date !== "string") throw new Error("scheduledDate must be a string");
-  const trimmed = date.trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    throw new Error("scheduledDate must be in YYYY-MM-DD format");
-  }
-  const [y, m, day] = trimmed.split("-").map(Number);
-  const parsed = new Date(y, m - 1, day);
-  if (parsed.getFullYear() !== y || parsed.getMonth() !== m - 1 || parsed.getDate() !== day) {
-    throw new Error("scheduledDate is not a valid calendar date");
-  }
-  return trimmed;
+  return validateDate(date, "scheduledDate");
 }
 
 export function validateScheduledTime(time: unknown): string {
@@ -130,17 +120,17 @@ export function validateAdjustedGrossScore(s: unknown): number {
   return n;
 }
 
-export function validateDate(d: unknown): string {
-  if (typeof d !== "string") throw new Error("date must be a string");
+export function validateDate(d: unknown, field = "date"): string {
+  if (typeof d !== "string") throw new Error(`${field} must be a string`);
   const trimmed = d.trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    throw new Error("date must be in YYYY-MM-DD format");
+    throw new Error(`${field} must be in YYYY-MM-DD format`);
   }
   // Parse and reconstruct to catch invalid calendar dates (e.g. Feb 31)
   const [y, m, day] = trimmed.split("-").map(Number);
   const parsed = new Date(y, m - 1, day);
   if (parsed.getFullYear() !== y || parsed.getMonth() !== m - 1 || parsed.getDate() !== day) {
-    throw new Error("date is not a valid calendar date");
+    throw new Error(`${field} is not a valid calendar date`);
   }
   return trimmed;
 }

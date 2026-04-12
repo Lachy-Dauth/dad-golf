@@ -39,7 +39,7 @@ After `npm install`, the shared package is automatically built via `postinstall`
 
 ### Shared (`@dad-golf/shared`)
 
-Exports types, Stableford scoring logic, handicap calculation (GA/WHS), and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
+Exports types, Stableford scoring logic, handicap calculation (GA/WHS), room code utilities, and badge definitions. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
 
 ### Server (`@dad-golf/server`)
 
@@ -54,6 +54,12 @@ Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Ea
 **Calendar integration**: `calendar.ts` generates RFC 5545 `.ics` files, `calendarSync.ts` syncs RSVPs to Google Calendar (fire-and-forget), and `googleCalendar.ts` wraps the Google Calendar API. Calendar feed routes serve a subscribable iCal URL per user.
 
 **Location & weather**: `weather.ts` provides Open-Meteo weather lookups and Nominatim (OpenStreetMap) geocoding for course locations. Courses store optional `latitude`, `longitude`, and `location` fields.
+
+**Activity feed**: `db/activity.ts` stores events (round completions, member joins, handicap changes, etc.) with likes and comments. Routes in `routes/activity.ts`. Visibility controlled per-user (`"none"` or `"group"`).
+
+**Badges**: `badgeEvaluator.ts` evaluates 12 badge definitions (from `shared/badges.ts`) on triggers like `round_completed` and `competition_won`. Awards are stored in `user_badges` table. Public user profiles at `/user/:username` display earned badges.
+
+**Seeding**: `seed.ts` exports `seedIfEmpty()` (sample courses on first run) and `bootstrapAdmin()` (creates admin user from `ADMIN_PASSWORD` env var).
 
 **Production serving**: if `client/dist/` exists, Fastify serves it as static files with SPA fallback (non-API 404s → `index.html`).
 
@@ -76,7 +82,7 @@ Raw parameterized SQL (`pool.query(sql, [params])`). Schema auto-created via `in
 
 ## Maintenance
 
-When adding or removing features, update `README.md` to reflect the change. Keep `docs/roadmap.md` in sync with shipped status.
+When adding or removing features, update `README.md` to reflect the change. Keep `docs/roadmap.md` and `docs/paid-features-brainstorm.md` in sync with shipped status.
 
 ## Deployment
 

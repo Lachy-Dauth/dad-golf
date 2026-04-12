@@ -125,13 +125,14 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ## 4. Social & Sharing
 
-### 4a. Activity Feed — FREE
+### 4a. Activity Feed — FREE ✅
 
 - See recent rounds from your groups
 - Like/comment on rounds
 
-> Basic social features help engagement and make the app feel alive. Keep it
-> simple — just rounds from your groups, no algorithmic feed.
+> Shipped. Group activity feed with likes/comments, privacy controls (private /
+> in group), and 7 event types (round started, round completed, member joined,
+> scheduled round, competition won, handicap change, badge earned).
 
 ### 4b. Shareable Round Cards — PRO
 
@@ -141,13 +142,14 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Great viral growth mechanic. Feels premium. Relatively low effort —
 > server-side image generation with canvas or SVG.
 
-### 4c. Achievement Badges — FREE
+### 4c. Achievement Badges — FREE ✅
 
 - Milestone badges: first eagle, 100 rounds played, 5 different courses, etc.
 - Display on profile
 
-> Fun and lightweight. Encourages repeat usage. Not worth gating behind a
-> paywall — the engagement benefit outweighs the monetisation potential.
+> Shipped. 12 badges across 4 categories (milestones, scoring, social,
+> competitions). Auto-evaluated on round completion. Displayed on user
+> profile page (`/user/:username`) visible to group members.
 
 ---
 
@@ -353,9 +355,9 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 3a  | Community Course Database      | **FREE** ✅  |
 | 3b  | Course GPS & Hole Maps         | **WON'T DO** |
 | 3c  | Course Condition Reports       | **WON'T DO** |
-| 4a  | Activity Feed                  | **FREE**     |
+| 4a  | Activity Feed                  | **FREE** ✅  |
 | 4b  | Shareable Round Cards          | **PRO**      |
-| 4c  | Achievement Badges             | **FREE**     |
+| 4c  | Achievement Badges             | **FREE** ✅  |
 | 5a  | Skins Game                     | **PRO**      |
 | 5b  | Nassau / Match Play            | **WON'T DO** |
 | 5c  | Closest to Pin / Longest Drive | **FREE** ✅  |
@@ -376,4 +378,4 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 10a | Club/Organisation Account      | **WON'T DO** |
 | 10b | Tournament Mode                | **WON'T DO** |
 
-**Totals: 14 FREE (12 shipped), 10 PRO, 8 WON'T DO**
+**Totals: 14 FREE (14 shipped), 10 PRO, 8 WON'T DO**
