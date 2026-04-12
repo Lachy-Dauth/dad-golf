@@ -242,21 +242,22 @@ export async function listScheduledRoundsForUser(userId: string): Promise<UserSc
   const { rows } = await pool.query(
     `SELECT sr.*, c.name AS course_name, u.display_name AS created_by_name,
             r.room_code, g.name AS group_name, rsvp.status AS rsvp_status
-       FROM scheduled_round_rsvps rsvp
-       JOIN scheduled_rounds sr ON sr.id = rsvp.scheduled_round_id
+       FROM scheduled_rounds sr
        JOIN courses c ON c.id = sr.course_id
        JOIN users u ON u.id = sr.created_by_user_id
        LEFT JOIN rounds r ON r.id = sr.round_id
        JOIN groups g ON g.id = sr.group_id
-       WHERE rsvp.user_id = $1 AND sr.status = 'scheduled'
+       JOIN group_members gm ON gm.group_id = sr.group_id AND gm.user_id = $1
+       LEFT JOIN scheduled_round_rsvps rsvp ON rsvp.scheduled_round_id = sr.id AND rsvp.user_id = $1
+       WHERE sr.status = 'scheduled'
        ORDER BY sr.scheduled_date ASC, sr.scheduled_time ASC NULLS LAST`,
     [userId],
   );
   return (
-    rows as Array<ScheduledRoundListRow & { group_name: string; rsvp_status: RsvpStatus }>
+    rows as Array<ScheduledRoundListRow & { group_name: string; rsvp_status: RsvpStatus | null }>
   ).map((row) => ({
     ...rowToScheduledRound(row),
     groupName: row.group_name,
-    rsvpStatus: row.rsvp_status,
+    rsvpStatus: row.rsvp_status ?? null,
   }));
 }

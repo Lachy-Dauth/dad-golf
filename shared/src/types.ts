@@ -157,7 +157,7 @@ export interface ActiveRoundSummary {
 
 export interface UserScheduledRound extends ScheduledRound {
   groupName: string;
-  rsvpStatus: RsvpStatus;
+  rsvpStatus: RsvpStatus | null;
 }
 
 export type CompetitionType = "ctp" | "longest_drive";

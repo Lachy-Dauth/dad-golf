@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
-import { getRecentRounds } from "../localStore.js";
 
 export default function HomePage() {
-  const recent = getRecentRounds();
   return (
     <div className="page">
       <div className="hero">
@@ -37,7 +35,7 @@ export default function HomePage() {
         <Link to="/upcoming" className="action-tile">
           <span className="action-icon">📅</span>
           <span className="action-label">Upcoming rounds</span>
-          <span className="action-sub">Scheduled rounds you've RSVP'd to</span>
+          <span className="action-sub">View and RSVP to scheduled rounds</span>
         </Link>
       </div>
 
@@ -46,25 +44,6 @@ export default function HomePage() {
           How to use Stableford →
         </Link>
       </div>
-
-      {recent.length > 0 && (
-        <section className="section">
-          <h2>Recent rounds on this device</h2>
-          <ul className="list">
-            {recent.map((r) => (
-              <li key={r.roomCode}>
-                <Link to={`/r/${r.roomCode}`} className="list-row">
-                  <div>
-                    <div className="list-primary">{r.courseName}</div>
-                    <div className="list-secondary">{r.roomCode}</div>
-                  </div>
-                  <span className="chevron">›</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }

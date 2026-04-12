@@ -40,7 +40,7 @@ export default function UpcomingRoundsPage() {
   return (
     <div className="page">
       <h1>Upcoming rounds</h1>
-      <p className="muted">Scheduled rounds you've RSVP'd to across all your groups.</p>
+      <p className="muted">Scheduled rounds across all your groups.</p>
 
       {!user && (
         <div className="muted">
@@ -66,7 +66,9 @@ export default function UpcomingRoundsPage() {
                     {sr.groupName}
                   </div>
                 </div>
-                <span className="badge">{rsvpLabel(sr.rsvpStatus)}</span>
+                <span className="badge">
+                  {sr.rsvpStatus ? rsvpLabel(sr.rsvpStatus) : "No RSVP"}
+                </span>
               </Link>
             </li>
           ))}
