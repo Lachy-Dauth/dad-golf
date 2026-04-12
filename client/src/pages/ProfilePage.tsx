@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { pref: themePref, setPref: setThemePref } = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -48,8 +49,6 @@ export default function ProfilePage() {
       setBusy(false);
     }
   }
-
-  const { pref: themePref, setPref: setThemePref } = useTheme();
 
   async function handleSignOut() {
     await signOut();
@@ -104,6 +103,7 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+
       <div className="form theme-section">
         <label className="field">
           <span>Theme</span>

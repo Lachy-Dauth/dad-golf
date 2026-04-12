@@ -117,6 +117,49 @@ export interface GroupInvite {
   createdAt: string;
 }
 
+export type RsvpStatus = "accepted" | "declined" | "tentative";
+
+export type ScheduledRoundStatus = "scheduled" | "started" | "cancelled";
+
+export interface ScheduledRound {
+  id: string;
+  groupId: string;
+  courseId: string;
+  courseName: string;
+  scheduledDate: string;
+  scheduledTime: string | null;
+  durationMinutes: number | null;
+  notes: string | null;
+  status: ScheduledRoundStatus;
+  roundId: string | null;
+  roomCode: string | null;
+  createdByUserId: string;
+  createdByName: string;
+  createdAt: string;
+}
+
+export interface ScheduledRoundRsvp {
+  id: string;
+  scheduledRoundId: string;
+  userId: string;
+  userName: string;
+  status: RsvpStatus;
+  updatedAt: string;
+}
+
+export interface ActiveRoundSummary {
+  roomCode: string;
+  courseName: string;
+  status: string;
+  playerCount: number;
+  createdAt: string;
+}
+
+export interface UserScheduledRound extends ScheduledRound {
+  groupName: string;
+  rsvpStatus: RsvpStatus | null;
+}
+
 export type CompetitionType = "ctp" | "longest_drive";
 
 export interface CompetitionClaim {

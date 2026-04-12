@@ -51,6 +51,7 @@ export {
   updateRoundStatus,
   updateRoundCurrentHole,
   listRecentRounds,
+  listActiveRoundsForUser,
   listUserCompletedRounds,
   listGroupCompletedRounds,
 } from "./rounds.js";
@@ -74,6 +75,19 @@ export {
   clearClaimWinner,
   listCompetitions,
 } from "./competitions.js";
+export {
+  createScheduledRound,
+  getScheduledRound,
+  listScheduledRoundsForGroup,
+  updateScheduledRound,
+  claimScheduledRound,
+  updateScheduledRoundStatus,
+  deleteScheduledRound,
+  upsertRsvp,
+  listRsvps,
+  listAcceptedRsvpUserIds,
+  listScheduledRoundsForUser,
+} from "./scheduledRounds.js";
 export type {
   AdminStats,
   AdminUser,

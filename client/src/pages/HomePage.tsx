@@ -1,10 +1,8 @@
 import { Link } from "react-router-dom";
-import { getRecentRounds } from "../localStore.js";
 import { useAuth } from "../AuthContext.js";
 
 export default function HomePage() {
   const { user } = useAuth();
-  const recent = getRecentRounds();
   return (
     <div className="page">
       <div className="hero">
@@ -36,6 +34,11 @@ export default function HomePage() {
           <span className="action-label">Golf groups</span>
           <span className="action-sub">Save your regulars</span>
         </Link>
+        <Link to="/upcoming" className="action-tile">
+          <span className="action-icon">📅</span>
+          <span className="action-label">Upcoming rounds</span>
+          <span className="action-sub">View and RSVP to scheduled rounds</span>
+        </Link>
         {user && (
           <Link to="/rounds" className="action-tile">
             <span className="action-icon">📋</span>
@@ -50,25 +53,6 @@ export default function HomePage() {
           How to use Stableford →
         </Link>
       </div>
-
-      {recent.length > 0 && (
-        <section className="section">
-          <h2>Recent rounds on this device</h2>
-          <ul className="list">
-            {recent.map((r) => (
-              <li key={r.roomCode}>
-                <Link to={`/r/${r.roomCode}`} className="list-row">
-                  <div>
-                    <div className="list-primary">{r.courseName}</div>
-                    <div className="list-secondary">{r.roomCode}</div>
-                  </div>
-                  <span className="chevron">›</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }

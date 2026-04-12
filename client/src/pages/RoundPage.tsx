@@ -146,11 +146,6 @@ export default function RoundPage() {
     setState(res.state);
   }
 
-  async function handleClearScore(holeNumber: number) {
-    if (!roomCode || !activePlayer) return;
-    await api.clearScore(roomCode, activePlayer.id, holeNumber);
-  }
-
   async function handleSetCurrentHole(holeNumber: number) {
     if (!roomCode) return;
     const res = await api.setCurrentHole(roomCode, holeNumber);
@@ -272,7 +267,6 @@ export default function RoundPage() {
               isLeader={isLeader}
               roomCode={roomCode!}
               onScore={handleScore}
-              onClearScore={handleClearScore}
               onSetCurrentHole={handleSetCurrentHole}
               onStateUpdate={setState}
             />

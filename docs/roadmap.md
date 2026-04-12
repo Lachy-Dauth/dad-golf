@@ -145,11 +145,11 @@ gantt
 
 ### Phase 1: Quick Wins ✅
 
-| Feature                 | Duration | Depends On | Notes                                     |
-| ----------------------- | -------- | ---------- | ----------------------------------------- |
-| 8d. PWA Install Prompt  | 3 days   | —          | ✅ Shipped                                |
-| 9b. Weather Integration | 3 days   | —          | ✅ Shipped                                |
-| 8c. Dark Mode           | 1 week   | —          | ✅ Shipped                                |
+| Feature                 | Duration | Depends On | Notes      |
+| ----------------------- | -------- | ---------- | ---------- |
+| 8d. PWA Install Prompt  | 3 days   | —          | ✅ Shipped |
+| 9b. Weather Integration | 3 days   | —          | ✅ Shipped |
+| 8c. Dark Mode           | 1 week   | —          | ✅ Shipped |
 
 **Phase complete.**
 
@@ -269,13 +269,13 @@ the following **5-6 months**.
 
 ## Estimated Total Effort
 
-| Category           | Features                      | Est. Weeks    |
-| ------------------ | ----------------------------- | ------------- |
-| FREE (shipped)     | 5 features ✅                 | ~0 weeks      |
-| FREE (remaining)   | 10 features                   | ~12.5 weeks   |
-| PRO Infrastructure | Payment + gating              | ~3 weeks      |
-| PRO                | 10 features                   | ~24 weeks     |
-| **Remaining**      | **20 features + infra**       | **~39.5 weeks** |
+| Category           | Features                | Est. Weeks      |
+| ------------------ | ----------------------- | --------------- |
+| FREE (shipped)     | 5 features ✅           | ~0 weeks        |
+| FREE (remaining)   | 10 features             | ~12.5 weeks     |
+| PRO Infrastructure | Payment + gating        | ~3 weeks        |
+| PRO                | 10 features             | ~24 weeks       |
+| **Remaining**      | **20 features + infra** | **~39.5 weeks** |
 
 **Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles.
 

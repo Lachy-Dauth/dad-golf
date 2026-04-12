@@ -1,4 +1,12 @@
-import type { Round, RoundStatus, RoundSummary, Player, Score, Course } from "@dad-golf/shared";
+import type {
+  ActiveRoundSummary,
+  Round,
+  RoundStatus,
+  RoundSummary,
+  Player,
+  Score,
+  Course,
+} from "@dad-golf/shared";
 import { computeLeaderboard } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
@@ -124,6 +132,35 @@ export async function listRecentRounds(limit = 20): Promise<Round[]> {
     [limit],
   );
   return (rows as RoundListRow[]).map(rowToRound);
+}
+
+export async function listActiveRoundsForUser(userId: string): Promise<ActiveRoundSummary[]> {
+  const { rows } = await pool.query(
+    `SELECT r.room_code, c.name AS course_name, r.status,
+            (SELECT COUNT(*) FROM players p2 WHERE p2.round_id = r.id) AS player_count,
+            r.created_at
+       FROM rounds r
+       JOIN players p ON p.round_id = r.id AND p.user_id = $1
+       JOIN courses c ON c.id = r.course_id
+       WHERE r.status IN ('waiting', 'in_progress')
+       ORDER BY r.created_at DESC`,
+    [userId],
+  );
+  return (
+    rows as Array<{
+      room_code: string;
+      course_name: string;
+      status: string;
+      player_count: string;
+      created_at: string;
+    }>
+  ).map((row) => ({
+    roomCode: row.room_code,
+    courseName: row.course_name,
+    status: row.status,
+    playerCount: Number(row.player_count),
+    createdAt: row.created_at,
+  }));
 }
 
 // ---- Round history queries ----

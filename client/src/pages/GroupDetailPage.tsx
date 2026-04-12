@@ -1,8 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api.js";
-import type { Group, GroupInvite, GroupMember, GroupRole, RoundSummary } from "@dad-golf/shared";
+import type {
+  Course,
+  Group,
+  GroupInvite,
+  GroupMember,
+  GroupRole,
+  RoundSummary,
+  ScheduledRound,
+  ScheduledRoundRsvp,
+} from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
+import ScheduledRoundCard from "../components/ScheduledRoundCard.js";
 
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +24,19 @@ export default function GroupDetailPage() {
   const [groupRoundsTotal, setGroupRoundsTotal] = useState(0);
   const [roundsOffset, setRoundsOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Scheduled rounds state
+  const [scheduledRounds, setScheduledRounds] = useState<ScheduledRound[]>([]);
+  const [rsvpsByRound, setRsvpsByRound] = useState<Record<string, ScheduledRoundRsvp[]>>({});
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [scheduleForm, setScheduleForm] = useState({
+    courseId: "",
+    scheduledDate: "",
+    scheduledTime: "",
+    durationMinutes: "",
+    notes: "",
+  });
 
   const myMember = user ? members.find((m) => m.userId === user.id) : null;
   const isAdmin = myMember?.role === "admin";
@@ -40,11 +63,27 @@ export default function GroupDetailPage() {
       });
   }, [id]);
 
+  const loadScheduledRounds = useCallback(() => {
+    if (!id) return;
+    api
+      .listScheduledRounds(id)
+      .then((res) => {
+        setScheduledRounds(res.scheduledRounds);
+        setRsvpsByRound(res.rsvps);
+      })
+      .catch(() => {
+        /* ignore: user may not be a member */
+      });
+  }, [id]);
+
   useEffect(() => load(), [id, user?.id, load]);
   useEffect(() => {
     if (isAdmin) loadInvites();
     else setInvites([]);
   }, [isAdmin, id, loadInvites]);
+  useEffect(() => {
+    if (myMember) loadScheduledRounds();
+  }, [myMember, loadScheduledRounds]);
 
   useEffect(() => {
     setGroupRounds([]);
@@ -99,6 +138,43 @@ export default function GroupDetailPage() {
     try {
       await api.deleteGroupInvite(id, inviteId);
       loadInvites();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleOpenScheduleForm() {
+    setShowScheduleForm(true);
+    if (courses.length === 0) {
+      try {
+        const res = await api.listCourses();
+        setCourses(res.courses);
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    }
+  }
+
+  async function handleCreateScheduledRound() {
+    if (!id) return;
+    try {
+      const dur = scheduleForm.durationMinutes ? Number(scheduleForm.durationMinutes) : undefined;
+      await api.createScheduledRound(id, {
+        courseId: scheduleForm.courseId,
+        scheduledDate: scheduleForm.scheduledDate,
+        scheduledTime: scheduleForm.scheduledTime || undefined,
+        durationMinutes: dur,
+        notes: scheduleForm.notes || undefined,
+      });
+      setShowScheduleForm(false);
+      setScheduleForm({
+        courseId: "",
+        scheduledDate: "",
+        scheduledTime: "",
+        durationMinutes: "",
+        notes: "",
+      });
+      loadScheduledRounds();
     } catch (e) {
       setError((e as Error).message);
     }
@@ -168,6 +244,113 @@ export default function GroupDetailPage() {
                 </li>
               ))}
             </ul>
+          )}
+        </section>
+      )}
+
+      {myMember && (
+        <section className="section">
+          <div className="section-header">
+            <h2>Upcoming rounds</h2>
+            {isAdmin && (
+              <button className="btn btn-primary" onClick={handleOpenScheduleForm}>
+                + Schedule
+              </button>
+            )}
+          </div>
+
+          {showScheduleForm && (
+            <div className="form" style={{ marginBottom: 12 }}>
+              <label className="field">
+                <span>Course</span>
+                <select
+                  value={scheduleForm.courseId}
+                  onChange={(e) => setScheduleForm((f) => ({ ...f, courseId: e.target.value }))}
+                >
+                  <option value="">Select course...</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Date</span>
+                <input
+                  type="date"
+                  value={scheduleForm.scheduledDate}
+                  onChange={(e) =>
+                    setScheduleForm((f) => ({ ...f, scheduledDate: e.target.value }))
+                  }
+                />
+              </label>
+              <div className="field-row">
+                <label className="field">
+                  <span>Time (optional)</span>
+                  <input
+                    type="time"
+                    value={scheduleForm.scheduledTime}
+                    onChange={(e) =>
+                      setScheduleForm((f) => ({ ...f, scheduledTime: e.target.value }))
+                    }
+                  />
+                </label>
+                <label className="field">
+                  <span>Duration (optional)</span>
+                  <select
+                    value={scheduleForm.durationMinutes}
+                    onChange={(e) =>
+                      setScheduleForm((f) => ({ ...f, durationMinutes: e.target.value }))
+                    }
+                  >
+                    <option value="">--</option>
+                    <option value="120">2 hours</option>
+                    <option value="150">2.5 hours</option>
+                    <option value="180">3 hours</option>
+                    <option value="210">3.5 hours</option>
+                    <option value="240">4 hours</option>
+                    <option value="270">4.5 hours</option>
+                    <option value="300">5 hours</option>
+                  </select>
+                </label>
+              </div>
+              <label className="field">
+                <span>Notes (optional)</span>
+                <input
+                  type="text"
+                  value={scheduleForm.notes}
+                  onChange={(e) => setScheduleForm((f) => ({ ...f, notes: e.target.value }))}
+                  placeholder="e.g. Meet at pro shop"
+                  maxLength={200}
+                />
+              </label>
+              <div className="form-actions">
+                <button className="btn" onClick={() => setShowScheduleForm(false)}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  disabled={!scheduleForm.courseId || !scheduleForm.scheduledDate}
+                  onClick={handleCreateScheduledRound}
+                >
+                  Schedule
+                </button>
+              </div>
+            </div>
+          )}
+
+          {scheduledRounds.length === 0 ? (
+            <div className="muted">No upcoming rounds scheduled.</div>
+          ) : (
+            scheduledRounds.map((sr) => (
+              <ScheduledRoundCard
+                key={sr.id}
+                scheduledRound={sr}
+                rsvps={rsvpsByRound[sr.id] ?? []}
+                currentUserId={user?.id ?? null}
+              />
+            ))
           )}
         </section>
       )}

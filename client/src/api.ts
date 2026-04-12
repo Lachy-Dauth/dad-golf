@@ -1,4 +1,5 @@
 import type {
+  ActiveRoundSummary,
   CompetitionType,
   Course,
   Group,
@@ -10,8 +11,12 @@ import type {
   Player,
   RoundState,
   RoundSummary,
+  RsvpStatus,
+  ScheduledRound,
+  ScheduledRoundRsvp,
   Score,
   User,
+  UserScheduledRound,
   Weather,
 } from "@dad-golf/shared";
 import type { HandicapCalculation } from "@dad-golf/shared";
@@ -253,6 +258,73 @@ export const api = {
       method: "POST",
       headers: authHeaders(),
     }).then((r) => json<{ group: Group; member: GroupMember }>(r)),
+
+  // scheduled rounds
+  listScheduledRounds: (groupId: string) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds`, { headers: authHeaders() }).then((r) =>
+      json<{ scheduledRounds: ScheduledRound[]; rsvps: Record<string, ScheduledRoundRsvp[]> }>(r),
+    ),
+  getScheduledRound: (groupId: string, id: string) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}`, { headers: authHeaders() }).then((r) =>
+      json<{ scheduledRound: ScheduledRound; rsvps: ScheduledRoundRsvp[] }>(r),
+    ),
+  createScheduledRound: (
+    groupId: string,
+    payload: {
+      courseId: string;
+      scheduledDate: string;
+      scheduledTime?: string;
+      durationMinutes?: number;
+      notes?: string;
+    },
+  ) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
+    }).then((r) => json<{ scheduledRound: ScheduledRound }>(r)),
+  updateScheduledRound: (
+    groupId: string,
+    id: string,
+    payload: {
+      courseId?: string;
+      scheduledDate?: string;
+      scheduledTime?: string | null;
+      durationMinutes?: number | null;
+      notes?: string | null;
+    },
+  ) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}`, {
+      method: "PATCH",
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
+    }).then((r) => json<{ scheduledRound: ScheduledRound }>(r)),
+  cancelScheduledRound: (groupId: string, id: string) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  rsvpScheduledRound: (groupId: string, id: string, status: RsvpStatus) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}/rsvp`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ status }),
+    }).then((r) => json<{ rsvp: ScheduledRoundRsvp }>(r)),
+  startScheduledRound: (groupId: string, id: string) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}/start`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ state: RoundState }>(r)),
+
+  // my (user-specific cross-group queries)
+  myActiveRounds: () =>
+    fetch("/api/my/rounds", { headers: authHeaders() }).then((r) =>
+      json<{ rounds: ActiveRoundSummary[] }>(r),
+    ),
+  myScheduledRounds: () =>
+    fetch("/api/my/scheduled-rounds", { headers: authHeaders() }).then((r) =>
+      json<{ scheduledRounds: UserScheduledRound[] }>(r),
+    ),
 
   // round history
   listMyRounds: (limit = 20, offset = 0) =>

@@ -22,6 +22,7 @@ import {
   isUserInGroup,
   listGroupMembers,
   listPlayers,
+  listActiveRoundsForUser,
   listRecentRounds,
   listUserCompletedRounds,
   removePlayer,
@@ -558,5 +559,13 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     const state = await buildRoundState(code, user.id);
     if (state) broadcast(code, { type: "competition_update", state });
     return { ok: true };
+  });
+
+  // List active rounds the current user is in
+  app.get("/api/my/rounds", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const rounds = await listActiveRoundsForUser(user.id);
+    return { rounds };
   });
 }
