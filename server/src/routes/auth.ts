@@ -86,7 +86,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       let activityVisibility = user.activityVisibility;
       if (
         req.body?.activityVisibility &&
-        ["none", "group", "all"].includes(req.body.activityVisibility)
+        ["none", "group"].includes(req.body.activityVisibility)
       ) {
         activityVisibility = req.body.activityVisibility as ActivityVisibility;
         await updateActivityVisibility(user.id, activityVisibility);

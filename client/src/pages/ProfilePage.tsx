@@ -101,20 +101,20 @@ export default function ProfilePage() {
         <label className="field">
           <span>Activity sharing</span>
           <div className="segmented">
-            {(["none", "group", "all"] as ActivityVisibility[]).map((opt) => (
+            {(["none", "group"] as ActivityVisibility[]).map((opt) => (
               <button
                 key={opt}
                 className={activityVis === opt ? "active" : ""}
                 onClick={() => setActivityVis(opt)}
               >
-                {opt === "none" ? "Don't share" : opt === "group" ? "Group only" : "All groups"}
+                {opt === "none" ? "Private" : "In group"}
               </button>
             ))}
           </div>
           <span className="muted" style={{ fontSize: 12 }}>
             {activityVis === "none" && "Your activity won't appear in anyone's feed."}
-            {activityVis === "group" && "Activity visible only to the specific group it belongs to."}
-            {activityVis === "all" && "Activity visible to members of any group you're in."}
+            {activityVis === "group" &&
+              "Activity visible to members of the group it belongs to."}
           </span>
         </label>
         {error && <div className="error">{error}</div>}

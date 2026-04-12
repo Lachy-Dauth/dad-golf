@@ -46,10 +46,27 @@ export default function UserProfilePage() {
   }
 
   if (error || !profile) {
+    const is403 = error?.toLowerCase().includes("share a group");
+    const is401 = error?.toLowerCase().includes("auth") || error?.toLowerCase().includes("log in");
     return (
       <div className="page">
         <h1>Profile</h1>
-        <div className="error">{error ?? "User not found"}</div>
+        <div className="error">
+          {is401
+            ? "You must be logged in to view profiles."
+            : is403
+              ? "You must share a group with this user to view their profile."
+              : error ?? "User not found"}
+        </div>
+        {(is401 || is403) && (
+          <p className="muted">
+            {is401 ? (
+              <Link to="/login">Log in</Link>
+            ) : (
+              "Join a group with this person to see their profile and badges."
+            )}
+          </p>
+        )}
         <Link to="/" className="back-link">
           &larr; Home
         </Link>

@@ -334,6 +334,10 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
     );
     CREATE INDEX IF NOT EXISTS idx_user_badges_user ON user_badges(user_id);
   `);
+
+  // Migration: remove 'all' visibility option (replaced by 'group')
+  await pool.query(`UPDATE users SET activity_visibility = 'group' WHERE activity_visibility = 'all'`);
+  await pool.query(`UPDATE activity_events SET visibility = 'group' WHERE visibility = 'all'`);
 }
 
 export async function closeDb(): Promise<void> {

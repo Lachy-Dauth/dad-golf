@@ -66,10 +66,6 @@ export async function getActivityFeedForUser(
   const { rows: countRows } = await pool.query(
     `SELECT COUNT(*) AS cnt FROM activity_events ae
      WHERE (ae.visibility = 'group' AND ae.group_id = ANY($2))
-        OR (ae.visibility = 'all' AND ae.user_id IN (
-             SELECT gm2.user_id FROM group_members gm2
-             WHERE gm2.group_id = ANY($2) AND gm2.user_id IS NOT NULL
-           ))
         OR ae.user_id = $1`,
     [userId, groupIds],
   );
@@ -86,10 +82,6 @@ export async function getActivityFeedForUser(
      LEFT JOIN groups g ON g.id = ae.group_id
      LEFT JOIN rounds r ON r.id = ae.round_id
      WHERE (ae.visibility = 'group' AND ae.group_id = ANY($2))
-        OR (ae.visibility = 'all' AND ae.user_id IN (
-             SELECT gm2.user_id FROM group_members gm2
-             WHERE gm2.group_id = ANY($2) AND gm2.user_id IS NOT NULL
-           ))
         OR ae.user_id = $1
      ORDER BY ae.created_at DESC
      LIMIT $3 OFFSET $4`,
@@ -135,25 +127,13 @@ export async function canUserSeeEvent(eventId: string, userId: string): Promise<
   // 'none' visibility: only the author
   if (event.visibility === "none") return false;
 
-  // Check if viewer shares a group with the event
+  // Check if viewer shares the event's group
   if (event.visibility === "group" && event.group_id) {
     const { rows: memberRows } = await pool.query(
       `SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2`,
       [event.group_id, userId],
     );
     return memberRows.length > 0;
-  }
-
-  if (event.visibility === "all") {
-    // Viewer must share at least one group with the event author
-    const { rows: sharedRows } = await pool.query(
-      `SELECT 1 FROM group_members gm1
-       JOIN group_members gm2 ON gm1.group_id = gm2.group_id
-       WHERE gm1.user_id = $1 AND gm2.user_id = $2
-       LIMIT 1`,
-      [userId, event.user_id],
-    );
-    return sharedRows.length > 0;
   }
 
   return false;
