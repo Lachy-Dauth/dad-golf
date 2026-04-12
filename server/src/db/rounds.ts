@@ -110,6 +110,10 @@ export async function updateRoundCurrentHole(id: string, holeNumber: number): Pr
   await pool.query(`UPDATE rounds SET current_hole = $1 WHERE id = $2`, [holeNumber, id]);
 }
 
+export async function deleteRound(id: string): Promise<void> {
+  await pool.query(`DELETE FROM rounds WHERE id = $1`, [id]);
+}
+
 export async function listRecentRounds(limit = 20): Promise<Round[]> {
   const { rows } = await pool.query(
     `SELECT r.*, u.display_name AS leader_name

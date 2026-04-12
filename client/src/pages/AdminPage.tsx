@@ -151,7 +151,15 @@ function UsersTab({
   );
 }
 
-function RoundsTab({ rounds, total }: { rounds: AdminRound[]; total: number }) {
+function RoundsTab({
+  rounds,
+  total,
+  onDelete,
+}: {
+  rounds: AdminRound[];
+  total: number;
+  onDelete: (id: string, roomCode: string) => void;
+}) {
   return (
     <>
       <div className="muted" style={{ marginBottom: 8 }}>
@@ -167,6 +175,7 @@ function RoundsTab({ rounds, total }: { rounds: AdminRound[]; total: number }) {
               <th>Players</th>
               <th>Status</th>
               <th>Created</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -182,6 +191,14 @@ function RoundsTab({ rounds, total }: { rounds: AdminRound[]; total: number }) {
                   <StatusBadge status={r.status} />
                 </td>
                 <td>{formatDate(r.createdAt)}</td>
+                <td>
+                  <button
+                    className="btn btn-small btn-danger"
+                    onClick={() => onDelete(r.id, r.roomCode)}
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -366,6 +383,21 @@ export default function AdminPage() {
     );
   }
 
+  async function handleDeleteRound(id: string, roomCode: string) {
+    if (!confirm(`Delete round ${roomCode}? This will also delete all players and scores.`)) return;
+    try {
+      await api.adminDeleteRound(id);
+      setRounds((prev) => prev.filter((r) => r.id !== id));
+      setRoundsTotal((prev) => prev - 1);
+      api
+        .adminStats()
+        .then(setStats)
+        .catch(() => {});
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   async function handleDeleteUser(id: string, username: string) {
     if (
       !confirm(
@@ -419,7 +451,9 @@ export default function AdminPage() {
         {tab === "users" && (
           <UsersTab users={users} currentUserId={user.id} onDelete={handleDeleteUser} />
         )}
-        {tab === "rounds" && <RoundsTab rounds={rounds} total={roundsTotal} />}
+        {tab === "rounds" && (
+          <RoundsTab rounds={rounds} total={roundsTotal} onDelete={handleDeleteRound} />
+        )}
         {tab === "courses" && <CoursesTab courses={courses} />}
         {tab === "groups" && <GroupsTab groups={groups} />}
         {tab === "activity" && <ActivityTab events={events} />}

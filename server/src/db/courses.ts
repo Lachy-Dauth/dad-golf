@@ -118,10 +118,12 @@ export async function updateCourse(
   rating: number,
   slope: number,
   holes: Hole[],
+  latitude: number | null = null,
+  longitude: number | null = null,
 ): Promise<void> {
   await pool.query(
-    `UPDATE courses SET name = $1, location = $2, latitude = NULL, longitude = NULL, rating = $3, slope = $4, holes_json = $5 WHERE id = $6`,
-    [name, location, rating, slope, JSON.stringify(holes), id],
+    `UPDATE courses SET name = $1, location = $2, latitude = $3, longitude = $4, rating = $5, slope = $6, holes_json = $7 WHERE id = $8`,
+    [name, location, latitude, longitude, rating, slope, JSON.stringify(holes), id],
   );
 }
 

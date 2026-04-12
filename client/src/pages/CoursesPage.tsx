@@ -22,7 +22,7 @@ export default function CoursesPage() {
   }, [user?.id]);
 
   async function handleDelete(c: Course) {
-    if (c.favoriteCount > 0) {
+    if (!user?.isAdmin && c.favoriteCount > 0) {
       setError("This course has favourites and cannot be deleted.");
       return;
     }
@@ -73,7 +73,9 @@ export default function CoursesPage() {
         <ul className="list">
           {courses.map((c) => {
             const isOwner = user && c.createdByUserId === user.id;
-            const canDelete = isOwner && c.favoriteCount === 0;
+            const isAdmin = user?.isAdmin ?? false;
+            const canManage = isOwner || isAdmin;
+            const canDelete = canManage && (isAdmin || c.favoriteCount === 0);
             return (
               <li key={c.id}>
                 <div className="list-row">
@@ -96,16 +98,26 @@ export default function CoursesPage() {
                     >
                       {c.isFavorite ? "★" : "☆"}
                     </button>
-                    {isOwner && (
-                      <button
-                        className="btn-icon"
-                        onClick={() => handleDelete(c)}
-                        disabled={!canDelete}
-                        title={canDelete ? "Delete" : "Cannot delete: has favourites"}
-                        aria-label="Delete"
-                      >
-                        ✕
-                      </button>
+                    {canManage && (
+                      <>
+                        <Link
+                          to={`/courses/${c.id}/edit`}
+                          className="btn-icon"
+                          title="Edit"
+                          aria-label="Edit"
+                        >
+                          ✎
+                        </Link>
+                        <button
+                          className="btn-icon"
+                          onClick={() => handleDelete(c)}
+                          disabled={!canDelete}
+                          title={canDelete ? "Delete" : "Cannot delete: has favourites"}
+                          aria-label="Delete"
+                        >
+                          ✕
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

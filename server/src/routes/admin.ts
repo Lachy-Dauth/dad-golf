@@ -1,8 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import {
+  deleteRound,
   deleteUserAsAdmin,
   getActivityFeed,
   getAdminStats,
+  getRound,
   getUser,
   listAllCourses,
   listAllGroups,
@@ -50,6 +52,15 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       : 50;
     const offset = Number.isFinite(parsedOffset) ? Math.max(0, Math.floor(parsedOffset)) : 0;
     return await listAllRounds(limit, offset);
+  });
+
+  app.delete<{ Params: { id: string } }>("/api/admin/rounds/:id", async (req, reply) => {
+    const user = await requireAdmin(req, reply);
+    if (!user) return;
+    const round = await getRound(req.params.id);
+    if (!round) return reply.code(404).send({ error: "round not found" });
+    await deleteRound(round.id);
+    return { ok: true };
   });
 
   app.get("/api/admin/courses", async (req, reply) => {

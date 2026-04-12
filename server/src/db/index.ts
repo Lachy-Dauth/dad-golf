@@ -41,6 +41,7 @@ export {
   createRound,
   getRoundByRoomCode,
   getRound,
+  deleteRound,
   updateRoundStatus,
   updateRoundCurrentHole,
   listRecentRounds,
