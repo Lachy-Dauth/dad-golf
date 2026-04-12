@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage.js";
 import AcceptInvitePage from "./pages/AcceptInvitePage.js";
 import AdminPage from "./pages/AdminPage.js";
 import { AuthProvider, useAuth } from "./AuthContext.js";
+import InstallPrompt from "./components/InstallPrompt.js";
 
 function HeaderUser() {
   const { user, loading } = useAuth();
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </main>
+        <InstallPrompt />
       </div>
     </AuthProvider>
   );

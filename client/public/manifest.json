@@ -1,0 +1,30 @@
+{
+  "name": "Stableford — Live Golf Scoring",
+  "short_name": "Stableford",
+  "description": "Live Stableford golf scoring with real-time leaderboards",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1713",
+  "theme_color": "#1f7a3d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
