@@ -192,7 +192,7 @@ export default function NewCoursePage() {
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="City, State"
+            placeholder="e.g. Wembley Downs, Perth"
           />
         </label>
         <div className="field-row">

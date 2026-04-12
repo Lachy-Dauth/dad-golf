@@ -1,7 +1,8 @@
 import type { Weather } from "@dad-golf/shared";
 
 const OPEN_METEO_WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
-const OPEN_METEO_GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
+const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+const NOMINATIM_USER_AGENT = "dad-golf/1.0";
 
 // In-memory cache: key = "lat,lng" → { data, fetchedAt }
 const weatherCache = new Map<string, { data: Weather; fetchedAt: number }>();
@@ -11,18 +12,34 @@ export interface GeocodingResult {
   latitude: number;
   longitude: number;
   name: string;
+  displayName: string;
 }
 
 export async function geocodeLocation(query: string): Promise<GeocodingResult | null> {
-  const url = `${OPEN_METEO_GEOCODING_URL}?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
-  const res = await fetch(url);
+  const params = new URLSearchParams({
+    q: query,
+    format: "json",
+    limit: "1",
+    countrycodes: "au",
+  });
+  const res = await fetch(`${NOMINATIM_URL}?${params}`, {
+    headers: { "User-Agent": NOMINATIM_USER_AGENT },
+  });
   if (!res.ok) throw new Error("geocoding service unavailable");
-  const data = (await res.json()) as {
-    results?: Array<{ latitude: number; longitude: number; name: string }>;
+  const data = (await res.json()) as Array<{
+    lat: string;
+    lon: string;
+    name: string;
+    display_name: string;
+  }>;
+  if (data.length === 0) return null;
+  const r = data[0];
+  return {
+    latitude: parseFloat(r.lat),
+    longitude: parseFloat(r.lon),
+    name: r.name,
+    displayName: r.display_name,
   };
-  if (!data.results || data.results.length === 0) return null;
-  const r = data.results[0];
-  return { latitude: r.latitude, longitude: r.longitude, name: r.name };
 }
 
 export async function fetchWeather(latitude: number, longitude: number): Promise<Weather | null> {
