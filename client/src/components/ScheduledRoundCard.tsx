@@ -6,6 +6,7 @@ interface Props {
   scheduledRound: ScheduledRound;
   rsvps: ScheduledRoundRsvp[];
   currentUserId: string | null;
+  googleCalendarConnected?: boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -29,7 +30,12 @@ function formatDuration(minutes: number): string {
   return `${h}h ${m}m`;
 }
 
-export default function ScheduledRoundCard({ scheduledRound: sr, rsvps, currentUserId }: Props) {
+export default function ScheduledRoundCard({
+  scheduledRound: sr,
+  rsvps,
+  currentUserId,
+  googleCalendarConnected,
+}: Props) {
   const navigate = useNavigate();
   const accepted = rsvps.filter((r) => r.status === "accepted").length;
   const tentative = rsvps.filter((r) => r.status === "tentative").length;
@@ -52,7 +58,7 @@ export default function ScheduledRoundCard({ scheduledRound: sr, rsvps, currentU
           </div>
         </div>
         <div className="rsvp-summary">
-          {sr.status === "scheduled" && (
+          {sr.status === "scheduled" && !googleCalendarConnected && (
             <button
               className="calendar-icon-btn"
               title="Download .ics"

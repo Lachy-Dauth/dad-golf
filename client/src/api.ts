@@ -528,4 +528,31 @@ export const api = {
       method: "POST",
       headers: authHeaders(),
     }).then((r) => json<{ user: User; calculation: HandicapCalculation }>(r)),
+
+  // google calendar
+  googleCalendarAvailable: () =>
+    fetch("/api/google-calendar/available").then((r) => json<{ available: boolean }>(r)),
+  googleCalendarAuthUrl: () =>
+    fetch("/api/google-calendar/auth-url", { headers: authHeaders() }).then((r) =>
+      json<{ url: string }>(r),
+    ),
+  googleCalendarStatus: () =>
+    fetch("/api/google-calendar/status", { headers: authHeaders() }).then((r) =>
+      json<{ connected: boolean; email: string | null; calendarId: string | null }>(r),
+    ),
+  googleCalendarCalendars: () =>
+    fetch("/api/google-calendar/calendars", { headers: authHeaders() }).then((r) =>
+      json<{ calendars: Array<{ id: string; name: string; primary: boolean }> }>(r),
+    ),
+  googleCalendarUpdateSettings: (calendarId: string) =>
+    fetch("/api/google-calendar/settings", {
+      method: "PATCH",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ calendarId }),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  googleCalendarDisconnect: () =>
+    fetch("/api/google-calendar", {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
 };

@@ -3,6 +3,11 @@ import type { RsvpStatus } from "@dad-golf/shared";
 import { generateRoomCode } from "@dad-golf/shared";
 import { buildScheduledRoundEvent, generateIcsEvent } from "../calendar.js";
 import {
+  syncRsvpToGoogle,
+  syncScheduledRoundUpdateToGoogle,
+  syncScheduledRoundCancelToGoogle,
+} from "../calendarSync.js";
+import {
   addPlayer,
   claimScheduledRound,
   createRound,
@@ -226,6 +231,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
 
       await updateScheduledRound(sr.id, fields);
+      syncScheduledRoundUpdateToGoogle(sr.id, req.log).catch(() => {});
       const updated = await getScheduledRound(sr.id);
       return { scheduledRound: updated };
     } catch (e) {
@@ -255,6 +261,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
 
       await updateScheduledRoundStatus(sr.id, "cancelled");
+      syncScheduledRoundCancelToGoogle(sr.id, req.log).catch(() => {});
       return { ok: true };
     },
   );
@@ -286,6 +293,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
 
       const rsvp = await upsertRsvp(sr.id, user.id, status);
+      syncRsvpToGoogle(user.id, sr, status, req.log).catch(() => {});
       return { rsvp };
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });

@@ -26,6 +26,7 @@ export interface UserRow {
   display_name: string;
   handicap: number;
   handicap_auto_adjust: number;
+  google_calendar_connected: number;
   created_at: string;
   is_admin: number;
 }
@@ -37,6 +38,7 @@ function rowToUser(row: UserRow): User {
     displayName: row.display_name,
     handicap: Number(row.handicap),
     handicapAutoAdjust: Boolean(row.handicap_auto_adjust),
+    googleCalendarConnected: Boolean(row.google_calendar_connected),
     createdAt: row.created_at,
     isAdmin: Boolean(row.is_admin),
   };
@@ -62,6 +64,7 @@ export async function createUser(
     displayName,
     handicap,
     handicapAutoAdjust: false,
+    googleCalendarConnected: false,
     createdAt,
     isAdmin: false,
   };

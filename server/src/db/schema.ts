@@ -199,6 +199,31 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
   await pool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS handicap_auto_adjust INTEGER NOT NULL DEFAULT 0;
   `);
+
+  // Migration: Google Calendar OAuth connections
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS google_calendar_connections (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT NOT NULL,
+      token_expiry TEXT NOT NULL,
+      calendar_id TEXT NOT NULL DEFAULT 'primary',
+      email TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_google_cal_user ON google_calendar_connections(user_id);
+  `);
+
+  // Migration: track Google Calendar event IDs on RSVPs
+  await pool.query(`
+    ALTER TABLE scheduled_round_rsvps ADD COLUMN IF NOT EXISTS google_event_id TEXT;
+  `);
+
+  // Migration: flag for Google Calendar connection on users
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS google_calendar_connected INTEGER NOT NULL DEFAULT 0;
+  `);
 }
 
 export async function closeDb(): Promise<void> {

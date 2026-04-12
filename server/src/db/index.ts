@@ -107,6 +107,19 @@ export {
   deleteUserAsAdmin,
   ensureAdminUser,
 } from "./admin.js";
+export type { GoogleCalendarConnection } from "./googleCalendar.js";
+export {
+  getGoogleConnection,
+  createGoogleConnection,
+  updateGoogleTokens,
+  updateGoogleCalendarId,
+  deleteGoogleConnection,
+  getGoogleEventId,
+  setGoogleEventId,
+  clearGoogleEventId,
+  clearAllGoogleEventIds,
+  listRsvpsWithGoogleEvents,
+} from "./googleCalendar.js";
 export {
   listHandicapRounds,
   getHandicapRound,

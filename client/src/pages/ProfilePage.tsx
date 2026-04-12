@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext.js";
 import { useTheme } from "../ThemeContext.js";
 import type { ThemePref } from "../localStore.js";
+import GoogleCalendarSection from "../components/GoogleCalendarSection.js";
 
 export default function ProfilePage() {
   const { user, updateProfile, signOut } = useAuth();
@@ -120,6 +121,12 @@ export default function ProfilePage() {
           </div>
         </label>
       </div>
+
+      <section className="section">
+        <h2>Google Calendar</h2>
+        <GoogleCalendarSection />
+      </section>
+
       <Link to="/" className="back-link">
         ← Home
       </Link>

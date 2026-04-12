@@ -206,7 +206,7 @@ export default function ScheduledRoundPage() {
         </div>
       </section>
 
-      {sr.status === "scheduled" && groupId && id && (
+      {sr.status === "scheduled" && groupId && id && !user?.googleCalendarConnected && (
         <div className="calendar-dropdown-wrap" ref={calendarRef}>
           <button className="btn btn-sm" onClick={() => setCalendarOpen((v) => !v)}>
             {"\uD83D\uDCC5"} Add to Calendar
@@ -255,6 +255,10 @@ export default function ScheduledRoundPage() {
               );
             })()}
         </div>
+      )}
+
+      {sr.status === "scheduled" && user?.googleCalendarConnected && (
+        <div className="gcal-synced-badge">Synced with Google Calendar</div>
       )}
 
       {error && <div className="error">{error}</div>}

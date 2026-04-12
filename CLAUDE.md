@@ -79,3 +79,9 @@ When adding or removing features, update `README.md` to reflect the change.
 Railway with Nixpacks (Node.js 22). Health check at `GET /api/health`. Config in `railway.json` and `nixpacks.toml`.
 
 **Required env**: `DATABASE_URL` (PostgreSQL connection string). Optional: `PORT` (default 3001), `HOST` (default 0.0.0.0), `ADMIN_PASSWORD` (bootstraps admin user on startup if set).
+
+**Optional env** for Google Calendar sync:
+
+- `GOOGLE_CLIENT_ID` — Google OAuth client ID (enables Google Calendar integration)
+- `GOOGLE_CLIENT_SECRET` — Google OAuth client secret
+- `APP_URL` — Base URL of the app (used for OAuth redirect and calendar event links)

@@ -1783,3 +1783,35 @@ input:-webkit-autofill:focus {
   margin-top: 4px;
   opacity: 0.8;
 }
+
+/* ---- Google Calendar ---- */
+.gcal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gcal-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.gcal-connected-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+}
+.gcal-synced-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--primary);
+  padding: 6px 0;
+}
+.gcal-synced-badge::before {
+  content: "\2713";
+  font-weight: 700;
+}
