@@ -72,13 +72,12 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 > Natural extension of leagues. Awards are fun and low effort once leagues exist.
 
-### 2c. Scheduled Rounds — WON'T DO
+### 2c. Scheduled Rounds — FREE
 - Pre-schedule rounds for a league (date, time, course)
 - RSVP / availability tracking
-- Reminders (push notification or email)
 
-> Requires push notification or email infrastructure. Everyone already
-> coordinates via WhatsApp/iMessage — this is reinventing the wheel.
+> Useful for regular groups to coordinate upcoming rounds. Keeps round
+> planning inside the app instead of scattered across group chats.
 
 ---
 
@@ -102,12 +101,12 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Massive effort. Golfshot, 18Birdies, and every other golf app already does
 > this with dedicated teams. Not our lane.
 
-### 3c. Course Condition Reports — WON'T DO
+### 3c. Course Condition Reports — FREE
 - Users can tag course conditions (wet, dry, fast greens, etc.)
 - Recent reports shown when selecting a course
 
-> Needs critical mass of users at each course to be useful. Would sit empty
-> for ages and look bad. Not worth it until the user base is huge.
+> Simple tagging feature. Low effort to build and useful context when
+> picking a course. Grows in value as the user base grows.
 
 ---
 
@@ -272,12 +271,12 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ## 9. Integrations
 
-### 9a. Calendar Integration — WON'T DO
+### 9a. Calendar Integration — FREE
 - Add scheduled rounds to Google/Apple Calendar
 - One-tap RSVP
 
-> Depends on Scheduled Rounds (2c), which is also won't-do. No point
-> building calendar integration without a scheduling feature.
+> Natural companion to Scheduled Rounds (2c). Low effort — just generate
+> an .ics link or use a calendar API. Makes scheduling feel complete.
 
 ### 9b. Weather Integration — FREE
 - Show weather forecast for round day / course location
@@ -325,10 +324,10 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 1c | Round Replay / Breakdown | **FREE** |
 | 2a | Recurring Leagues | **PRO** |
 | 2b | League Leaderboard & Awards | **PRO** |
-| 2c | Scheduled Rounds | **WON'T DO** |
+| 2c | Scheduled Rounds | **FREE** |
 | 3a | Community Course Database | **FREE** |
 | 3b | Course GPS & Hole Maps | **WON'T DO** |
-| 3c | Course Condition Reports | **WON'T DO** |
+| 3c | Course Condition Reports | **FREE** |
 | 4a | Activity Feed | **FREE** |
 | 4b | Shareable Round Cards | **PRO** |
 | 4c | Achievement Badges | **FREE** |
@@ -348,10 +347,10 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 8c | Dark Mode / Themes | **FREE** |
 | 8d | PWA Install Prompt | **FREE** |
 | 8e | PDF Scorecards | **PRO** |
-| 9a | Calendar Integration | **WON'T DO** |
+| 9a | Calendar Integration | **FREE** |
 | 9b | Weather Integration | **FREE** |
 | 9c | Photo Attachment | **WON'T DO** |
 | 10a | Club/Organisation Account | **WON'T DO** |
 | 10b | Tournament Mode | **WON'T DO** |
 
-**Totals: 13 FREE, 10 PRO, 11 WON'T DO**
+**Totals: 16 FREE, 10 PRO, 8 WON'T DO**
