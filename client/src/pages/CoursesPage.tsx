@@ -32,6 +32,13 @@ export default function CoursesPage() {
     load();
   }, [user?.id]);
 
+  // Reset auth-dependent filters when user logs out
+  useEffect(() => {
+    if (!user && (filter === "favorites" || filter === "mine")) {
+      setFilter("all");
+    }
+  }, [user, filter]);
+
   const filtered = useMemo(() => {
     if (!courses) return [];
     const q = search.toLowerCase().trim();

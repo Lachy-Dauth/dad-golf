@@ -382,7 +382,7 @@ function ScorecardTable({
   holes: { number: number; par: number; strokeIndex: number }[];
   label: string;
 }) {
-  const totalPar = holes.reduce((sum, h) => sum + h.par, 0);
+  const parTotal = holes.reduce((sum, h) => sum + h.par, 0);
   return (
     <div className="course-scorecard">
       <table>
@@ -401,7 +401,7 @@ function ScorecardTable({
             {holes.map((h) => (
               <td key={h.number}>{h.par}</td>
             ))}
-            <td>{totalPar}</td>
+            <td>{parTotal}</td>
           </tr>
           <tr>
             <td>SI</td>
