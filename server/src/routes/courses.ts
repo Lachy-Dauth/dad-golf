@@ -4,7 +4,6 @@ import {
   deleteCourse,
   favoriteCourse,
   getCourse,
-  getCourseFavoriteCount,
   listCourses,
   unfavoriteCourse,
   updateCourse,
@@ -53,7 +52,12 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
       let latitude: number | null = null;
       let longitude: number | null = null;
       if (location) {
-        const geo = await geocodeLocation(location);
+        let geo: Awaited<ReturnType<typeof geocodeLocation>>;
+        try {
+          geo = await geocodeLocation(location);
+        } catch {
+          return reply.code(503).send({ error: "could not verify location at this time — please try again later" });
+        }
         if (!geo) {
           return reply.code(400).send({ error: "could not verify location — please enter a valid place name or address" });
         }
@@ -94,7 +98,12 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
       let latitude: number | null = null;
       let longitude: number | null = null;
       if (location) {
-        const geo = await geocodeLocation(location);
+        let geo: Awaited<ReturnType<typeof geocodeLocation>>;
+        try {
+          geo = await geocodeLocation(location);
+        } catch {
+          return reply.code(503).send({ error: "could not verify location at this time — please try again later" });
+        }
         if (!geo) {
           return reply.code(400).send({ error: "could not verify location — please enter a valid place name or address" });
         }
@@ -117,15 +126,18 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     if (course.createdByUserId !== user.id && !user.isAdmin) {
       return reply.code(403).send({ error: "only the course creator can delete this course" });
     }
-    if (!user.isAdmin) {
-      const favCount = await getCourseFavoriteCount(course.id);
-      if (favCount > 0) {
-        return reply.code(400).send({
-          error: `course has ${favCount} favorite${favCount === 1 ? "" : "s"} and cannot be deleted`,
-        });
-      }
+    if (!user.isAdmin && course.favoriteCount > 0) {
+      return reply.code(400).send({
+        error: `course has ${course.favoriteCount} favorite${course.favoriteCount === 1 ? "" : "s"} and cannot be deleted`,
+      });
     }
-    await deleteCourse(course.id);
+    try {
+      await deleteCourse(course.id);
+    } catch {
+      return reply.code(409).send({
+        error: "course has associated rounds and cannot be deleted",
+      });
+    }
     return { ok: true };
   });
 

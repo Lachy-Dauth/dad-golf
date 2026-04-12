@@ -28,7 +28,21 @@ export default function NewCoursePage() {
   const [loadingCourse, setLoadingCourse] = useState(isEdit);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setError(null);
+      setLoadingCourse(false);
+      return;
+    }
+
+    setLoadingCourse(true);
+    setError(null);
+    setName("");
+    setLocation("");
+    setRating("72.0");
+    setSlope("113");
+    setHoleCount(18);
+    setHoles(defaultHoles(18));
+
     api
       .getCourse(id)
       .then(({ course }) => {

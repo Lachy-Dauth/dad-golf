@@ -175,7 +175,7 @@ function RoundsTab({
               <th>Players</th>
               <th>Status</th>
               <th>Created</th>
-              <th></th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
