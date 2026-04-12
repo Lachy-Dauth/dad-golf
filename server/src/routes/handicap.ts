@@ -210,9 +210,7 @@ export async function registerHandicapRoutes(app: FastifyInstance): Promise<void
     const providedIds = new Set(orderedIds);
 
     if (orderedIds.length !== existingRounds.length || providedIds.size !== orderedIds.length) {
-      return reply
-        .code(400)
-        .send({ error: "orderedIds must contain all round IDs exactly once" });
+      return reply.code(400).send({ error: "orderedIds must contain all round IDs exactly once" });
     }
     for (const id of orderedIds) {
       if (!existingIds.has(id)) {

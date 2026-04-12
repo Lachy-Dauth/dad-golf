@@ -62,11 +62,9 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
             .send({ error: "could not verify location at this time — please try again later" });
         }
         if (!geo) {
-          return reply
-            .code(400)
-            .send({
-              error: "could not verify location — please enter a valid place name or address",
-            });
+          return reply.code(400).send({
+            error: "could not verify location — please enter a valid place name or address",
+          });
         }
         latitude = geo.latitude;
         longitude = geo.longitude;
@@ -123,11 +121,9 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
             .send({ error: "could not verify location at this time — please try again later" });
         }
         if (!geo) {
-          return reply
-            .code(400)
-            .send({
-              error: "could not verify location — please enter a valid place name or address",
-            });
+          return reply.code(400).send({
+            error: "could not verify location — please enter a valid place name or address",
+          });
         }
         latitude = geo.latitude;
         longitude = geo.longitude;
