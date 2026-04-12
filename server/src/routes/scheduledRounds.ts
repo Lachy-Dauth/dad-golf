@@ -3,6 +3,7 @@ import type { RsvpStatus } from "@dad-golf/shared";
 import { generateRoomCode } from "@dad-golf/shared";
 import {
   addPlayer,
+  claimScheduledRound,
   createRound,
   createScheduledRound,
   getCourse,
@@ -43,10 +44,12 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       if (!role) return reply.code(403).send({ error: "you are not a member of this group" });
 
       const scheduledRounds = await listScheduledRoundsForGroup(group.id);
-      const rsvps: Record<string, Awaited<ReturnType<typeof listRsvps>>> = {};
-      for (const sr of scheduledRounds) {
-        rsvps[sr.id] = await listRsvps(sr.id);
-      }
+      const rsvpEntries = await Promise.all(
+        scheduledRounds.map(async (sr) => [sr.id, await listRsvps(sr.id)] as const),
+      );
+      const rsvps: Record<string, Awaited<ReturnType<typeof listRsvps>>> = Object.fromEntries(
+        rsvpEntries,
+      );
       return { scheduledRounds, rsvps };
     },
   );
@@ -198,6 +201,9 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       if (!sr || sr.groupId !== group.id) {
         return reply.code(404).send({ error: "scheduled round not found" });
       }
+      if (sr.status !== "scheduled") {
+        return reply.code(400).send({ error: "can only cancel rounds in scheduled status" });
+      }
 
       await updateScheduledRoundStatus(sr.id, "cancelled");
       return { ok: true };
@@ -261,6 +267,14 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
             .send({ error: "this scheduled round has already been started or cancelled" });
         }
 
+        // Atomically claim the scheduled round to prevent races
+        const claimed = await claimScheduledRound(sr.id);
+        if (!claimed) {
+          return reply
+            .code(400)
+            .send({ error: "this scheduled round has already been started or cancelled" });
+        }
+
         const course = await getCourse(sr.courseId, user.id);
         if (!course) {
           return reply
@@ -273,6 +287,11 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         for (let attempt = 0; attempt < 10; attempt++) {
           code = generateRoomCode();
           if (!(await getRoundByRoomCode(code))) break;
+          if (attempt === 9) {
+            return reply
+              .code(500)
+              .send({ error: "failed to generate a unique room code, please try again" });
+          }
         }
 
         // Create the live round
@@ -282,13 +301,13 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         await addPlayer(round.id, user.displayName, user.handicap, user.id);
 
         // Add accepted RSVP members as players
-        const acceptedUserIds = await listAcceptedRsvpUserIds(sr.id);
+        const acceptedUserIds = new Set(await listAcceptedRsvpUserIds(sr.id));
         const members = await listGroupMembers(group.id);
         let added = 1; // leader already added
         for (const member of members) {
           if (!member.userId) continue;
           if (member.userId === user.id) continue; // leader already added
-          if (!acceptedUserIds.includes(member.userId)) continue;
+          if (!acceptedUserIds.has(member.userId)) continue;
           if (added >= MAX_PLAYERS_PER_ROUND) break;
           if (await findPlayerByName(round.id, member.name)) continue;
           await addPlayer(round.id, member.name, member.handicap, member.userId);

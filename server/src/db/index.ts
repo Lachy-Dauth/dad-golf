@@ -77,6 +77,7 @@ export {
   getScheduledRound,
   listScheduledRoundsForGroup,
   updateScheduledRound,
+  claimScheduledRound,
   updateScheduledRoundStatus,
   deleteScheduledRound,
   upsertRsvp,

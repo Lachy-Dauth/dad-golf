@@ -31,6 +31,7 @@ function formatDuration(minutes: number): string {
 export default function ScheduledRoundCard({ scheduledRound: sr, rsvps, currentUserId }: Props) {
   const accepted = rsvps.filter((r) => r.status === "accepted").length;
   const tentative = rsvps.filter((r) => r.status === "tentative").length;
+  const declined = rsvps.filter((r) => r.status === "declined").length;
   const myRsvp = currentUserId ? rsvps.find((r) => r.userId === currentUserId) : null;
 
   return (
@@ -51,6 +52,7 @@ export default function ScheduledRoundCard({ scheduledRound: sr, rsvps, currentU
         <div className="rsvp-summary">
           {accepted > 0 && <span className="rsvp-count rsvp-accepted">{accepted}</span>}
           {tentative > 0 && <span className="rsvp-count rsvp-tentative">{tentative}</span>}
+          {declined > 0 && <span className="rsvp-count rsvp-declined">{declined}</span>}
           {myRsvp && (
             <span className="badge">
               {myRsvp.status === "accepted"

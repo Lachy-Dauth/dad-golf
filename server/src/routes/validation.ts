@@ -91,8 +91,11 @@ export function validateScheduledDate(date: unknown): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
     throw new Error("scheduledDate must be in YYYY-MM-DD format");
   }
-  const parsed = new Date(trimmed + "T00:00:00");
-  if (isNaN(parsed.getTime())) throw new Error("scheduledDate is not a valid date");
+  const [y, m, day] = trimmed.split("-").map(Number);
+  const parsed = new Date(y, m - 1, day);
+  if (parsed.getFullYear() !== y || parsed.getMonth() !== m - 1 || parsed.getDate() !== day) {
+    throw new Error("scheduledDate is not a valid calendar date");
+  }
   return trimmed;
 }
 
@@ -113,7 +116,7 @@ export function validateDurationMinutes(d: unknown): number | null {
   if (d === undefined || d === null || d === "") return null;
   const n = Number(d);
   if (!Number.isInteger(n) || n < 30 || n > 600) {
-    throw new Error("duration must be an integer between 30 and 600 minutes");
+    throw new Error("durationMinutes must be an integer between 30 and 600");
   }
   return n;
 }

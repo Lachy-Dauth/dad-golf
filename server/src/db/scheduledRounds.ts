@@ -159,6 +159,14 @@ export async function updateScheduledRound(
   await pool.query(`UPDATE scheduled_rounds SET ${sets.join(", ")} WHERE id = $${idx}`, params);
 }
 
+export async function claimScheduledRound(id: string): Promise<boolean> {
+  const { rowCount } = await pool.query(
+    `UPDATE scheduled_rounds SET status = 'started' WHERE id = $1 AND status = 'scheduled'`,
+    [id],
+  );
+  return (rowCount ?? 0) > 0;
+}
+
 export async function updateScheduledRoundStatus(
   id: string,
   status: ScheduledRoundStatus,
