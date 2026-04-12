@@ -29,15 +29,19 @@ export async function geocodeLocation(query: string): Promise<GeocodingResult | 
   const data = (await res.json()) as Array<{
     lat: string;
     lon: string;
-    name: string;
+    name?: string;
     display_name: string;
   }>;
   if (data.length === 0) return null;
   const r = data[0];
+  const latitude = parseFloat(r.lat);
+  const longitude = parseFloat(r.lon);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  const fallbackName = r.display_name.split(",")[0]?.trim() || r.display_name;
   return {
-    latitude: parseFloat(r.lat),
-    longitude: parseFloat(r.lon),
-    name: r.name,
+    latitude,
+    longitude,
+    name: r.name?.trim() || fallbackName,
     displayName: r.display_name,
   };
 }
