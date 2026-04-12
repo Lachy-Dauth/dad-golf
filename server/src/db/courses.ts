@@ -46,6 +46,9 @@ export async function createCourse(
     createdByName: creator?.displayName ?? null,
     favoriteCount: 0,
     isFavorite: false,
+    avgRating: null,
+    ratingCount: 0,
+    roundCount: 0,
   };
 }
 
@@ -66,6 +69,9 @@ interface CourseListRow extends CourseRow {
   creator_name: string | null;
   favorite_count: string;
   is_favorite: string;
+  avg_rating: string | null;
+  rating_count: string;
+  round_count: string;
 }
 
 function rowToCourse(row: CourseListRow): Course {
@@ -83,6 +89,9 @@ function rowToCourse(row: CourseListRow): Course {
     createdByName: row.creator_name,
     favoriteCount: Number(row.favorite_count) || 0,
     isFavorite: Number(row.is_favorite) > 0,
+    avgRating: row.avg_rating != null ? Math.round(Number(row.avg_rating) * 10) / 10 : null,
+    ratingCount: Number(row.rating_count) || 0,
+    roundCount: Number(row.round_count) || 0,
   };
 }
 
@@ -93,7 +102,10 @@ export async function listCourses(viewerUserId: string | null): Promise<Course[]
             (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id) AS favorite_count,
             CASE WHEN $1::text IS NULL THEN 0
                  ELSE (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id AND cf.user_id = $1)
-            END AS is_favorite
+            END AS is_favorite,
+            (SELECT AVG(cr.rating) FROM course_reviews cr WHERE cr.course_id = c.id) AS avg_rating,
+            (SELECT COUNT(*) FROM course_reviews cr WHERE cr.course_id = c.id) AS rating_count,
+            (SELECT COUNT(*) FROM rounds r WHERE r.course_id = c.id) AS round_count
        FROM courses c
        LEFT JOIN users u ON u.id = c.created_by_user_id
        ORDER BY favorite_count DESC, c.name ASC`,
@@ -112,7 +124,10 @@ export async function getCourse(
             (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id) AS favorite_count,
             CASE WHEN $1::text IS NULL THEN 0
                  ELSE (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id AND cf.user_id = $1)
-            END AS is_favorite
+            END AS is_favorite,
+            (SELECT AVG(cr.rating) FROM course_reviews cr WHERE cr.course_id = c.id) AS avg_rating,
+            (SELECT COUNT(*) FROM course_reviews cr WHERE cr.course_id = c.id) AS rating_count,
+            (SELECT COUNT(*) FROM rounds r WHERE r.course_id = c.id) AS round_count
        FROM courses c
        LEFT JOIN users u ON u.id = c.created_by_user_id
        WHERE c.id = $2`,

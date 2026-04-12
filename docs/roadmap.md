@@ -25,7 +25,6 @@ flowchart TD
     end
 
     subgraph phase3["Phase 3: Free Features w/ Dependencies (weeks 7-12)"]
-        P3A["3c. Course Conditions\n3 days"]
         P3B["2c. Scheduled Rounds\n2 weeks"]
         P3C["9a. Calendar Integration\n1 week"]
         P3D["4a. Activity Feed\n2 weeks"]
@@ -57,7 +56,6 @@ flowchart TD
     end
 
     %% Dependencies
-    P2F --> P3A
     P2D --> P3B
     P3B --> P3C
     P2A --> P3D
@@ -82,7 +80,7 @@ flowchart TD
     classDef pro fill:#fff3cd,stroke:#ffc107,color:#000
     classDef infra fill:#d1ecf1,stroke:#17a2b8,color:#000
 
-    class P1B,P1C,P1D,P2A,P2B,P2D,P2E,P2F,P3A,P3B,P3C,P3D,P3E free
+    class P1B,P1C,P1D,P2A,P2B,P2D,P2E,P2F,P3B,P3C,P3D,P3E free
     class P5A,P5B,P5C,P5D,P5E,P6A,P6B,P6C,P7A,P7B pro
     class P4A,P4B infra
 ```
@@ -112,7 +110,6 @@ gantt
     Community Courses (3a)          :p2f, 2026-06-01, 10d
 
     section Phase 3: Free w/ Deps
-    Course Conditions (3c)          :p3a, after p2f, 3d
     Scheduled Rounds (2c)           :p3b, after p2d, 10d
     Calendar Integration (9a)       :p3c, after p3b, 5d
     Activity Feed (4a)              :p3d, after p2a, 10d
@@ -175,7 +172,6 @@ These are the features that make the free tier genuinely compelling.
 
 | Feature                  | Duration  | Depends On | Notes                            |
 | ------------------------ | --------- | ---------- | -------------------------------- |
-| 3c. Course Conditions    | 3 days    | 3a         | Tags on community courses        |
 | 2c. Scheduled Rounds     | 2 weeks   | 6c         | Date/time/course + RSVP          |
 | 9a. Calendar Integration | 1 week    | 2c         | .ics export + calendar API       |
 | 4a. Activity Feed        | 2 weeks   | 1c         | Group round feed + likes         |

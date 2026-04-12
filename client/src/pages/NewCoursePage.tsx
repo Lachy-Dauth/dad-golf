@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api.js";
-import type { Hole } from "@dad-golf/shared";
+import type { Course, Hole } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
 
 function defaultHoles(count: 9 | 18): Hole[] {
@@ -26,6 +26,33 @@ export default function NewCoursePage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingCourse, setLoadingCourse] = useState(isEdit);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load all courses for duplicate detection (only on create, not edit)
+  useEffect(() => {
+    if (!isEdit) {
+      api
+        .listCourses()
+        .then((res) => setAllCourses(res.courses))
+        .catch(() => {});
+    }
+  }, [isEdit]);
+
+  const [debouncedName, setDebouncedName] = useState("");
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedName(name), 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [name]);
+
+  const similarCourses = useMemo(() => {
+    if (isEdit || debouncedName.trim().length < 3) return [];
+    const q = debouncedName.toLowerCase().trim();
+    return allCourses.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 5);
+  }, [allCourses, debouncedName, isEdit]);
 
   useEffect(() => {
     if (!id) {
@@ -73,8 +100,8 @@ export default function NewCoursePage() {
       return;
     }
     const ratingNum = Number(rating);
-    if (!Number.isFinite(ratingNum) || ratingNum < 50 || ratingNum > 90) {
-      setError("Course rating must be a number between 50.0 and 90.0");
+    if (!Number.isFinite(ratingNum) || ratingNum < 10 || ratingNum > 100) {
+      setError("Course rating must be a number between 10 and 100");
       return;
     }
     const slopeNum = Number(slope);
@@ -98,10 +125,11 @@ export default function NewCoursePage() {
       };
       if (isEdit && id) {
         await api.updateCourse(id, payload);
+        nav("/courses");
       } else {
-        await api.createCourse(payload);
+        const res = await api.createCourse(payload);
+        nav(`/courses/${res.course.id}`);
       }
-      nav("/courses");
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -144,6 +172,21 @@ export default function NewCoursePage() {
             placeholder="e.g. Pebble Creek Municipal"
           />
         </label>
+        {similarCourses.length > 0 && (
+          <div className="duplicate-hint">
+            <span>Similar courses already exist:</span>
+            <ul>
+              {similarCourses.map((c) => (
+                <li key={c.id}>
+                  <Link to={`/courses/${c.id}`}>
+                    {c.name}
+                    {c.location ? ` (${c.location})` : ""} &mdash; {c.holes.length} holes
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <label className="field">
           <span>Location (optional)</span>
           <input

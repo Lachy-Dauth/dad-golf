@@ -1,14 +1,25 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import type { Course } from "@dad-golf/shared";
 import { totalPar } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
+import StarRating from "../components/StarRating.js";
+
+type Filter = "all" | "9" | "18" | "favorites" | "mine";
+type Sort = "popular" | "top-rated" | "newest" | "az";
+
+const PAGE_SIZE = 20;
 
 export default function CoursesPage() {
   const { user } = useAuth();
+  const nav = useNavigate();
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
+  const [sort, setSort] = useState<Sort>("popular");
+  const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
 
   const load = () => {
     api
@@ -21,7 +32,67 @@ export default function CoursesPage() {
     load();
   }, [user?.id]);
 
-  async function handleDelete(c: Course) {
+  // Reset auth-dependent filters when user logs out
+  useEffect(() => {
+    if (!user && (filter === "favorites" || filter === "mine")) {
+      setFilter("all");
+    }
+  }, [user, filter]);
+
+  const filtered = useMemo(() => {
+    if (!courses) return [];
+    const q = search.toLowerCase().trim();
+    let result = courses;
+
+    // Search
+    if (q) {
+      result = result.filter(
+        (c) => c.name.toLowerCase().includes(q) || (c.location?.toLowerCase().includes(q) ?? false),
+      );
+    }
+
+    // Filter
+    switch (filter) {
+      case "9":
+        result = result.filter((c) => c.holes.length === 9);
+        break;
+      case "18":
+        result = result.filter((c) => c.holes.length === 18);
+        break;
+      case "favorites":
+        result = result.filter((c) => c.isFavorite);
+        break;
+      case "mine":
+        result = result.filter((c) => user && c.createdByUserId === user.id);
+        break;
+    }
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      switch (sort) {
+        case "popular":
+          return b.favoriteCount - a.favoriteCount || a.name.localeCompare(b.name);
+        case "top-rated": {
+          const ra = a.avgRating ?? -1;
+          const rb = b.avgRating ?? -1;
+          return rb - ra || b.ratingCount - a.ratingCount || a.name.localeCompare(b.name);
+        }
+        case "newest":
+          return b.createdAt.localeCompare(a.createdAt);
+        case "az":
+          return a.name.localeCompare(b.name);
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [courses, search, filter, sort, user]);
+
+  const visible = filtered.slice(0, displayCount);
+
+  async function handleDelete(e: React.MouseEvent, c: Course) {
+    e.stopPropagation();
     if (!user?.isAdmin && c.favoriteCount > 0) {
       setError("This course has favourites and cannot be deleted.");
       return;
@@ -30,12 +101,13 @@ export default function CoursesPage() {
     try {
       await api.deleteCourse(c.id);
       load();
-    } catch (e) {
-      setError((e as Error).message);
+    } catch (err) {
+      setError((err as Error).message);
     }
   }
 
-  async function handleToggleFav(c: Course) {
+  async function handleToggleFav(e: React.MouseEvent, c: Course) {
+    e.stopPropagation();
     if (!user) {
       setError("Log in to favourite courses.");
       return;
@@ -44,8 +116,8 @@ export default function CoursesPage() {
       if (c.isFavorite) await api.unfavoriteCourse(c.id);
       else await api.favoriteCourse(c.id);
       load();
-    } catch (e) {
-      setError((e as Error).message);
+    } catch (err) {
+      setError((err as Error).message);
     }
   }
 
@@ -59,45 +131,128 @@ export default function CoursesPage() {
           </Link>
         )}
       </div>
+
       {!user && (
         <div className="muted">
           <Link to="/login">Log in</Link> to add or favourite courses.
         </div>
       )}
+
+      {/* Search */}
+      <input
+        className="course-search"
+        type="text"
+        placeholder="Search by name or location..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setDisplayCount(PAGE_SIZE);
+        }}
+      />
+
+      {/* Filter tabs */}
+      <div className="course-filters">
+        {(
+          [
+            ["all", "All"],
+            ["9", "9 Holes"],
+            ["18", "18 Holes"],
+            ...(user
+              ? [["favorites", "Favourites"] as const, ["mine", "My Courses"] as const]
+              : []),
+          ] as [Filter, string][]
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            className={`course-filter-btn ${filter === key ? "active" : ""}`}
+            onClick={() => {
+              setFilter(key);
+              setDisplayCount(PAGE_SIZE);
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Sort */}
+      <div className="course-sort">
+        <label>
+          Sort:{" "}
+          <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+            <option value="popular">Popular</option>
+            <option value="top-rated">Top Rated</option>
+            <option value="newest">Newest</option>
+            <option value="az">A-Z</option>
+          </select>
+        </label>
+      </div>
+
       {error && <div className="error">{error}</div>}
-      {!courses && <div className="muted">Loading…</div>}
-      {courses && courses.length === 0 && (
-        <div className="muted">No courses yet. Add one to get started.</div>
+      {!courses && <div className="muted">Loading...</div>}
+      {courses && filtered.length === 0 && (
+        <div className="muted">
+          {courses.length === 0
+            ? "No courses yet. Add one to get started."
+            : "No courses match your search."}
+        </div>
       )}
-      {courses && courses.length > 0 && (
-        <ul className="list">
-          {courses.map((c) => {
+
+      {visible.length > 0 && (
+        <ul className="course-list">
+          {visible.map((c) => {
             const isOwner = user && c.createdByUserId === user.id;
             const isAdmin = user?.isAdmin ?? false;
             const canManage = isOwner || isAdmin;
             const canDelete = canManage && (isAdmin || c.favoriteCount === 0);
             return (
               <li key={c.id}>
-                <div className="list-row">
-                  <div>
-                    <div className="list-primary">{c.name}</div>
-                    <div className="list-secondary">
-                      {c.location ? `${c.location} · ` : ""}
-                      {c.holes.length} holes · par {totalPar(c)} · rating {c.rating.toFixed(1)} ·
-                      slope {c.slope}
-                      {c.createdByName && ` · by ${c.createdByName}`}
-                      {c.favoriteCount > 0 && ` · ★ ${c.favoriteCount}`}
+                <div
+                  className="course-card"
+                  onClick={() => nav(`/courses/${c.id}`)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") nav(`/courses/${c.id}`);
+                  }}
+                >
+                  <div className="course-card-body">
+                    <div className="course-card-name">{c.name}</div>
+                    {c.location && <div className="course-card-location">{c.location}</div>}
+                    <div className="course-card-meta">
+                      {c.holes.length} holes &middot; par {totalPar(c)} &middot; R{" "}
+                      {c.rating.toFixed(1)} &middot; S {c.slope}
                     </div>
+                    <div className="course-card-stats">
+                      {c.avgRating != null ? (
+                        <>
+                          <StarRating value={Math.round(c.avgRating)} size="sm" />
+                          <span>
+                            {c.avgRating.toFixed(1)} ({c.ratingCount})
+                          </span>
+                        </>
+                      ) : (
+                        <span className="muted">No ratings</span>
+                      )}
+                      {c.favoriteCount > 0 && (
+                        <span className="course-card-favs">&hearts; {c.favoriteCount}</span>
+                      )}
+                    </div>
+                    {c.createdByName && (
+                      <div className="course-card-creator">by {c.createdByName}</div>
+                    )}
                   </div>
-                  <div className="row-actions">
-                    <button
-                      className={`btn-icon fav ${c.isFavorite ? "active" : ""}`}
-                      onClick={() => handleToggleFav(c)}
-                      title={c.isFavorite ? "Unfavourite" : "Favourite"}
-                      aria-label="Favourite"
-                    >
-                      {c.isFavorite ? "★" : "☆"}
-                    </button>
+                  <div className="row-actions" onClick={(e) => e.stopPropagation()}>
+                    {user && (
+                      <button
+                        className={`btn-icon fav ${c.isFavorite ? "active" : ""}`}
+                        onClick={(e) => handleToggleFav(e, c)}
+                        title={c.isFavorite ? "Unfavourite" : "Favourite"}
+                        aria-label="Favourite"
+                      >
+                        {c.isFavorite ? "\u2605" : "\u2606"}
+                      </button>
+                    )}
                     {canManage && (
                       <>
                         <Link
@@ -105,12 +260,13 @@ export default function CoursesPage() {
                           className="btn-icon"
                           title="Edit"
                           aria-label="Edit"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           ✎
                         </Link>
                         <button
                           className="btn-icon"
-                          onClick={() => handleDelete(c)}
+                          onClick={(e) => handleDelete(e, c)}
                           disabled={!canDelete}
                           title={canDelete ? "Delete" : "Cannot delete: has favourites"}
                           aria-label="Delete"
@@ -126,8 +282,15 @@ export default function CoursesPage() {
           })}
         </ul>
       )}
+
+      {visible.length < filtered.length && (
+        <button className="btn" onClick={() => setDisplayCount((n) => n + PAGE_SIZE)}>
+          Load more ({filtered.length - visible.length} remaining)
+        </button>
+      )}
+
       <Link to="/" className="back-link">
-        ← Back
+        &larr; Back
       </Link>
     </div>
   );

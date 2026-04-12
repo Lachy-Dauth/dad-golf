@@ -1,13 +1,20 @@
 import type { FastifyInstance } from "fastify";
+import type { CourseReview } from "@dad-golf/shared";
 import {
   createCourse,
+  createCourseReport,
   deleteCourse,
+  deleteCourseReview,
   favoriteCourse,
   getCourse,
   getCourseRoundCount,
+  getUserCourseReview,
+  listCourseReviews,
   listCourses,
   unfavoriteCourse,
   updateCourse,
+  updateCourseCoords,
+  upsertCourseReview,
 } from "../db/index.js";
 import {
   getViewerUser,
@@ -16,8 +23,11 @@ import {
   validateCourseSlope,
   validateHoles,
   validateName,
+  validateReportReason,
+  validateReviewText,
+  validateStarRating,
 } from "./validation.js";
-import { geocodeLocation } from "../weather.js";
+import { fetchWeather, geocodeLocation } from "../weather.js";
 
 export async function registerCourseRoutes(app: FastifyInstance): Promise<void> {
   app.get("/api/courses", async (req) => {
@@ -29,7 +39,11 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     const viewer = await getViewerUser(req);
     const c = await getCourse(req.params.id, viewer?.id ?? null);
     if (!c) return reply.code(404).send({ error: "course not found" });
-    return { course: c };
+    let viewerReview: CourseReview | null = null;
+    if (viewer) {
+      viewerReview = await getUserCourseReview(c.id, viewer.id);
+    }
+    return { course: c, viewerReview };
   });
 
   app.post<{
@@ -159,6 +173,8 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     return { ok: true };
   });
 
+  // --- Favorites ---
+
   app.post<{ Params: { id: string } }>("/api/courses/:id/favorite", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
@@ -173,5 +189,102 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     if (!user) return;
     await unfavoriteCourse(user.id, req.params.id);
     return { course: await getCourse(req.params.id, user.id) };
+  });
+
+  // --- Reviews ---
+
+  app.get<{ Params: { id: string }; Querystring: { limit?: string; offset?: string } }>(
+    "/api/courses/:id/reviews",
+    async (req, reply) => {
+      const course = await getCourse(req.params.id);
+      if (!course) return reply.code(404).send({ error: "course not found" });
+      const parsedLimit = Number(req.query.limit);
+      const parsedOffset = Number(req.query.offset);
+      const limit = Number.isFinite(parsedLimit)
+        ? Math.max(1, Math.min(Math.floor(parsedLimit), 50))
+        : 20;
+      const offset = Number.isFinite(parsedOffset) ? Math.max(0, Math.floor(parsedOffset)) : 0;
+      return await listCourseReviews(course.id, limit, offset);
+    },
+  );
+
+  app.post<{ Params: { id: string }; Body: { rating?: unknown; reviewText?: unknown } }>(
+    "/api/courses/:id/reviews",
+    async (req, reply) => {
+      const user = await requireUser(req, reply);
+      if (!user) return;
+      const course = await getCourse(req.params.id, user.id);
+      if (!course) return reply.code(404).send({ error: "course not found" });
+      try {
+        const rating = validateStarRating(req.body?.rating);
+        const reviewText = validateReviewText(req.body?.reviewText);
+        const review = await upsertCourseReview(course.id, user.id, rating, reviewText);
+        return { review };
+      } catch (e) {
+        return reply.code(400).send({ error: (e as Error).message });
+      }
+    },
+  );
+
+  app.delete<{ Params: { id: string } }>("/api/courses/:id/reviews", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    await deleteCourseReview(req.params.id, user.id);
+    return { ok: true };
+  });
+
+  // --- Reports ---
+
+  app.post<{ Params: { id: string }; Body: { reason?: unknown } }>(
+    "/api/courses/:id/report",
+    async (req, reply) => {
+      const user = await requireUser(req, reply);
+      if (!user) return;
+      const course = await getCourse(req.params.id, user.id);
+      if (!course) return reply.code(404).send({ error: "course not found" });
+      try {
+        const reason = validateReportReason(req.body?.reason);
+        await createCourseReport(course.id, user.id, reason);
+        return { ok: true };
+      } catch (e) {
+        return reply.code(400).send({ error: (e as Error).message });
+      }
+    },
+  );
+
+  // --- Weather (for course detail page) ---
+
+  app.get<{ Params: { id: string } }>("/api/courses/:id/weather", async (req, reply) => {
+    const viewer = await getViewerUser(req);
+    const course = await getCourse(req.params.id, viewer?.id ?? null);
+    if (!course) return reply.code(404).send({ error: "course not found" });
+
+    let lat = course.latitude;
+    let lng = course.longitude;
+
+    if (lat == null || lng == null) {
+      if (!course.location) {
+        return reply.code(422).send({ error: "course has no location set" });
+      }
+      let geo: Awaited<ReturnType<typeof geocodeLocation>>;
+      try {
+        geo = await geocodeLocation(course.location);
+      } catch {
+        return reply.code(502).send({ error: "geocoding service unavailable" });
+      }
+      if (!geo) {
+        return reply.code(502).send({ error: "could not geocode course location" });
+      }
+      lat = geo.latitude;
+      lng = geo.longitude;
+      await updateCourseCoords(course.id, lat, lng);
+    }
+
+    const weather = await fetchWeather(lat, lng);
+    if (!weather) {
+      return reply.code(502).send({ error: "weather service unavailable" });
+    }
+
+    return { weather };
   });
 }

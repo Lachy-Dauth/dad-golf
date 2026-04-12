@@ -200,6 +200,34 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS handicap_auto_adjust INTEGER NOT NULL DEFAULT 0;
   `);
 
+  // Migration: course reviews (ratings + text reviews)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS course_reviews (
+      id TEXT PRIMARY KEY,
+      course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      review_text TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      UNIQUE(course_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_course_reviews_course ON course_reviews(course_id);
+  `);
+
+  // Migration: course reports (moderation flags)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS course_reports (
+      id TEXT PRIMARY KEY,
+      course_id TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reason TEXT NOT NULL CHECK (reason IN ('incorrect_info', 'duplicate', 'inappropriate')),
+      created_at TEXT NOT NULL,
+      UNIQUE(course_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_course_reports_course ON course_reports(course_id);
+  `);
+
   // Migration: Google Calendar OAuth connections
   await pool.query(`
     CREATE TABLE IF NOT EXISTS google_calendar_connections (

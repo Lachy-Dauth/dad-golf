@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import type { Hole, User } from "@dad-golf/shared";
+import type { CourseReportReason, Hole, User } from "@dad-golf/shared";
 import { getUserBySession } from "../db/index.js";
 
 export const MAX_PLAYERS_PER_ROUND = 32;
@@ -46,8 +46,8 @@ export function validateHandicap(h: unknown): number {
 
 export function validateCourseRating(r: unknown): number {
   const n = Number(r);
-  if (!Number.isFinite(n) || n < 50 || n > 90) {
-    throw new Error("course rating must be a number between 50.0 and 90.0");
+  if (!Number.isFinite(n) || n < 10 || n > 100) {
+    throw new Error("course rating must be a number between 10 and 100");
   }
   return Math.round(n * 10) / 10;
 }
@@ -142,6 +142,36 @@ export function validateDate(d: unknown): string {
     throw new Error("date is not a valid calendar date");
   }
   return trimmed;
+}
+
+export function validateStarRating(r: unknown): number {
+  const n = Number(r);
+  if (!Number.isInteger(n) || n < 1 || n > 5) {
+    throw new Error("rating must be an integer between 1 and 5");
+  }
+  return n;
+}
+
+export function validateReviewText(t: unknown): string | null {
+  if (t === undefined || t === null || t === "") return null;
+  if (typeof t !== "string") throw new Error("reviewText must be a string");
+  const trimmed = t.trim();
+  if (trimmed.length === 0) return null;
+  if (trimmed.length > 500) throw new Error("review text must be 500 characters or fewer");
+  return trimmed;
+}
+
+const VALID_REPORT_REASONS = new Set<CourseReportReason>([
+  "incorrect_info",
+  "duplicate",
+  "inappropriate",
+]);
+
+export function validateReportReason(r: unknown): CourseReportReason {
+  if (typeof r !== "string" || !VALID_REPORT_REASONS.has(r as CourseReportReason)) {
+    throw new Error("reason must be one of: incorrect_info, duplicate, inappropriate");
+  }
+  return r as CourseReportReason;
 }
 
 export async function getViewerUser(req: FastifyRequest): Promise<User | null> {
