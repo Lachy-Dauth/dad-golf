@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { registerRoutes } from "./routes.js";
 import { registerWebsocket } from "./ws.js";
+import { initDb } from "./db.js";
 import { seedIfEmpty } from "./seed.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -17,7 +18,8 @@ async function main(): Promise<void> {
   await app.register(cors, { origin: true });
   await app.register(websocket);
 
-  seedIfEmpty();
+  await initDb();
+  await seedIfEmpty();
 
   await registerRoutes(app);
   await registerWebsocket(app);

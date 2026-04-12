@@ -143,16 +143,16 @@ function validatePassword(p: unknown): string {
   return p;
 }
 
-function getViewerUser(req: FastifyRequest): User | null {
+async function getViewerUser(req: FastifyRequest): Promise<User | null> {
   const auth = req.headers.authorization;
   if (!auth) return null;
   const match = /^Bearer\s+(.+)$/i.exec(auth);
   if (!match) return null;
-  return getUserBySession(match[1]);
+  return await getUserBySession(match[1]);
 }
 
-function requireUser(req: FastifyRequest, reply: FastifyReply): User | null {
-  const user = getViewerUser(req);
+async function requireUser(req: FastifyRequest, reply: FastifyReply): Promise<User | null> {
+  const user = await getViewerUser(req);
   if (!user) {
     reply.code(401).send({ error: "sign in required" });
     return null;
@@ -180,11 +180,11 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         "display name",
       );
       const handicap = validateHandicap(req.body?.handicap ?? 18);
-      if (getUserByUsername(username)) {
+      if (await getUserByUsername(username)) {
         return reply.code(400).send({ error: "username already taken" });
       }
-      const user = createUser(username, password, displayName, handicap);
-      const token = createSession(user.id);
+      const user = await createUser(username, password, displayName, handicap);
+      const token = await createSession(user.id);
       return reply.code(201).send({ user, token });
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
@@ -197,11 +197,11 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       try {
         const username = validateUsername(req.body?.username);
         const password = validatePassword(req.body?.password);
-        const user = authenticateUser(username, password);
+        const user = await authenticateUser(username, password);
         if (!user) {
           return reply.code(401).send({ error: "invalid credentials" });
         }
-        const token = createSession(user.id);
+        const token = await createSession(user.id);
         return { user, token };
       } catch (e) {
         return reply.code(400).send({ error: (e as Error).message });
@@ -212,12 +212,12 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.post("/api/auth/logout", async (req, reply) => {
     const auth = req.headers.authorization;
     const match = auth ? /^Bearer\s+(.+)$/i.exec(auth) : null;
-    if (match) deleteSession(match[1]);
+    if (match) await deleteSession(match[1]);
     return { ok: true };
   });
 
   app.get("/api/auth/me", async (req, reply) => {
-    const user = getViewerUser(req);
+    const user = await getViewerUser(req);
     if (!user) return reply.code(401).send({ error: "not signed in" });
     return { user };
   });
@@ -225,12 +225,12 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.patch<{
     Body: { displayName?: string; handicap?: number };
   }>("/api/auth/me", async (req, reply) => {
-    const user = requireUser(req, reply);
+    const user = await requireUser(req, reply);
     if (!user) return;
     try {
       const displayName = validateName(req.body?.displayName, "display name");
       const handicap = validateHandicap(req.body?.handicap);
-      updateUserProfile(user.id, displayName, handicap);
+      await updateUserProfile(user.id, displayName, handicap);
       return { user: { ...user, displayName, handicap } };
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
@@ -239,15 +239,15 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
   // ---------- courses ----------
   app.get("/api/courses", async (req) => {
-    const viewer = getViewerUser(req);
-    return { courses: listCourses(viewer?.id ?? null) };
+    const viewer = await getViewerUser(req);
+    return { courses: await listCourses(viewer?.id ?? null) };
   });
 
   app.get<{ Params: { id: string } }>(
     "/api/courses/:id",
     async (req, reply) => {
-      const viewer = getViewerUser(req);
-      const c = getCourse(req.params.id, viewer?.id ?? null);
+      const viewer = await getViewerUser(req);
+      const c = await getCourse(req.params.id, viewer?.id ?? null);
       if (!c) return reply.code(404).send({ error: "course not found" });
       return { course: c };
     },
@@ -262,7 +262,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       holes?: unknown;
     };
   }>("/api/courses", async (req, reply) => {
-    const user = requireUser(req, reply);
+    const user = await requireUser(req, reply);
     if (!user) return;
     try {
       const name = validateName(req.body?.name, "course name");
@@ -273,7 +273,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const rating = validateCourseRating(req.body?.rating);
       const slope = validateCourseSlope(req.body?.slope);
       const holes = validateHoles(req.body?.holes);
-      const course = createCourse(
+      const course = await createCourse(
         name,
         location,
         rating,
@@ -297,9 +297,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       holes?: unknown;
     };
   }>("/api/courses/:id", async (req, reply) => {
-    const user = requireUser(req, reply);
+    const user = await requireUser(req, reply);
     if (!user) return;
-    const course = getCourse(req.params.id, user.id);
+    const course = await getCourse(req.params.id, user.id);
     if (!course) return reply.code(404).send({ error: "course not found" });
     if (course.createdByUserId !== user.id) {
       return reply
@@ -315,8 +315,8 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       const rating = validateCourseRating(req.body?.rating);
       const slope = validateCourseSlope(req.body?.slope);
       const holes = validateHoles(req.body?.holes);
-      updateCourse(course.id, name, location, rating, slope, holes);
-      const updated = getCourse(course.id, user.id);
+      await updateCourse(course.id, name, location, rating, slope, holes);
+      const updated = await getCourse(course.id, user.id);
       return { course: updated };
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
@@ -326,22 +326,22 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.delete<{ Params: { id: string } }>(
     "/api/courses/:id",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
-      const course = getCourse(req.params.id, user.id);
+      const course = await getCourse(req.params.id, user.id);
       if (!course) return reply.code(404).send({ error: "course not found" });
       if (course.createdByUserId !== user.id) {
         return reply
           .code(403)
           .send({ error: "only the course creator can delete this course" });
       }
-      const favCount = getCourseFavoriteCount(course.id);
+      const favCount = await getCourseFavoriteCount(course.id);
       if (favCount > 0) {
         return reply.code(400).send({
           error: `course has ${favCount} favorite${favCount === 1 ? "" : "s"} and cannot be deleted`,
         });
       }
-      deleteCourse(course.id);
+      await deleteCourse(course.id);
       return { ok: true };
     },
   );
@@ -349,40 +349,43 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Params: { id: string } }>(
     "/api/courses/:id/favorite",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
-      const course = getCourse(req.params.id, user.id);
+      const course = await getCourse(req.params.id, user.id);
       if (!course) return reply.code(404).send({ error: "course not found" });
-      favoriteCourse(user.id, course.id);
-      return { course: getCourse(course.id, user.id) };
+      await favoriteCourse(user.id, course.id);
+      return { course: await getCourse(course.id, user.id) };
     },
   );
 
   app.delete<{ Params: { id: string } }>(
     "/api/courses/:id/favorite",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
-      unfavoriteCourse(user.id, req.params.id);
-      return { course: getCourse(req.params.id, user.id) };
+      await unfavoriteCourse(user.id, req.params.id);
+      return { course: await getCourse(req.params.id, user.id) };
     },
   );
 
   // ---------- groups ----------
   app.get("/api/groups", async () => {
-    const groups = listGroups().map((g) => ({
-      ...g,
-      members: listGroupMembers(g.id),
-    }));
+    const groupRows = await listGroups();
+    const groups = await Promise.all(
+      groupRows.map(async (g) => ({
+        ...g,
+        members: await listGroupMembers(g.id),
+      })),
+    );
     return { groups };
   });
 
   app.get<{ Params: { id: string } }>(
     "/api/groups/:id",
     async (req, reply) => {
-      const g = getGroup(req.params.id);
+      const g = await getGroup(req.params.id);
       if (!g) return reply.code(404).send({ error: "group not found" });
-      const members = listGroupMembers(g.id);
+      const members = await listGroupMembers(g.id);
       return { group: g, members };
     },
   );
@@ -390,14 +393,14 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Body: { name?: string } }>(
     "/api/groups",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
       try {
         const name = validateName(req.body?.name, "group name");
-        const group = createGroup(name, user.id);
+        const group = await createGroup(name, user.id);
         // Auto-add the creator as the first member
-        addGroupMember(group.id, user.displayName, user.handicap, user.id);
-        const members = listGroupMembers(group.id);
+        await addGroupMember(group.id, user.displayName, user.handicap, user.id);
+        const members = await listGroupMembers(group.id);
         return reply.code(201).send({ group, members });
       } catch (e) {
         return reply.code(400).send({ error: (e as Error).message });
@@ -406,16 +409,16 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   );
 
   app.delete<{ Params: { id: string } }>("/api/groups/:id", async (req, reply) => {
-    const user = requireUser(req, reply);
+    const user = await requireUser(req, reply);
     if (!user) return;
-    const group = getGroup(req.params.id);
+    const group = await getGroup(req.params.id);
     if (!group) return reply.code(404).send({ error: "group not found" });
     if (group.ownerUserId !== user.id) {
       return reply
         .code(403)
         .send({ error: "only the group owner can delete this group" });
     }
-    deleteGroup(req.params.id);
+    await deleteGroup(req.params.id);
     return { ok: true };
   });
 
@@ -423,10 +426,10 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     Params: { id: string };
     Body: { name?: string; handicap?: number };
   }>("/api/groups/:id/members", async (req, reply) => {
-    const user = requireUser(req, reply);
+    const user = await requireUser(req, reply);
     if (!user) return;
     try {
-      const group = getGroup(req.params.id);
+      const group = await getGroup(req.params.id);
       if (!group)
         return reply.code(404).send({ error: "group not found" });
       if (group.ownerUserId !== user.id) {
@@ -434,7 +437,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           .code(403)
           .send({ error: "only the group owner can add members" });
       }
-      const existing = listGroupMembers(group.id);
+      const existing = await listGroupMembers(group.id);
       if (existing.length >= MAX_MEMBERS_PER_GROUP) {
         return reply
           .code(400)
@@ -442,7 +445,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       }
       const name = validateName(req.body?.name);
       const handicap = validateHandicap(req.body?.handicap);
-      const member = addGroupMember(group.id, name, handicap);
+      const member = await addGroupMember(group.id, name, handicap);
       return reply.code(201).send({ member });
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
@@ -453,13 +456,13 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     Params: { id: string; memberId: string };
     Body: { name?: string; handicap?: number };
   }>("/api/groups/:id/members/:memberId", async (req, reply) => {
-    const user = requireUser(req, reply);
+    const user = await requireUser(req, reply);
     if (!user) return;
     try {
-      const group = getGroup(req.params.id);
+      const group = await getGroup(req.params.id);
       if (!group)
         return reply.code(404).send({ error: "group not found" });
-      const member = getGroupMember(req.params.memberId);
+      const member = await getGroupMember(req.params.memberId);
       if (!member || member.groupId !== group.id) {
         return reply.code(404).send({ error: "member not found" });
       }
@@ -470,7 +473,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       }
       const name = validateName(req.body?.name);
       const handicap = validateHandicap(req.body?.handicap);
-      updateGroupMember(req.params.memberId, name, handicap);
+      await updateGroupMember(req.params.memberId, name, handicap);
       return { ok: true };
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
@@ -480,11 +483,11 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.delete<{
     Params: { id: string; memberId: string };
   }>("/api/groups/:id/members/:memberId", async (req, reply) => {
-    const user = requireUser(req, reply);
+    const user = await requireUser(req, reply);
     if (!user) return;
-    const group = getGroup(req.params.id);
+    const group = await getGroup(req.params.id);
     if (!group) return reply.code(404).send({ error: "group not found" });
-    const member = getGroupMember(req.params.memberId);
+    const member = await getGroupMember(req.params.memberId);
     if (!member || member.groupId !== group.id) {
       return reply.code(404).send({ error: "member not found" });
     }
@@ -498,7 +501,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         .code(400)
         .send({ error: "owner cannot leave their own group" });
     }
-    removeGroupMember(req.params.memberId);
+    await removeGroupMember(req.params.memberId);
     return { ok: true };
   });
 
@@ -506,32 +509,32 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { id: string } }>(
     "/api/groups/:id/invites",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
-      const group = getGroup(req.params.id);
+      const group = await getGroup(req.params.id);
       if (!group) return reply.code(404).send({ error: "group not found" });
       if (group.ownerUserId !== user.id) {
         return reply
           .code(403)
           .send({ error: "only the group owner can manage invites" });
       }
-      return { invites: listGroupInvites(group.id) };
+      return { invites: await listGroupInvites(group.id) };
     },
   );
 
   app.post<{ Params: { id: string } }>(
     "/api/groups/:id/invites",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
-      const group = getGroup(req.params.id);
+      const group = await getGroup(req.params.id);
       if (!group) return reply.code(404).send({ error: "group not found" });
       if (group.ownerUserId !== user.id) {
         return reply
           .code(403)
           .send({ error: "only the group owner can create invites" });
       }
-      const invite = createGroupInvite(group.id);
+      const invite = await createGroupInvite(group.id);
       return reply.code(201).send({ invite });
     },
   );
@@ -539,14 +542,14 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.delete<{ Params: { id: string; inviteId: string } }>(
     "/api/groups/:id/invites/:inviteId",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
-      const group = getGroup(req.params.id);
+      const group = await getGroup(req.params.id);
       if (!group) return reply.code(404).send({ error: "group not found" });
       if (group.ownerUserId !== user.id) {
         return reply.code(403).send({ error: "not allowed" });
       }
-      deleteGroupInvite(req.params.inviteId);
+      await deleteGroupInvite(req.params.inviteId);
       return { ok: true };
     },
   );
@@ -554,13 +557,13 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { token: string } }>(
     "/api/group-invites/:token",
     async (req, reply) => {
-      const invite = getGroupInviteByToken(req.params.token);
+      const invite = await getGroupInviteByToken(req.params.token);
       if (!invite)
         return reply.code(404).send({ error: "invite not found" });
-      const group = getGroup(invite.groupId);
+      const group = await getGroup(invite.groupId);
       if (!group)
         return reply.code(404).send({ error: "group not found" });
-      const memberCount = listGroupMembers(group.id).length;
+      const memberCount = (await listGroupMembers(group.id)).length;
       return { invite, group, memberCount };
     },
   );
@@ -568,22 +571,22 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Params: { token: string } }>(
     "/api/group-invites/:token/accept",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
-      const invite = getGroupInviteByToken(req.params.token);
+      const invite = await getGroupInviteByToken(req.params.token);
       if (!invite)
         return reply.code(404).send({ error: "invite not found" });
-      const group = getGroup(invite.groupId);
+      const group = await getGroup(invite.groupId);
       if (!group) return reply.code(404).send({ error: "group not found" });
-      const existing = findGroupMemberByUser(group.id, user.id);
+      const existing = await findGroupMemberByUser(group.id, user.id);
       if (existing) {
         return { group, member: existing };
       }
-      const members = listGroupMembers(group.id);
+      const members = await listGroupMembers(group.id);
       if (members.length >= MAX_MEMBERS_PER_GROUP) {
         return reply.code(400).send({ error: "group is full" });
       }
-      const member = addGroupMember(
+      const member = await addGroupMember(
         group.id,
         user.displayName,
         user.handicap,
@@ -595,7 +598,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
   // ---------- rounds ----------
   app.get("/api/rounds/recent", async () => {
-    return { rounds: listRecentRounds(20) };
+    return { rounds: await listRecentRounds(20) };
   });
 
   app.post<{
@@ -605,16 +608,16 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       memberIds?: string[];
     };
   }>("/api/rounds", async (req, reply) => {
-    const user = requireUser(req, reply);
+    const user = await requireUser(req, reply);
     if (!user) return;
     try {
       const { courseId, groupId, memberIds } = req.body ?? {};
       if (!courseId) throw new Error("courseId is required");
-      const course = getCourse(courseId, user.id);
+      const course = await getCourse(courseId, user.id);
       if (!course) throw new Error("course not found");
 
       if (groupId) {
-        if (!isUserInGroup(groupId, user.id)) {
+        if (!(await isUserInGroup(groupId, user.id))) {
           return reply.code(403).send({
             error: "you must be a member of the group to start a round for it",
           });
@@ -624,15 +627,15 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       let code = "";
       for (let attempt = 0; attempt < 10; attempt++) {
         code = generateRoomCode();
-        if (!getRoundByRoomCode(code)) break;
+        if (!(await getRoundByRoomCode(code))) break;
       }
-      const round = createRound(code, course.id, groupId ?? null, user.id);
+      const round = await createRound(code, course.id, groupId ?? null, user.id);
 
       // Add the creator (round leader) as a player so they show in the lobby
-      addPlayer(round.id, user.displayName, user.handicap, user.id);
+      await addPlayer(round.id, user.displayName, user.handicap, user.id);
 
       if (groupId && Array.isArray(memberIds) && memberIds.length > 0) {
-        const members = listGroupMembers(groupId);
+        const members = await listGroupMembers(groupId);
         const wanted = new Set(memberIds);
         let added = 1; // already added creator
         for (const m of members) {
@@ -640,12 +643,12 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           if (m.userId === user.id) continue; // creator already added
           if (added >= MAX_PLAYERS_PER_ROUND) break;
           // avoid duplicate names within a round
-          if (findPlayerByName(round.id, m.name)) continue;
-          addPlayer(round.id, m.name, m.handicap, m.userId);
+          if (await findPlayerByName(round.id, m.name)) continue;
+          await addPlayer(round.id, m.name, m.handicap, m.userId);
           added++;
         }
       }
-      const state = buildRoundState(round.roomCode, user.id);
+      const state = await buildRoundState(round.roomCode, user.id);
       return reply.code(201).send({ state });
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
@@ -655,9 +658,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { code: string } }>(
     "/api/rounds/:code",
     async (req, reply) => {
-      const viewer = getViewerUser(req);
+      const viewer = await getViewerUser(req);
       const code = normalizeRoomCode(req.params.code);
-      const state = buildRoundState(code, viewer?.id ?? null);
+      const state = await buildRoundState(code, viewer?.id ?? null);
       if (!state) return reply.code(404).send({ error: "round not found" });
       return { state };
     },
@@ -668,9 +671,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     Body: { name?: string; handicap?: number };
   }>("/api/rounds/:code/players", async (req, reply) => {
     try {
-      const viewer = getViewerUser(req);
+      const viewer = await getViewerUser(req);
       const code = normalizeRoomCode(req.params.code);
-      const round = getRoundByRoomCode(code);
+      const round = await getRoundByRoomCode(code);
       if (!round)
         return reply.code(404).send({ error: "round not found" });
       if (round.status === "complete") {
@@ -679,9 +682,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
       // If signed in, idempotent rejoin by user_id
       if (viewer) {
-        const existingByUser = findPlayerByUserId(round.id, viewer.id);
+        const existingByUser = await findPlayerByUserId(round.id, viewer.id);
         if (existingByUser) {
-          const state = buildRoundState(code, viewer.id);
+          const state = await buildRoundState(code, viewer.id);
           return { player: existingByUser, state };
         }
       }
@@ -698,19 +701,19 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         handicap = validateHandicap(req.body?.handicap);
       }
 
-      const existing = findPlayerByName(round.id, name);
+      const existing = await findPlayerByName(round.id, name);
       if (existing) {
-        const state = buildRoundState(code, viewer?.id ?? null);
+        const state = await buildRoundState(code, viewer?.id ?? null);
         return { player: existing, state };
       }
-      const players = listPlayers(round.id);
+      const players = await listPlayers(round.id);
       if (players.length >= MAX_PLAYERS_PER_ROUND) {
         return reply
           .code(400)
           .send({ error: `round is full (${MAX_PLAYERS_PER_ROUND} max)` });
       }
-      const player = addPlayer(round.id, name, handicap, viewer?.id ?? null);
-      const state = buildRoundState(code, viewer?.id ?? null);
+      const player = await addPlayer(round.id, name, handicap, viewer?.id ?? null);
+      const state = await buildRoundState(code, viewer?.id ?? null);
       if (state) broadcast(code, { type: "player_joined", player, state });
       return reply.code(201).send({ player, state });
     } catch (e) {
@@ -723,12 +726,12 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     Body: { name?: string; handicap?: number };
   }>("/api/rounds/:code/players/:playerId", async (req, reply) => {
     try {
-      const viewer = getViewerUser(req);
+      const viewer = await getViewerUser(req);
       const code = normalizeRoomCode(req.params.code);
-      const round = getRoundByRoomCode(code);
+      const round = await getRoundByRoomCode(code);
       if (!round)
         return reply.code(404).send({ error: "round not found" });
-      const player = getPlayer(req.params.playerId);
+      const player = await getPlayer(req.params.playerId);
       if (!player || player.roundId !== round.id) {
         return reply.code(404).send({ error: "player not found" });
       }
@@ -739,8 +742,8 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       }
       const name = validateName(req.body?.name);
       const handicap = validateHandicap(req.body?.handicap);
-      updatePlayer(req.params.playerId, name, handicap);
-      const state = buildRoundState(code, viewer?.id ?? null);
+      await updatePlayer(req.params.playerId, name, handicap);
+      const state = await buildRoundState(code, viewer?.id ?? null);
       if (state) broadcast(code, { type: "state", state });
       return { ok: true, state };
     } catch (e) {
@@ -751,11 +754,11 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.delete<{
     Params: { code: string; playerId: string };
   }>("/api/rounds/:code/players/:playerId", async (req, reply) => {
-    const viewer = getViewerUser(req);
+    const viewer = await getViewerUser(req);
     const code = normalizeRoomCode(req.params.code);
-    const round = getRoundByRoomCode(code);
+    const round = await getRoundByRoomCode(code);
     if (!round) return reply.code(404).send({ error: "round not found" });
-    const player = getPlayer(req.params.playerId);
+    const player = await getPlayer(req.params.playerId);
     if (!player || player.roundId !== round.id) {
       return reply.code(404).send({ error: "player not found" });
     }
@@ -764,8 +767,8 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     if (!isLeader && !isSelf) {
       return reply.code(403).send({ error: "not allowed" });
     }
-    removePlayer(req.params.playerId);
-    const state = buildRoundState(code, viewer?.id ?? null);
+    await removePlayer(req.params.playerId);
+    const state = await buildRoundState(code, viewer?.id ?? null);
     if (state) broadcast(code, { type: "state", state });
     return { ok: true };
   });
@@ -773,10 +776,10 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Params: { code: string } }>(
     "/api/rounds/:code/start",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
       const code = normalizeRoomCode(req.params.code);
-      const round = getRoundByRoomCode(code);
+      const round = await getRoundByRoomCode(code);
       if (!round)
         return reply.code(404).send({ error: "round not found" });
       if (round.leaderUserId !== user.id) {
@@ -784,8 +787,8 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           .code(403)
           .send({ error: "only the round leader can start this round" });
       }
-      updateRoundStatus(round.id, "in_progress");
-      const state = buildRoundState(code, user.id);
+      await updateRoundStatus(round.id, "in_progress");
+      const state = await buildRoundState(code, user.id);
       if (state) broadcast(code, { type: "round_started", state });
       return { state };
     },
@@ -794,10 +797,10 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Params: { code: string } }>(
     "/api/rounds/:code/complete",
     async (req, reply) => {
-      const user = requireUser(req, reply);
+      const user = await requireUser(req, reply);
       if (!user) return;
       const code = normalizeRoomCode(req.params.code);
-      const round = getRoundByRoomCode(code);
+      const round = await getRoundByRoomCode(code);
       if (!round)
         return reply.code(404).send({ error: "round not found" });
       if (round.leaderUserId !== user.id) {
@@ -805,8 +808,8 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
           .code(403)
           .send({ error: "only the round leader can end this round" });
       }
-      updateRoundStatus(round.id, "complete");
-      const state = buildRoundState(code, user.id);
+      await updateRoundStatus(round.id, "complete");
+      const state = await buildRoundState(code, user.id);
       if (state) broadcast(code, { type: "round_completed", state });
       return { state };
     },
@@ -816,12 +819,12 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     Params: { code: string };
     Body: { holeNumber?: number };
   }>("/api/rounds/:code/current-hole", async (req, reply) => {
-    const viewer = getViewerUser(req);
+    const viewer = await getViewerUser(req);
     const code = normalizeRoomCode(req.params.code);
-    const round = getRoundByRoomCode(code);
+    const round = await getRoundByRoomCode(code);
     if (!round) return reply.code(404).send({ error: "round not found" });
     const holeNumber = Number(req.body?.holeNumber);
-    const course = getCourse(round.courseId, viewer?.id ?? null);
+    const course = await getCourse(round.courseId, viewer?.id ?? null);
     if (!course) return reply.code(500).send({ error: "course missing" });
     if (
       !Number.isInteger(holeNumber) ||
@@ -830,8 +833,8 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     ) {
       return reply.code(400).send({ error: "invalid hole number" });
     }
-    updateRoundCurrentHole(round.id, holeNumber);
-    const state = buildRoundState(code, viewer?.id ?? null);
+    await updateRoundCurrentHole(round.id, holeNumber);
+    const state = await buildRoundState(code, viewer?.id ?? null);
     if (state) broadcast(code, { type: "current_hole", holeNumber, state });
     return { state };
   });
@@ -845,12 +848,12 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     };
   }>("/api/rounds/:code/scores", async (req, reply) => {
     try {
-      const viewer = getViewerUser(req);
+      const viewer = await getViewerUser(req);
       const code = normalizeRoomCode(req.params.code);
-      const round = getRoundByRoomCode(code);
+      const round = await getRoundByRoomCode(code);
       if (!round)
         return reply.code(404).send({ error: "round not found" });
-      const course = getCourse(round.courseId, viewer?.id ?? null);
+      const course = await getCourse(round.courseId, viewer?.id ?? null);
       if (!course)
         return reply.code(500).send({ error: "course missing" });
       const playerId = String(req.body?.playerId ?? "");
@@ -867,11 +870,11 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       if (!Number.isInteger(strokes) || strokes < 1 || strokes > 20) {
         throw new Error("strokes must be integer 1-20");
       }
-      const score = upsertScore(round.id, playerId, holeNumber, strokes);
+      const score = await upsertScore(round.id, playerId, holeNumber, strokes);
       if (round.status === "waiting") {
-        updateRoundStatus(round.id, "in_progress");
+        await updateRoundStatus(round.id, "in_progress");
       }
-      const state = buildRoundState(code, viewer?.id ?? null);
+      const state = await buildRoundState(code, viewer?.id ?? null);
       if (state) broadcast(code, { type: "score_update", score, state });
       return { score, state };
     } catch (e) {
@@ -883,17 +886,17 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     Params: { code: string };
     Body: { playerId?: string; holeNumber?: number };
   }>("/api/rounds/:code/scores", async (req, reply) => {
-    const viewer = getViewerUser(req);
+    const viewer = await getViewerUser(req);
     const code = normalizeRoomCode(req.params.code);
-    const round = getRoundByRoomCode(code);
+    const round = await getRoundByRoomCode(code);
     if (!round) return reply.code(404).send({ error: "round not found" });
     const playerId = String(req.body?.playerId ?? "");
     const holeNumber = Number(req.body?.holeNumber);
     if (!playerId || !Number.isInteger(holeNumber)) {
       return reply.code(400).send({ error: "invalid request" });
     }
-    deleteScore(playerId, holeNumber);
-    const state = buildRoundState(code, viewer?.id ?? null);
+    await deleteScore(playerId, holeNumber);
+    const state = await buildRoundState(code, viewer?.id ?? null);
     if (state) broadcast(code, { type: "state", state });
     return { ok: true };
   });

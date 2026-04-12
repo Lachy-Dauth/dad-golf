@@ -7,16 +7,16 @@ import {
   listScores,
 } from "./db.js";
 
-export function buildRoundState(
+export async function buildRoundState(
   roomCode: string,
   viewerUserId: string | null = null,
-): RoundState | null {
-  const round = getRoundByRoomCode(roomCode);
+): Promise<RoundState | null> {
+  const round = await getRoundByRoomCode(roomCode);
   if (!round) return null;
-  const course = getCourse(round.courseId, viewerUserId);
+  const course = await getCourse(round.courseId, viewerUserId);
   if (!course) return null;
-  const players = listPlayers(round.id);
-  const scores = listScores(round.id);
+  const players = await listPlayers(round.id);
+  const scores = await listScores(round.id);
   const leaderboard = computeLeaderboard(course, players, scores);
   return { round, course, players, scores, leaderboard };
 }
