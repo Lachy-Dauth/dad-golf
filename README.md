@@ -13,7 +13,7 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 - **Live leaderboard** — everyone sees the standings update in real time as scores come in
 - **Hole competitions** — closest-to-pin and longest drive contests on selected holes
 - **Weather** — live weather conditions displayed for the course location
-- **Groups** — create groups, invite members, and track rounds together
+- **Groups** — create groups, invite members, assign admin/member roles, and track rounds together
 - **Admin dashboard** — view stats, manage users, and monitor activity
 - **Dark / light mode** — theme toggle that respects your preference
 - **PWA support** — install the app to your home screen for a native feel

@@ -4,6 +4,7 @@ import type {
   Group,
   GroupInvite,
   GroupMember,
+  GroupRole,
   Hole,
   Player,
   RoundState,
@@ -217,6 +218,12 @@ export const api = {
     fetch(`/api/groups/${groupId}/members/${memberId}`, {
       method: "DELETE",
       headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  updateGroupMemberRole: (groupId: string, memberId: string, role: GroupRole) =>
+    fetch(`/api/groups/${groupId}/members/${memberId}/role`, {
+      method: "PATCH",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ role }),
     }).then((r) => json<{ ok: boolean }>(r)),
 
   // group invites
