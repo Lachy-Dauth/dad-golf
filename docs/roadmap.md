@@ -11,7 +11,6 @@ Estimates assume a solo developer working part-time (~15-20 hrs/week).
 flowchart TD
     subgraph phase1["Phase 1: Quick Wins (weeks 1-2)"]
         direction LR
-        P1A["6a. Larger Groups\n1 day"]
         P1B["8d. PWA Install\n3 days"]
         P1C["8c. Dark Mode\n1 week"]
         P1D["9b. Weather\n3 days"]
@@ -84,7 +83,7 @@ flowchart TD
     classDef pro fill:#fff3cd,stroke:#ffc107,color:#000
     classDef infra fill:#d1ecf1,stroke:#17a2b8,color:#000
 
-    class P1A,P1B,P1C,P1D,P2A,P2B,P2C,P2D,P2E,P2F,P3A,P3B,P3C,P3D,P3E free
+    class P1B,P1C,P1D,P2A,P2B,P2C,P2D,P2E,P2F,P3A,P3B,P3C,P3D,P3E free
     class P5A,P5B,P5C,P5D,P5E,P6A,P6B,P6C,P7A,P7B pro
     class P4A,P4B infra
 ```
@@ -102,10 +101,9 @@ gantt
     axisFormat %b %Y
 
     section Phase 1: Quick Wins
-    Larger Groups (6a)              :p1a, 2026-05-04, 1d
-    PWA Install Prompt (8d)         :p1b, 2026-05-05, 3d
-    Weather Integration (9b)        :p1c, 2026-05-05, 3d
-    Dark Mode (8c)                  :p1d, 2026-05-08, 5d
+    PWA Install Prompt (8d)         :p1b, 2026-05-04, 3d
+    Weather Integration (9b)        :p1c, 2026-05-04, 3d
+    Dark Mode (8c)                  :p1d, 2026-05-07, 5d
 
     section Phase 2: Core Free
     CTP / Longest Drive (5c)        :p2b, 2026-05-18, 5d
@@ -151,7 +149,6 @@ gantt
 
 | Feature | Duration | Depends On | Notes |
 |---------|----------|------------|-------|
-| 6a. Larger Groups | 1 day | — | Config change, basically done already |
 | 8d. PWA Install Prompt | 3 days | — | Manifest, service worker, install banner |
 | 9b. Weather Integration | 3 days | — | Free API (Open-Meteo), show on round page |
 | 8c. Dark Mode | 1 week | — | CSS variables, theme toggle, persist pref |
@@ -279,10 +276,10 @@ the following **5-6 months**.
 
 | Category | Features | Est. Weeks |
 |----------|----------|-----------|
-| FREE | 16 features | ~16 weeks |
+| FREE | 15 features | ~16 weeks |
 | PRO Infrastructure | Payment + gating | ~3 weeks |
 | PRO | 10 features | ~24 weeks |
-| **Total** | **26 features + infra** | **~43 weeks** |
+| **Total** | **25 features + infra** | **~43 weeks** |
 
 At part-time pace (~15-20 hrs/week), that's roughly **10-11 months** of
 calendar time with some parallelism.

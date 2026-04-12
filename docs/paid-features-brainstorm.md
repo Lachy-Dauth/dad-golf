@@ -171,11 +171,6 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ## 6. Group Management Upgrades
 
-### 6a. Larger Groups — FREE
-- Keep the current 64-member limit for everyone
-
-> Artificial group size limits feel hostile and petty. Don't gate this.
-
 ### 6b. Group Stats & History — PRO
 - All-time group leaderboard
 - Round history for the group
@@ -335,7 +330,6 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 5b | Nassau / Match Play | **WON'T DO** |
 | 5c | Closest to Pin / Longest Drive | **FREE** |
 | 5d | Drink Tracker | **FREE** |
-| 6a | Larger Groups | **FREE** |
 | 6b | Group Stats & History | **PRO** |
 | 6c | Group Roles & Permissions | **FREE** |
 | 6d | Group Chat / Noticeboard | **WON'T DO** |
@@ -353,4 +347,4 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 10a | Club/Organisation Account | **WON'T DO** |
 | 10b | Tournament Mode | **WON'T DO** |
 
-**Totals: 16 FREE, 10 PRO, 8 WON'T DO**
+**Totals: 15 FREE, 10 PRO, 8 WON'T DO**
