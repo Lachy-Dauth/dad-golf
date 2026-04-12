@@ -98,12 +98,15 @@ export interface Group {
   ownerName: string | null;
 }
 
+export type GroupRole = "admin" | "member";
+
 export interface GroupMember {
   id: string;
   groupId: string;
   userId: string | null;
   name: string;
   handicap: number;
+  role: GroupRole;
   createdAt: string;
 }
 

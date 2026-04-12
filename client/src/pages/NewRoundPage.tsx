@@ -31,9 +31,7 @@ export default function NewRoundPage() {
 
   const myGroups = useMemo(() => {
     if (!user) return [];
-    return groups.filter(
-      (g) => g.ownerUserId === user.id || g.members.some((m) => m.userId === user.id),
-    );
+    return groups.filter((g) => g.members.some((m) => m.userId === user.id));
   }, [groups, user]);
 
   const selectedGroup = useMemo(

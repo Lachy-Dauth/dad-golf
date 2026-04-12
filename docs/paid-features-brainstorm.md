@@ -166,13 +166,13 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Niche format. Press rules are complicated and divisive (everyone plays
 > different house rules). High effort for a small audience.
 
-### 5c. Closest to Pin / Longest Drive — FREE
+### 5c. Closest to Pin / Longest Drive — FREE ✅
 
 - Mark specific holes for side competitions
 - Players submit claims, leader verifies
 
-> Simple, fun feature. Just a flag on a hole + a text field. Low effort,
-> makes rounds more engaging for everyone.
+> Shipped. Hole competitions with claim/winner system integrated into the
+> live scoring flow.
 
 ---
 
@@ -187,14 +187,16 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Natural Pro feature. "Who's the all-time best in the group?" is a question
 > every regular group wants answered. Drives competitive engagement.
 
-### 6c. Group Roles & Permissions — FREE
+### 6c. Group Roles & Permissions — FREE ✅
 
-- Admins, captains, members
-- Captain can manage rounds; admin can manage membership
+- ~~Admins, captains, members~~ Admins and members (simplified from original spec)
+- Admin can manage membership, invites, roles, and delete group
 - Multiple admins per group
+- Group creator is automatically an admin; last admin cannot be demoted or leave
 
-> Basic group management. Shouldn't be gated — it's just good UX for
-> groups with more than one organiser.
+> Shipped. Replaced single-owner model with role-based permissions on the
+> `group_members` table. Kept it simple with two roles — captain was
+> dropped since any member can already create rounds.
 
 ### 6d. Group Chat / Noticeboard — WON'T DO
 
@@ -258,18 +260,18 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Requires native app development (Swift/Kotlin). Completely different
 > skillset and maintenance burden. Not viable for a side project.
 
-### 8c. Dark Mode / Themes — FREE
+### 8c. Dark Mode / Themes — FREE ✅
 
 - Dark mode + a few clean colour themes
 
-> Dark mode is table stakes in 2026. Just ship it for free.
+> Shipped. Theme toggle with dark/light modes, persisted in localStorage.
 
-### 8d. PWA Install Prompt — FREE
+### 8d. PWA Install Prompt — FREE ✅
 
 - Make the "Add to Home Screen" experience seamless
 - Custom splash screen, app icon
 
-> Helps adoption. Makes the app feel native. Zero reason to gate this.
+> Shipped. Service worker, manifest, and install prompt component.
 
 ### 8e. Export / PDF Scorecards — PRO
 
@@ -292,13 +294,12 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Natural companion to Scheduled Rounds (2c). Low effort — just generate
 > an .ics link or use a calendar API. Makes scheduling feel complete.
 
-### 9b. Weather Integration — FREE
+### 9b. Weather Integration — FREE ✅
 
 - Show weather forecast for round day / course location
 - Wind/rain warnings
 
-> Free weather APIs exist. Quick to implement, genuinely useful, and a
-> nice polish touch on the round creation screen.
+> Shipped. Open-Meteo API integration with weather widget on the round page.
 
 ### 9c. Photo Attachment — WON'T DO
 
@@ -351,20 +352,20 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 4c  | Achievement Badges             | **FREE**     |
 | 5a  | Skins Game                     | **PRO**      |
 | 5b  | Nassau / Match Play            | **WON'T DO** |
-| 5c  | Closest to Pin / Longest Drive | **FREE**     |
+| 5c  | Closest to Pin / Longest Drive | **FREE** ✅  |
 | 6b  | Group Stats & History          | **PRO**      |
-| 6c  | Group Roles & Permissions      | **FREE**     |
+| 6c  | Group Roles & Permissions      | **FREE** ✅  |
 | 6d  | Group Chat / Noticeboard       | **WON'T DO** |
 | 7a  | Multiple Scoring Formats       | **PRO**      |
 | 7b  | Team Rounds                    | **PRO**      |
 | 7c  | Handicap Auto-Adjustment       | **FREE**     |
 | 8a  | Offline Mode                   | **WON'T DO** |
 | 8b  | Apple Watch Companion          | **WON'T DO** |
-| 8c  | Dark Mode / Themes             | **FREE**     |
-| 8d  | PWA Install Prompt             | **FREE**     |
+| 8c  | Dark Mode / Themes             | **FREE** ✅  |
+| 8d  | PWA Install Prompt             | **FREE** ✅  |
 | 8e  | PDF Scorecards                 | **PRO**      |
 | 9a  | Calendar Integration           | **FREE**     |
-| 9b  | Weather Integration            | **FREE**     |
+| 9b  | Weather Integration            | **FREE** ✅  |
 | 9c  | Photo Attachment               | **WON'T DO** |
 | 10a | Club/Organisation Account      | **WON'T DO** |
 | 10b | Tournament Mode                | **WON'T DO** |

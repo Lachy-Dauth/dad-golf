@@ -79,23 +79,21 @@ export default function GroupsPage() {
       {groups && groups.length > 0 && (
         <ul className="list">
           {groups.map((g) => {
-            const isOwner = user && g.ownerUserId === user.id;
-            const isMember = !!(user && g.members.some((m) => m.userId === user.id));
+            const myMember = user ? g.members.find((m) => m.userId === user.id) : null;
+            const isAdmin = myMember?.role === "admin";
             return (
               <li key={g.id}>
                 <div className="list-row">
                   <Link to={`/groups/${g.id}`} className="list-link">
                     <div className="list-primary">
                       {g.name}
-                      {isOwner && <span className="badge">owner</span>}
-                      {!isOwner && isMember && <span className="badge">member</span>}
+                      {myMember && <span className="badge">{myMember.role}</span>}
                     </div>
                     <div className="list-secondary">
                       {g.members.length} {g.members.length === 1 ? "member" : "members"}
-                      {g.ownerName && ` · ${g.ownerName}`}
                     </div>
                   </Link>
-                  {isOwner && (
+                  {isAdmin && (
                     <button
                       className="btn-icon"
                       onClick={() => handleDelete(g.id)}
