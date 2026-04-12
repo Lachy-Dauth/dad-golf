@@ -1,4 +1,5 @@
 import type {
+  ActiveRoundSummary,
   CompetitionType,
   Course,
   Group,
@@ -14,6 +15,7 @@ import type {
   ScheduledRoundRsvp,
   Score,
   User,
+  UserScheduledRound,
   Weather,
 } from "@dad-golf/shared";
 import type { HandicapCalculation } from "@dad-golf/shared";
@@ -312,6 +314,16 @@ export const api = {
       method: "POST",
       headers: authHeaders(),
     }).then((r) => json<{ state: RoundState }>(r)),
+
+  // my (user-specific cross-group queries)
+  myActiveRounds: () =>
+    fetch("/api/my/rounds", { headers: authHeaders() }).then((r) =>
+      json<{ rounds: ActiveRoundSummary[] }>(r),
+    ),
+  myScheduledRounds: () =>
+    fetch("/api/my/scheduled-rounds", { headers: authHeaders() }).then((r) =>
+      json<{ scheduledRounds: UserScheduledRound[] }>(r),
+    ),
 
   // rounds
   createRound: (payload: { courseId: string; groupId: string | null; memberIds: string[] }) =>

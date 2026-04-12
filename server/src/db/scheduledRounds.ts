@@ -3,6 +3,7 @@ import type {
   ScheduledRoundRsvp,
   ScheduledRoundStatus,
   RsvpStatus,
+  UserScheduledRound,
 } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
@@ -231,4 +232,26 @@ export async function listAcceptedRsvpUserIds(scheduledRoundId: string): Promise
     [scheduledRoundId],
   );
   return (rows as { user_id: string }[]).map((r) => r.user_id);
+}
+
+export async function listScheduledRoundsForUser(userId: string): Promise<UserScheduledRound[]> {
+  const { rows } = await pool.query(
+    `SELECT sr.*, c.name AS course_name, u.display_name AS created_by_name,
+            g.name AS group_name, rsvp.status AS rsvp_status
+       FROM scheduled_round_rsvps rsvp
+       JOIN scheduled_rounds sr ON sr.id = rsvp.scheduled_round_id
+       JOIN courses c ON c.id = sr.course_id
+       JOIN users u ON u.id = sr.created_by_user_id
+       JOIN groups g ON g.id = sr.group_id
+       WHERE rsvp.user_id = $1 AND sr.status = 'scheduled'
+       ORDER BY sr.scheduled_date ASC, sr.scheduled_time ASC NULLS LAST`,
+    [userId],
+  );
+  return (
+    rows as Array<ScheduledRoundListRow & { group_name: string; rsvp_status: RsvpStatus }>
+  ).map((row) => ({
+    ...rowToScheduledRound(row),
+    groupName: row.group_name,
+    rsvpStatus: row.rsvp_status,
+  }));
 }

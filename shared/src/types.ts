@@ -146,6 +146,19 @@ export interface ScheduledRoundRsvp {
   updatedAt: string;
 }
 
+export interface ActiveRoundSummary {
+  roomCode: string;
+  courseName: string;
+  status: string;
+  playerCount: number;
+  createdAt: string;
+}
+
+export interface UserScheduledRound extends ScheduledRound {
+  groupName: string;
+  rsvpStatus: RsvpStatus;
+}
+
 export type CompetitionType = "ctp" | "longest_drive";
 
 export interface CompetitionClaim {

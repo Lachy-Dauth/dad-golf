@@ -3,6 +3,27 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext.js";
 import { useTheme } from "../ThemeContext.js";
 import type { ThemePref } from "../localStore.js";
+import { api } from "../api.js";
+import type { UserScheduledRound } from "@dad-golf/shared";
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+}
+
+function formatTime(timeStr: string): string {
+  const [h, m] = timeStr.split(":");
+  const hour = parseInt(h, 10);
+  const suffix = hour >= 12 ? "pm" : "am";
+  const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${display}:${m}${suffix}`;
+}
+
+function rsvpLabel(status: string): string {
+  if (status === "accepted") return "Going";
+  if (status === "tentative") return "Maybe";
+  return "Can't";
+}
 
 export default function ProfilePage() {
   const { user, updateProfile, signOut } = useAuth();
@@ -12,11 +33,17 @@ export default function ProfilePage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [upcoming, setUpcoming] = useState<UserScheduledRound[]>([]);
+  const { pref: themePref, setPref: setThemePref } = useTheme();
 
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName);
       setHandicap(user.handicap.toFixed(1));
+      api
+        .myScheduledRounds()
+        .then((res) => setUpcoming(res.scheduledRounds))
+        .catch(() => {});
     }
   }, [user]);
 
@@ -48,8 +75,6 @@ export default function ProfilePage() {
       setBusy(false);
     }
   }
-
-  const { pref: themePref, setPref: setThemePref } = useTheme();
 
   async function handleSignOut() {
     await signOut();
@@ -104,6 +129,31 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+
+      {upcoming.length > 0 && (
+        <section className="section">
+          <h2>Upcoming rounds</h2>
+          <ul className="list">
+            {upcoming.map((sr) => (
+              <li key={sr.id}>
+                <Link to={`/groups/${sr.groupId}/schedule/${sr.id}`} className="list-row">
+                  <div>
+                    <div className="list-primary">{sr.courseName}</div>
+                    <div className="list-secondary">
+                      {formatDate(sr.scheduledDate)}
+                      {sr.scheduledTime && ` at ${formatTime(sr.scheduledTime)}`}
+                      {" · "}
+                      {sr.groupName}
+                    </div>
+                  </div>
+                  <span className="badge">{rsvpLabel(sr.rsvpStatus)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="form theme-section">
         <label className="field">
           <span>Theme</span>

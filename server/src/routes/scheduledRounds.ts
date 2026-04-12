@@ -15,6 +15,7 @@ import {
   listGroupMembers,
   listRsvps,
   listScheduledRoundsForGroup,
+  listScheduledRoundsForUser,
   updateScheduledRound,
   updateScheduledRoundStatus,
   upsertRsvp,
@@ -324,4 +325,12 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       }
     },
   );
+
+  // List all upcoming scheduled rounds the user has RSVP'd to (across all groups)
+  app.get("/api/my/scheduled-rounds", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const scheduledRounds = await listScheduledRoundsForUser(user.id);
+    return { scheduledRounds };
+  });
 }

@@ -51,6 +51,7 @@ export {
   updateRoundStatus,
   updateRoundCurrentHole,
   listRecentRounds,
+  listActiveRoundsForUser,
 } from "./rounds.js";
 export {
   addPlayer,
@@ -83,6 +84,7 @@ export {
   upsertRsvp,
   listRsvps,
   listAcceptedRsvpUserIds,
+  listScheduledRoundsForUser,
 } from "./scheduledRounds.js";
 export type {
   AdminStats,
