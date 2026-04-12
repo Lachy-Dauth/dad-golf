@@ -9,17 +9,17 @@ Estimates assume a solo developer working part-time (~15-20 hrs/week).
 
 ```mermaid
 flowchart TD
-    subgraph phase1["Phase 1: Quick Wins (weeks 1-2)"]
+    subgraph phase1["Phase 1: Quick Wins ✅"]
         direction LR
-        P1B["8d. PWA Install\n3 days"]
-        P1C["8c. Dark Mode\n1 week"]
-        P1D["9b. Weather\n3 days"]
+        P1B["8d. PWA Install ✅"]
+        P1C["8c. Dark Mode ✅"]
+        P1D["9b. Weather ✅"]
     end
 
-    subgraph phase2["Phase 2: Core Free Features (weeks 3-8)"]
+    subgraph phase2["Phase 2: Core Free Features (in progress)"]
         P2A["1c. Round Replay\n1.5 weeks"]
-        P2B["5c. CTP / Long Drive\n1 week"]
-        P2D["6c. Group Roles\n1 week"]
+        P2B["5c. CTP / Long Drive ✅"]
+        P2D["6c. Group Roles ✅"]
         P2E["7c. Handicap Auto-Adj\n1 week"]
         P2F["3a. Community Courses\n2 weeks"]
     end
@@ -99,14 +99,14 @@ gantt
     dateFormat YYYY-MM-DD
     axisFormat %b %Y
 
-    section Phase 1: Quick Wins
-    PWA Install Prompt (8d)         :p1b, 2026-05-04, 3d
-    Weather Integration (9b)        :p1c, 2026-05-04, 3d
-    Dark Mode (8c)                  :p1d, 2026-05-07, 5d
+    section Phase 1: Quick Wins ✅
+    PWA Install Prompt (8d)         :done, p1b, 2026-05-04, 3d
+    Weather Integration (9b)        :done, p1c, 2026-05-04, 3d
+    Dark Mode (8c)                  :done, p1d, 2026-05-07, 5d
 
     section Phase 2: Core Free
-    CTP / Longest Drive (5c)        :p2b, 2026-05-18, 5d
-    Group Roles (6c)                :p2d, 2026-05-25, 5d
+    CTP / Longest Drive (5c)        :done, p2b, 2026-05-18, 5d
+    Group Roles (6c)                :done, p2d, 2026-05-25, 5d
     Handicap Auto-Adj (7c)          :p2e, 2026-05-25, 5d
     Round Replay (1c)               :p2a, 2026-06-01, 8d
     Community Courses (3a)          :p2f, 2026-06-01, 10d
@@ -143,31 +143,29 @@ gantt
 
 ## Phase Breakdown
 
-### Phase 1: Quick Wins (Weeks 1-2)
+### Phase 1: Quick Wins ✅
 
 | Feature                 | Duration | Depends On | Notes                                     |
 | ----------------------- | -------- | ---------- | ----------------------------------------- |
-| 8d. PWA Install Prompt  | 3 days   | —          | Manifest, service worker, install banner  |
-| 9b. Weather Integration | 3 days   | —          | Free API (Open-Meteo), show on round page |
-| 8c. Dark Mode           | 1 week   | —          | CSS variables, theme toggle, persist pref |
+| 8d. PWA Install Prompt  | 3 days   | —          | ✅ Shipped                                |
+| 9b. Weather Integration | 3 days   | —          | ✅ Shipped                                |
+| 8c. Dark Mode           | 1 week   | —          | ✅ Shipped                                |
 
-**Phase total: ~2 weeks**
-
-Ship these immediately. Low risk, visible improvements, good momentum.
+**Phase complete.**
 
 ---
 
-### Phase 2: Core Free Features (Weeks 3-8)
+### Phase 2: Core Free Features (In Progress)
 
 | Feature                 | Duration  | Depends On | Notes                                    |
 | ----------------------- | --------- | ---------- | ---------------------------------------- |
-| 5c. CTP / Longest Drive | 1 week    | —          | Flag on hole + claim field               |
-| 6c. Group Roles         | 1 week    | —          | Role column + permission checks          |
+| 5c. CTP / Longest Drive | 1 week    | —          | ✅ Shipped                               |
+| 6c. Group Roles         | 1 week    | —          | ✅ Shipped (admin/member, simplified)    |
 | 7c. Handicap Auto-Adj   | 1 week    | —          | Rolling calc from recent scores          |
 | 1c. Round Replay        | 1.5 weeks | —          | Summary view, hole-by-hole breakdown     |
 | 3a. Community Courses   | 2 weeks   | —          | Shared courses, search, basic moderation |
 
-**Phase total: ~6 weeks** (some can run in parallel)
+**Remaining: ~4.5 weeks** (some can run in parallel)
 
 These are the features that make the free tier genuinely compelling.
 
@@ -271,12 +269,15 @@ the following **5-6 months**.
 
 ## Estimated Total Effort
 
-| Category           | Features                | Est. Weeks    |
-| ------------------ | ----------------------- | ------------- |
-| FREE               | 15 features             | ~16 weeks     |
-| PRO Infrastructure | Payment + gating        | ~3 weeks      |
-| PRO                | 10 features             | ~24 weeks     |
-| **Total**          | **25 features + infra** | **~43 weeks** |
+| Category           | Features                      | Est. Weeks    |
+| ------------------ | ----------------------------- | ------------- |
+| FREE (shipped)     | 5 features ✅                 | ~0 weeks      |
+| FREE (remaining)   | 10 features                   | ~12.5 weeks   |
+| PRO Infrastructure | Payment + gating              | ~3 weeks      |
+| PRO                | 10 features                   | ~24 weeks     |
+| **Remaining**      | **20 features + infra**       | **~39.5 weeks** |
 
-At part-time pace (~15-20 hrs/week), that's roughly **10-11 months** of
+**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles.
+
+At part-time pace (~15-20 hrs/week), remaining work is roughly **9-10 months** of
 calendar time with some parallelism.
