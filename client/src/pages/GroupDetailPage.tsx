@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api.js";
-import type { Group, GroupInvite, GroupMember, GroupRole } from "@dad-golf/shared";
+import type { Group, GroupInvite, GroupMember, GroupRole, RoundSummary } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
 
 export default function GroupDetailPage() {
@@ -10,6 +10,9 @@ export default function GroupDetailPage() {
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [invites, setInvites] = useState<GroupInvite[]>([]);
+  const [groupRounds, setGroupRounds] = useState<RoundSummary[]>([]);
+  const [groupRoundsTotal, setGroupRoundsTotal] = useState(0);
+  const [roundsOffset, setRoundsOffset] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const myMember = user ? members.find((m) => m.userId === user.id) : null;
@@ -42,6 +45,23 @@ export default function GroupDetailPage() {
     if (isAdmin) loadInvites();
     else setInvites([]);
   }, [isAdmin, id, loadInvites]);
+
+  useEffect(() => {
+    setGroupRounds([]);
+    setGroupRoundsTotal(0);
+    setRoundsOffset(0);
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    api
+      .listGroupRounds(id, 20, roundsOffset)
+      .then((res) => {
+        setGroupRounds((prev) => (roundsOffset === 0 ? res.rounds : [...prev, ...res.rounds]));
+        setGroupRoundsTotal(res.total);
+      })
+      .catch((e: Error) => setError(e.message));
+  }, [id, roundsOffset]);
 
   async function handleRemove(memberId: string) {
     if (!id) return;
@@ -179,8 +199,40 @@ export default function GroupDetailPage() {
         )}
       </section>
 
+      <section className="section">
+        <h2>Round History</h2>
+        {groupRounds.length === 0 ? (
+          <div className="muted">No completed rounds for this group yet.</div>
+        ) : (
+          <ul className="list">
+            {groupRounds.map((r) => (
+              <li key={r.roomCode}>
+                <Link to={`/r/${r.roomCode}`} className="list-row">
+                  <div>
+                    <div className="list-primary">{r.courseName}</div>
+                    <div className="list-secondary">
+                      {new Date(r.date).toLocaleDateString()} &middot; {r.playerCount} player
+                      {r.playerCount !== 1 ? "s" : ""}
+                      {r.winnerName && <> &middot; Won by {r.winnerName}</>}
+                    </div>
+                  </div>
+                  <span className="chevron">&rsaquo;</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        {groupRounds.length < groupRoundsTotal && (
+          <div className="form-actions">
+            <button className="btn" onClick={() => setRoundsOffset((o) => o + 20)}>
+              Load more
+            </button>
+          </div>
+        )}
+      </section>
+
       <Link to="/groups" className="back-link">
-        ← Back
+        &larr; Back
       </Link>
     </div>
   );

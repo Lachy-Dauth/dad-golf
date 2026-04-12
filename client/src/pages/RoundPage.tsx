@@ -13,10 +13,12 @@ import { useAuth } from "../AuthContext.js";
 import LobbyView from "../components/LobbyView.js";
 import ScoringView from "../components/ScoringView.js";
 import LeaderboardView from "../components/LeaderboardView.js";
-import SummaryView from "../components/SummaryView.js";
+import RoundReplayView from "../components/RoundReplayView.js";
+import ScorecardView from "../components/ScorecardView.js";
 import WeatherWidget from "../components/WeatherWidget.js";
 
 type Tab = "scoring" | "leaderboard" | "players";
+type CompletedTab = "summary" | "scorecard" | "leaderboard";
 
 export default function RoundPage() {
   const { code } = useParams<{ code: string }>();
@@ -26,6 +28,7 @@ export default function RoundPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const { state, setState } = useRoundSocket(roomCode, initial);
   const [tab, setTab] = useState<Tab>("scoring");
+  const [completedTab, setCompletedTab] = useState<CompletedTab>("summary");
   const [activePlayerId, setActivePlayer] = useState<string | null>(
     roomCode ? getActivePlayerId(roomCode) : null,
   );
@@ -212,7 +215,36 @@ export default function RoundPage() {
         />
       )}
 
-      {!showLobby && (
+      {!showLobby && showSummary && (
+        <>
+          <nav className="tabs">
+            <button
+              className={completedTab === "summary" ? "active" : ""}
+              onClick={() => setCompletedTab("summary")}
+            >
+              Summary
+            </button>
+            <button
+              className={completedTab === "scorecard" ? "active" : ""}
+              onClick={() => setCompletedTab("scorecard")}
+            >
+              Scorecard
+            </button>
+            <button
+              className={completedTab === "leaderboard" ? "active" : ""}
+              onClick={() => setCompletedTab("leaderboard")}
+            >
+              Leaderboard
+            </button>
+          </nav>
+
+          {completedTab === "summary" && <RoundReplayView state={state} />}
+          {completedTab === "scorecard" && <ScorecardView state={state} />}
+          {completedTab === "leaderboard" && <LeaderboardView state={state} />}
+        </>
+      )}
+
+      {!showLobby && !showSummary && (
         <>
           <nav className="tabs">
             <button className={tab === "scoring" ? "active" : ""} onClick={() => setTab("scoring")}>
@@ -277,9 +309,7 @@ export default function RoundPage() {
             </div>
           )}
 
-          {showSummary && <SummaryView state={state} />}
-
-          {!showSummary && round.status === "in_progress" && isLeader && (
+          {round.status === "in_progress" && isLeader && (
             <div className="form-actions" style={{ marginTop: 24 }}>
               <button className="btn" onClick={handleComplete}>
                 End round

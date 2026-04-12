@@ -9,6 +9,7 @@ import type {
   Hole,
   Player,
   RoundState,
+  RoundSummary,
   Score,
   User,
   Weather,
@@ -252,6 +253,16 @@ export const api = {
       method: "POST",
       headers: authHeaders(),
     }).then((r) => json<{ group: Group; member: GroupMember }>(r)),
+
+  // round history
+  listMyRounds: (limit = 20, offset = 0) =>
+    fetch(`/api/users/me/rounds?limit=${limit}&offset=${offset}`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ rounds: RoundSummary[]; total: number }>(r)),
+  listGroupRounds: (groupId: string, limit = 20, offset = 0) =>
+    fetch(`/api/groups/${groupId}/rounds?limit=${limit}&offset=${offset}`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ rounds: RoundSummary[]; total: number }>(r)),
 
   // rounds
   createRound: (payload: { courseId: string; groupId: string | null; memberIds: string[] }) =>
