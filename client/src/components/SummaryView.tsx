@@ -40,6 +40,28 @@ export default function SummaryView({ state }: Props) {
           </strong>
         </div>
       )}
+      {(state.competitions ?? []).map((comp) => {
+        const winner = comp.claims.find((c) => c.isWinner);
+        const label = comp.type === "ctp" ? "Closest to Pin" : "Longest Drive";
+        return (
+          <div key={comp.id} className="stat-card">
+            <div>
+              {label} · Hole {comp.holeNumber}
+            </div>
+            {winner ? (
+              <strong>
+                {winner.playerName} · {winner.claim}
+              </strong>
+            ) : (
+              <span className="muted">
+                {comp.claims.length > 0
+                  ? `${comp.claims.length} claim${comp.claims.length > 1 ? "s" : ""} — no winner selected`
+                  : "No claims"}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </section>
   );
 }

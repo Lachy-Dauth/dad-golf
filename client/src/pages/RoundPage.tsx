@@ -237,9 +237,12 @@ export default function RoundPage() {
               onJoinAsUser={handleJoinAsUser}
               onJoinAsGuest={handleJoinAsGuest}
               viewer={viewer}
+              isLeader={isLeader}
+              roomCode={roomCode!}
               onScore={handleScore}
               onClearScore={handleClearScore}
               onSetCurrentHole={handleSetCurrentHole}
+              onStateUpdate={setState}
             />
           )}
 

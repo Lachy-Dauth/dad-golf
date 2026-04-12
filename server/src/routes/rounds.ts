@@ -2,10 +2,15 @@ import type { FastifyInstance } from "fastify";
 import { generateRoomCode, normalizeRoomCode } from "@dad-golf/shared";
 import {
   addPlayer,
+  createCompetition,
   createRound,
+  clearClaimWinner,
+  deleteClaim,
+  deleteCompetition,
   deleteScore,
   findPlayerByName,
   findPlayerByUserId,
+  getCompetition,
   getCourse,
   getPlayer,
   getRoundByRoomCode,
@@ -14,9 +19,11 @@ import {
   listPlayers,
   listRecentRounds,
   removePlayer,
+  setClaimWinner,
   updatePlayer,
   updateRoundCurrentHole,
   updateRoundStatus,
+  upsertClaim,
   upsertScore,
 } from "../db/index.js";
 import { buildRoundState } from "../roundState.js";
@@ -302,6 +309,165 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     await deleteScore(playerId, holeNumber);
     const state = await buildRoundState(code, viewer?.id ?? null);
     if (state) broadcast(code, { type: "state", state });
+    return { ok: true };
+  });
+
+  // --- Competitions (CTP / Longest Drive) ---
+
+  app.post<{
+    Params: { code: string };
+    Body: { holeNumber?: number; type?: string };
+  }>("/api/rounds/:code/competitions", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    try {
+      const code = normalizeRoomCode(req.params.code);
+      const round = await getRoundByRoomCode(code);
+      if (!round) return reply.code(404).send({ error: "round not found" });
+      if (round.leaderUserId !== user.id) {
+        return reply.code(403).send({ error: "only the round leader can create competitions" });
+      }
+      const course = await getCourse(round.courseId, user.id);
+      if (!course) return reply.code(500).send({ error: "course missing" });
+      const holeNumber = Number(req.body?.holeNumber);
+      const type = String(req.body?.type ?? "");
+      if (!Number.isInteger(holeNumber) || holeNumber < 1 || holeNumber > course.holes.length) {
+        throw new Error("invalid hole number");
+      }
+      if (type !== "ctp" && type !== "longest_drive") {
+        throw new Error("type must be 'ctp' or 'longest_drive'");
+      }
+      await createCompetition(round.id, holeNumber, type);
+      const state = await buildRoundState(code, user.id);
+      if (state) broadcast(code, { type: "competition_update", state });
+      return reply.code(201).send({ state });
+    } catch (e) {
+      return reply.code(400).send({ error: (e as Error).message });
+    }
+  });
+
+  app.delete<{
+    Params: { code: string; competitionId: string };
+  }>("/api/rounds/:code/competitions/:competitionId", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const code = normalizeRoomCode(req.params.code);
+    const round = await getRoundByRoomCode(code);
+    if (!round) return reply.code(404).send({ error: "round not found" });
+    if (round.leaderUserId !== user.id) {
+      return reply.code(403).send({ error: "only the round leader can delete competitions" });
+    }
+    const comp = await getCompetition(req.params.competitionId);
+    if (!comp || comp.roundId !== round.id) {
+      return reply.code(404).send({ error: "competition not found" });
+    }
+    await deleteCompetition(req.params.competitionId);
+    const state = await buildRoundState(code, user.id);
+    if (state) broadcast(code, { type: "competition_update", state });
+    return { ok: true };
+  });
+
+  app.post<{
+    Params: { code: string; competitionId: string };
+    Body: { playerId?: string; claim?: string };
+  }>("/api/rounds/:code/competitions/:competitionId/claims", async (req, reply) => {
+    try {
+      const viewer = await getViewerUser(req);
+      const code = normalizeRoomCode(req.params.code);
+      const round = await getRoundByRoomCode(code);
+      if (!round) return reply.code(404).send({ error: "round not found" });
+      const comp = await getCompetition(req.params.competitionId);
+      if (!comp || comp.roundId !== round.id) {
+        return reply.code(404).send({ error: "competition not found" });
+      }
+      const playerId = String(req.body?.playerId ?? "");
+      const claim = String(req.body?.claim ?? "").trim();
+      if (!playerId) throw new Error("playerId is required");
+      if (!claim || claim.length > 100) throw new Error("claim is required (max 100 chars)");
+      const player = await getPlayer(playerId);
+      if (!player || player.roundId !== round.id) {
+        throw new Error("player not found in this round");
+      }
+      await upsertClaim(req.params.competitionId, playerId, claim);
+      const state = await buildRoundState(code, viewer?.id ?? null);
+      if (state) broadcast(code, { type: "competition_update", state });
+      return { state };
+    } catch (e) {
+      return reply.code(400).send({ error: (e as Error).message });
+    }
+  });
+
+  app.delete<{
+    Params: { code: string; competitionId: string };
+    Body: { playerId?: string };
+  }>("/api/rounds/:code/competitions/:competitionId/claims", async (req, reply) => {
+    const viewer = await getViewerUser(req);
+    const code = normalizeRoomCode(req.params.code);
+    const round = await getRoundByRoomCode(code);
+    if (!round) return reply.code(404).send({ error: "round not found" });
+    const comp = await getCompetition(req.params.competitionId);
+    if (!comp || comp.roundId !== round.id) {
+      return reply.code(404).send({ error: "competition not found" });
+    }
+    const playerId = String(req.body?.playerId ?? "");
+    if (!playerId) return reply.code(400).send({ error: "playerId is required" });
+    const player = await getPlayer(playerId);
+    if (!player || player.roundId !== round.id) {
+      return reply.code(404).send({ error: "player not found" });
+    }
+    const isLeader = viewer?.id === round.leaderUserId;
+    const isSelf = viewer && player.userId === viewer.id;
+    if (!isLeader && !isSelf) {
+      return reply.code(403).send({ error: "not allowed" });
+    }
+    await deleteClaim(req.params.competitionId, playerId);
+    const state = await buildRoundState(code, viewer?.id ?? null);
+    if (state) broadcast(code, { type: "competition_update", state });
+    return { ok: true };
+  });
+
+  app.post<{
+    Params: { code: string; competitionId: string };
+    Body: { playerId?: string };
+  }>("/api/rounds/:code/competitions/:competitionId/winner", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const code = normalizeRoomCode(req.params.code);
+    const round = await getRoundByRoomCode(code);
+    if (!round) return reply.code(404).send({ error: "round not found" });
+    if (round.leaderUserId !== user.id) {
+      return reply.code(403).send({ error: "only the round leader can select winners" });
+    }
+    const comp = await getCompetition(req.params.competitionId);
+    if (!comp || comp.roundId !== round.id) {
+      return reply.code(404).send({ error: "competition not found" });
+    }
+    const playerId = String(req.body?.playerId ?? "");
+    if (!playerId) return reply.code(400).send({ error: "playerId is required" });
+    await setClaimWinner(req.params.competitionId, playerId);
+    const state = await buildRoundState(code, user.id);
+    if (state) broadcast(code, { type: "competition_update", state });
+    return { state };
+  });
+
+  app.delete<{
+    Params: { code: string; competitionId: string };
+  }>("/api/rounds/:code/competitions/:competitionId/winner", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    const code = normalizeRoomCode(req.params.code);
+    const round = await getRoundByRoomCode(code);
+    if (!round) return reply.code(404).send({ error: "round not found" });
+    if (round.leaderUserId !== user.id) {
+      return reply.code(403).send({ error: "only the round leader can clear winners" });
+    }
+    const comp = await getCompetition(req.params.competitionId);
+    if (!comp || comp.roundId !== round.id) {
+      return reply.code(404).send({ error: "competition not found" });
+    }
+    await clearClaimWinner(req.params.competitionId);
+    const state = await buildRoundState(code, user.id);
+    if (state) broadcast(code, { type: "competition_update", state });
     return { ok: true };
   });
 }
