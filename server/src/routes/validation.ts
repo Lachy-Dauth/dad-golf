@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyBaseLogger, FastifyReply, FastifyRequest } from "fastify";
 import type { CourseReportReason, Hole, Round, User } from "@dad-golf/shared";
 import { normalizeRoomCode } from "@dad-golf/shared";
 import { getRoundByRoomCode, getUserBySession } from "../db/index.js";
@@ -227,4 +227,19 @@ export function parsePagination(
   const limit = Math.min(Math.max(Number(query.limit) || defaults.limit, 1), defaults.maxLimit);
   const offset = Math.max(Number(query.offset) || 0, 0);
   return { limit, offset };
+}
+
+export function fireAndForget(
+  promise: Promise<unknown>,
+  logger: FastifyBaseLogger,
+  context?: string,
+): void {
+  promise.catch((err) => {
+    logger.error({ err }, context ?? "fire-and-forget operation failed");
+  });
+}
+
+export function errorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return String(e);
 }

@@ -14,6 +14,7 @@ import {
   updateUserHandicap,
 } from "../db/index.js";
 import {
+  errorMessage,
   requireUser,
   validateAdjustedGrossScore,
   validateCourseRating,
@@ -111,7 +112,7 @@ export async function registerHandicapRoutes(app: FastifyInstance): Promise<void
 
       return reply.code(201).send({ round, calculation });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -166,7 +167,7 @@ export async function registerHandicapRoutes(app: FastifyInstance): Promise<void
       const updated = await getHandicapRound(req.params.id);
       return { round: updated, calculation };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 

@@ -24,92 +24,85 @@ export async function createActivityEvent(
   return id;
 }
 
+const ACTIVITY_FEED_COLUMNS = `ae.*, u.display_name AS user_name, u.username,
+            g.name AS group_name, r.room_code,
+            (SELECT COUNT(*) FROM activity_likes al WHERE al.event_id = ae.id) AS like_count,
+            (SELECT COUNT(*) FROM activity_comments ac WHERE ac.event_id = ae.id) AS comment_count,
+            EXISTS(SELECT 1 FROM activity_likes al2 WHERE al2.event_id = ae.id AND al2.user_id = $1) AS viewer_liked`;
+
+const ACTIVITY_FEED_FROM = `FROM activity_events ae
+     LEFT JOIN users u ON u.id = ae.user_id
+     LEFT JOIN groups g ON g.id = ae.group_id
+     LEFT JOIN rounds r ON r.id = ae.round_id`;
+
+const ACTIVITY_FEED_WHERE = `WHERE (ae.visibility = 'group' AND ae.group_id = ANY($2))
+        OR ae.user_id = $1`;
+
 export async function getActivityFeedForUser(
   userId: string,
   limit: number,
   offset: number,
 ): Promise<{ items: ActivityFeedItem[]; total: number }> {
-  // Find all groups the viewer belongs to
   const { rows: groupRows } = await pool.query(
     `SELECT group_id FROM group_members WHERE user_id = $1`,
     [userId],
   );
   const groupIds = groupRows.map((r: { group_id: string }) => r.group_id);
 
-  if (groupIds.length === 0) {
-    // User has no groups — only show their own events
-    const { rows: countRows } = await pool.query(
-      `SELECT COUNT(*) AS cnt FROM activity_events WHERE user_id = $1`,
-      [userId],
-    );
-    const total = Number(countRows[0].cnt);
-
-    const { rows } = await pool.query(
-      `SELECT ae.*, u.display_name AS user_name, u.username,
-              NULL AS group_name, r.room_code,
-              (SELECT COUNT(*) FROM activity_likes al WHERE al.event_id = ae.id) AS like_count,
-              (SELECT COUNT(*) FROM activity_comments ac WHERE ac.event_id = ae.id) AS comment_count,
-              EXISTS(SELECT 1 FROM activity_likes al2 WHERE al2.event_id = ae.id AND al2.user_id = $1) AS viewer_liked
-       FROM activity_events ae
-       LEFT JOIN users u ON u.id = ae.user_id
-       LEFT JOIN rounds r ON r.id = ae.round_id
-       WHERE ae.user_id = $1
-       ORDER BY ae.created_at DESC
-       LIMIT $2 OFFSET $3`,
-      [userId, limit, offset],
-    );
-
-    return { items: rows.map(rowToFeedItem), total };
-  }
-
-  // Count total visible events
   const { rows: countRows } = await pool.query(
-    `SELECT COUNT(*) AS cnt FROM activity_events ae
-     WHERE (ae.visibility = 'group' AND ae.group_id = ANY($2))
-        OR ae.user_id = $1`,
+    `SELECT COUNT(*) AS cnt ${ACTIVITY_FEED_FROM} ${ACTIVITY_FEED_WHERE}`,
     [userId, groupIds],
   );
   const total = Number(countRows[0].cnt);
 
   const { rows } = await pool.query(
-    `SELECT ae.*, u.display_name AS user_name, u.username,
-            g.name AS group_name, r.room_code,
-            (SELECT COUNT(*) FROM activity_likes al WHERE al.event_id = ae.id) AS like_count,
-            (SELECT COUNT(*) FROM activity_comments ac WHERE ac.event_id = ae.id) AS comment_count,
-            EXISTS(SELECT 1 FROM activity_likes al2 WHERE al2.event_id = ae.id AND al2.user_id = $1) AS viewer_liked
-     FROM activity_events ae
-     LEFT JOIN users u ON u.id = ae.user_id
-     LEFT JOIN groups g ON g.id = ae.group_id
-     LEFT JOIN rounds r ON r.id = ae.round_id
-     WHERE (ae.visibility = 'group' AND ae.group_id = ANY($2))
-        OR ae.user_id = $1
+    `SELECT ${ACTIVITY_FEED_COLUMNS}
+     ${ACTIVITY_FEED_FROM}
+     ${ACTIVITY_FEED_WHERE}
      ORDER BY ae.created_at DESC
      LIMIT $3 OFFSET $4`,
     [userId, groupIds, limit, offset],
   );
 
-  return { items: rows.map(rowToFeedItem), total };
+  return { items: (rows as ActivityFeedRow[]).map(rowToFeedItem), total };
 }
 
-function rowToFeedItem(row: Record<string, unknown>): ActivityFeedItem {
+interface ActivityFeedRow {
+  id: string;
+  type: string;
+  group_id: string | null;
+  user_id: string;
+  round_id: string | null;
+  data_json: string;
+  created_at: string;
+  user_name: string;
+  username: string;
+  group_name: string | null;
+  room_code: string | null;
+  like_count: string;
+  comment_count: string;
+  viewer_liked: boolean;
+}
+
+function rowToFeedItem(row: ActivityFeedRow): ActivityFeedItem {
   let data: Record<string, unknown> = {};
   try {
-    data = JSON.parse(String(row.data_json || "{}"));
+    data = JSON.parse(row.data_json || "{}");
   } catch {
     /* ignore */
   }
   return {
-    id: String(row.id),
-    type: String(row.type) as ActivityFeedItem["type"],
-    groupId: row.group_id ? String(row.group_id) : null,
-    groupName: row.group_name ? String(row.group_name) : null,
-    userId: String(row.user_id),
-    userName: String(row.user_name),
-    username: String(row.username),
-    roundId: row.round_id ? String(row.round_id) : null,
-    roomCode: row.room_code ? String(row.room_code) : null,
+    id: row.id,
+    type: row.type as ActivityFeedItem["type"],
+    groupId: row.group_id,
+    groupName: row.group_name,
+    userId: row.user_id,
+    userName: row.user_name,
+    username: row.username,
+    roundId: row.round_id,
+    roomCode: row.room_code,
     data,
-    createdAt: String(row.created_at),
+    createdAt: row.created_at,
     likeCount: Number(row.like_count),
     commentCount: Number(row.comment_count),
     viewerLiked: Boolean(row.viewer_liked),

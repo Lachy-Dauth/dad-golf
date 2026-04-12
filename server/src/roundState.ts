@@ -14,11 +14,13 @@ export async function buildRoundState(
 ): Promise<RoundState | null> {
   const round = await getRoundByRoomCode(roomCode);
   if (!round) return null;
-  const course = await getCourse(round.courseId, viewerUserId);
+  const [course, players, scores, competitions] = await Promise.all([
+    getCourse(round.courseId, viewerUserId),
+    listPlayers(round.id),
+    listScores(round.id),
+    listCompetitions(round.id),
+  ]);
   if (!course) return null;
-  const players = await listPlayers(round.id);
-  const scores = await listScores(round.id);
   const leaderboard = computeLeaderboard(course, players, scores);
-  const competitions = await listCompetitions(round.id);
   return { round, course, players, scores, leaderboard, competitions };
 }

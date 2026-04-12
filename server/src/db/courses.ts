@@ -74,6 +74,18 @@ interface CourseListRow extends CourseRow {
   round_count: string;
 }
 
+const COURSE_SELECT = `SELECT c.*,
+            u.display_name AS creator_name,
+            (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id) AS favorite_count,
+            CASE WHEN $1::text IS NULL THEN 0
+                 ELSE (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id AND cf.user_id = $1)
+            END AS is_favorite,
+            (SELECT AVG(cr.rating) FROM course_reviews cr WHERE cr.course_id = c.id) AS avg_rating,
+            (SELECT COUNT(*) FROM course_reviews cr WHERE cr.course_id = c.id) AS rating_count,
+            (SELECT COUNT(*) FROM rounds r WHERE r.course_id = c.id) AS round_count
+       FROM courses c
+       LEFT JOIN users u ON u.id = c.created_by_user_id`;
+
 function rowToCourse(row: CourseListRow): Course {
   return {
     id: row.id,
@@ -97,18 +109,7 @@ function rowToCourse(row: CourseListRow): Course {
 
 export async function listCourses(viewerUserId: string | null): Promise<Course[]> {
   const { rows } = await pool.query(
-    `SELECT c.*,
-            u.display_name AS creator_name,
-            (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id) AS favorite_count,
-            CASE WHEN $1::text IS NULL THEN 0
-                 ELSE (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id AND cf.user_id = $1)
-            END AS is_favorite,
-            (SELECT AVG(cr.rating) FROM course_reviews cr WHERE cr.course_id = c.id) AS avg_rating,
-            (SELECT COUNT(*) FROM course_reviews cr WHERE cr.course_id = c.id) AS rating_count,
-            (SELECT COUNT(*) FROM rounds r WHERE r.course_id = c.id) AS round_count
-       FROM courses c
-       LEFT JOIN users u ON u.id = c.created_by_user_id
-       ORDER BY favorite_count DESC, c.name ASC`,
+    `${COURSE_SELECT} ORDER BY favorite_count DESC, c.name ASC`,
     [viewerUserId],
   );
   return (rows as CourseListRow[]).map(rowToCourse);
@@ -118,21 +119,7 @@ export async function getCourse(
   id: string,
   viewerUserId: string | null = null,
 ): Promise<Course | null> {
-  const { rows } = await pool.query(
-    `SELECT c.*,
-            u.display_name AS creator_name,
-            (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id) AS favorite_count,
-            CASE WHEN $1::text IS NULL THEN 0
-                 ELSE (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id AND cf.user_id = $1)
-            END AS is_favorite,
-            (SELECT AVG(cr.rating) FROM course_reviews cr WHERE cr.course_id = c.id) AS avg_rating,
-            (SELECT COUNT(*) FROM course_reviews cr WHERE cr.course_id = c.id) AS rating_count,
-            (SELECT COUNT(*) FROM rounds r WHERE r.course_id = c.id) AS round_count
-       FROM courses c
-       LEFT JOIN users u ON u.id = c.created_by_user_id
-       WHERE c.id = $2`,
-    [viewerUserId, id],
-  );
+  const { rows } = await pool.query(`${COURSE_SELECT} WHERE c.id = $2`, [viewerUserId, id]);
   const row = rows[0] as CourseListRow | undefined;
   return row ? rowToCourse(row) : null;
 }

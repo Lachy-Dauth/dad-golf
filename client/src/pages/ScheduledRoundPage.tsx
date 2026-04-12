@@ -10,32 +10,7 @@ import {
   type CalendarLinkParams,
 } from "../calendarLinks.js";
 import { addRecentRound } from "../localStore.js";
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function formatTime(timeStr: string): string {
-  const [h, m] = timeStr.split(":");
-  const hour = parseInt(h, 10);
-  const suffix = hour >= 12 ? "pm" : "am";
-  const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${display}:${m}${suffix}`;
-}
-
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m} min`;
-  if (m === 0) return `${h} hour${h > 1 ? "s" : ""}`;
-  return `${h}h ${m}m`;
-}
+import { formatDate, formatTime, formatDuration } from "../utils/dateFormat.js";
 
 function RsvpSection({
   label,

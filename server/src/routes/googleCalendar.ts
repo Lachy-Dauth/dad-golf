@@ -16,7 +16,7 @@ import {
   refreshAccessToken,
   revokeToken,
 } from "../googleCalendar.js";
-import { requireUser } from "./validation.js";
+import { fireAndForget, requireUser } from "./validation.js";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const SCOPES = [
@@ -182,7 +182,7 @@ export async function registerGoogleCalendarRoutes(app: FastifyInstance): Promis
 
     const conn = await getGoogleConnection(user.id);
     if (conn) {
-      await revokeToken(conn.accessToken).catch(() => {});
+      fireAndForget(revokeToken(conn.accessToken), req.log, "revoke Google OAuth token");
       await clearAllGoogleEventIds(user.id);
       await deleteGoogleConnection(user.id);
     }

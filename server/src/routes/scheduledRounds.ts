@@ -31,6 +31,8 @@ import {
 import { buildRoundState } from "../roundState.js";
 import {
   MAX_PLAYERS_PER_ROUND,
+  errorMessage,
+  fireAndForget,
   requireUser,
   validateDurationMinutes,
   validateScheduledDate,
@@ -175,21 +177,25 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         trimmedNotes,
         user.id,
       );
-      createActivityEvent(
-        "scheduled_round_created",
-        user.id,
-        group.id,
-        null,
-        user.activityVisibility,
-        {
-          courseName: course.name,
-          scheduledDate,
-          scheduledTime,
-        },
-      ).catch(() => {});
+      fireAndForget(
+        createActivityEvent(
+          "scheduled_round_created",
+          user.id,
+          group.id,
+          null,
+          user.activityVisibility,
+          {
+            courseName: course.name,
+            scheduledDate,
+            scheduledTime,
+          },
+        ),
+        req.log,
+        "scheduled_round_created activity event",
+      );
       return reply.code(201).send({ scheduledRound });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -250,7 +256,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       const updated = await getScheduledRound(sr.id);
       return { scheduledRound: updated };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -318,7 +324,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       });
       return { rsvp };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -399,7 +405,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         const state = await buildRoundState(round.roomCode, user.id);
         return reply.code(201).send({ state });
       } catch (e) {
-        return reply.code(400).send({ error: (e as Error).message });
+        return reply.code(400).send({ error: errorMessage(e) });
       }
     },
   );

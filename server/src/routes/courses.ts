@@ -16,7 +16,10 @@ import {
   updateCourseCoords,
   upsertCourseReview,
 } from "../db/index.js";
+import type { FastifyReply } from "fastify";
+import type { Hole } from "@dad-golf/shared";
 import {
+  errorMessage,
   getViewerUser,
   parsePagination,
   requireUser,
@@ -29,6 +32,71 @@ import {
   validateStarRating,
 } from "./validation.js";
 import { fetchWeather, geocodeLocation, searchLocations } from "../weather.js";
+
+interface CourseInput {
+  name: string;
+  location: string | null;
+  rating: number;
+  slope: number;
+  holes: Hole[];
+  latitude: number | null;
+  longitude: number | null;
+}
+
+async function validateAndGeocodeCourseInput(
+  body: {
+    name?: string;
+    location?: string;
+    latitude?: number;
+    longitude?: number;
+    rating?: number;
+    slope?: number;
+    holes?: unknown;
+  },
+  reply: FastifyReply,
+): Promise<CourseInput | null> {
+  const name = validateName(body?.name, "course name");
+  const location = typeof body?.location === "string" ? body.location.trim() || null : null;
+  const rating = validateCourseRating(body?.rating);
+  const slope = validateCourseSlope(body?.slope);
+  const holes = validateHoles(body?.holes);
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+  const bodyLat = body?.latitude;
+  const bodyLng = body?.longitude;
+  if (
+    typeof bodyLat === "number" &&
+    typeof bodyLng === "number" &&
+    Number.isFinite(bodyLat) &&
+    Number.isFinite(bodyLng)
+  ) {
+    if (bodyLat < -90 || bodyLat > 90 || bodyLng < -180 || bodyLng > 180) {
+      reply.code(400).send({ error: "invalid coordinates" });
+      return null;
+    }
+    latitude = bodyLat;
+    longitude = bodyLng;
+  } else if (location) {
+    let geo: Awaited<ReturnType<typeof geocodeLocation>>;
+    try {
+      geo = await geocodeLocation(location);
+    } catch {
+      reply.code(503).send({
+        error: "could not verify location at this time — please try again later",
+      });
+      return null;
+    }
+    if (!geo) {
+      reply.code(400).send({
+        error: "could not verify location — please enter a valid place name or address",
+      });
+      return null;
+    }
+    latitude = geo.latitude;
+    longitude = geo.longitude;
+  }
+  return { name, location, rating, slope, holes, latitude, longitude };
+}
 
 export async function registerCourseRoutes(app: FastifyInstance): Promise<void> {
   app.get("/api/courses", async (req) => {
@@ -76,57 +144,21 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     const user = await requireUser(req, reply);
     if (!user) return;
     try {
-      const name = validateName(req.body?.name, "course name");
-      const location =
-        typeof req.body?.location === "string" ? req.body.location.trim() || null : null;
-      const rating = validateCourseRating(req.body?.rating);
-      const slope = validateCourseSlope(req.body?.slope);
-      const holes = validateHoles(req.body?.holes);
-      let latitude: number | null = null;
-      let longitude: number | null = null;
-      const bodyLat = req.body?.latitude;
-      const bodyLng = req.body?.longitude;
-      if (
-        typeof bodyLat === "number" &&
-        typeof bodyLng === "number" &&
-        Number.isFinite(bodyLat) &&
-        Number.isFinite(bodyLng)
-      ) {
-        if (bodyLat < -90 || bodyLat > 90 || bodyLng < -180 || bodyLng > 180) {
-          return reply.code(400).send({ error: "invalid coordinates" });
-        }
-        latitude = bodyLat;
-        longitude = bodyLng;
-      } else if (location) {
-        let geo: Awaited<ReturnType<typeof geocodeLocation>>;
-        try {
-          geo = await geocodeLocation(location);
-        } catch {
-          return reply
-            .code(503)
-            .send({ error: "could not verify location at this time — please try again later" });
-        }
-        if (!geo) {
-          return reply.code(400).send({
-            error: "could not verify location — please enter a valid place name or address",
-          });
-        }
-        latitude = geo.latitude;
-        longitude = geo.longitude;
-      }
+      const input = await validateAndGeocodeCourseInput(req.body ?? {}, reply);
+      if (!input) return;
       const course = await createCourse(
-        name,
-        location,
-        rating,
-        slope,
-        holes,
+        input.name,
+        input.location,
+        input.rating,
+        input.slope,
+        input.holes,
         user.id,
-        latitude,
-        longitude,
+        input.latitude,
+        input.longitude,
       );
       return reply.code(201).send({ course });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -150,49 +182,22 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
       return reply.code(403).send({ error: "only the course creator can edit this course" });
     }
     try {
-      const name = validateName(req.body?.name, "course name");
-      const location =
-        typeof req.body?.location === "string" ? req.body.location.trim() || null : null;
-      const rating = validateCourseRating(req.body?.rating);
-      const slope = validateCourseSlope(req.body?.slope);
-      const holes = validateHoles(req.body?.holes);
-      let latitude: number | null = null;
-      let longitude: number | null = null;
-      const bodyLat = req.body?.latitude;
-      const bodyLng = req.body?.longitude;
-      if (
-        typeof bodyLat === "number" &&
-        typeof bodyLng === "number" &&
-        Number.isFinite(bodyLat) &&
-        Number.isFinite(bodyLng)
-      ) {
-        if (bodyLat < -90 || bodyLat > 90 || bodyLng < -180 || bodyLng > 180) {
-          return reply.code(400).send({ error: "invalid coordinates" });
-        }
-        latitude = bodyLat;
-        longitude = bodyLng;
-      } else if (location) {
-        let geo: Awaited<ReturnType<typeof geocodeLocation>>;
-        try {
-          geo = await geocodeLocation(location);
-        } catch {
-          return reply
-            .code(503)
-            .send({ error: "could not verify location at this time — please try again later" });
-        }
-        if (!geo) {
-          return reply.code(400).send({
-            error: "could not verify location — please enter a valid place name or address",
-          });
-        }
-        latitude = geo.latitude;
-        longitude = geo.longitude;
-      }
-      await updateCourse(course.id, name, location, rating, slope, holes, latitude, longitude);
+      const input = await validateAndGeocodeCourseInput(req.body ?? {}, reply);
+      if (!input) return;
+      await updateCourse(
+        course.id,
+        input.name,
+        input.location,
+        input.rating,
+        input.slope,
+        input.holes,
+        input.latitude,
+        input.longitude,
+      );
       const updated = await getCourse(course.id, user.id);
       return { course: updated };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -262,7 +267,7 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
         const review = await upsertCourseReview(course.id, user.id, rating, reviewText);
         return { review };
       } catch (e) {
-        return reply.code(400).send({ error: (e as Error).message });
+        return reply.code(400).send({ error: errorMessage(e) });
       }
     },
   );
@@ -288,7 +293,7 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
         await createCourseReport(course.id, user.id, reason);
         return { ok: true };
       } catch (e) {
-        return reply.code(400).send({ error: (e as Error).message });
+        return reply.code(400).send({ error: errorMessage(e) });
       }
     },
   );

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { RoundState, WsServerMessage } from "@dad-golf/shared";
-import { getAuthToken } from "./authStore.js";
+import { getAuthToken } from "../authStore.js";
 
 export function useRoundSocket(roomCode: string | null, initialState: RoundState | null) {
   const [state, setState] = useState<RoundState | null>(initialState);
