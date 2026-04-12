@@ -37,7 +37,7 @@ A player with handicap _H_ receives strokes on the hardest holes first (by strok
 - **Database:** PostgreSQL
 - **Shared:** `@dad-golf/shared` package with types, Stableford scoring logic, and room code generation
 - **Tooling:** ESLint 9 (flat config) + Prettier + strict TypeScript
-- **Hosting:** Railway (see [deployment guide](./DEPLOY_RAILWAY.md))
+- **Hosting:** Railway
 
 ## Project structure
 
@@ -119,10 +119,8 @@ npm test               # Stableford scoring unit tests
 
 ### Deploying to Railway
 
-See [`DEPLOY_RAILWAY.md`](./DEPLOY_RAILWAY.md) for a step-by-step guide.
-Short version: connect the repo, add a Postgres plugin, set `DATABASE_URL`,
-generate a domain. The included `railway.json` and `nixpacks.toml` handle
-the rest.
+Connect the repo, add a Postgres plugin, set `DATABASE_URL`, generate a
+domain. The included `railway.json` and `nixpacks.toml` handle the rest.
 
 ### How to use
 
