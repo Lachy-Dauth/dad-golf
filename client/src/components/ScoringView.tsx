@@ -19,7 +19,6 @@ interface Props {
   onJoinAsUser: () => Promise<void>;
   onJoinAsGuest: (name: string, handicap: number) => Promise<void>;
   onScore: (holeNumber: number, strokes: number) => Promise<void>;
-  onClearScore: (holeNumber: number) => Promise<void>;
   onSetCurrentHole: (holeNumber: number) => Promise<void>;
   onStateUpdate: (state: RoundState) => void;
 }
@@ -34,7 +33,6 @@ export default function ScoringView({
   onJoinAsUser,
   onJoinAsGuest,
   onScore,
-  onClearScore,
   onSetCurrentHole,
   onStateUpdate,
 }: Props) {
@@ -166,15 +164,6 @@ export default function ScoringView({
     }
   }
 
-  async function handleClear() {
-    setSubmitting(true);
-    try {
-      await onClearScore(currentHole);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   const choices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const totalPoints = holes.reduce((s, h) => s + h.points, 0);
   const played = holes.filter((h) => h.strokes != null).length;
@@ -287,17 +276,6 @@ export default function ScoringView({
           );
         })}
       </div>
-
-      {currentStrokes != null && (
-        <div className="current-score">
-          <div>
-            Scored <strong>{currentStrokes}</strong> ({holeResult?.points ?? 0} pts)
-          </div>
-          <button className="btn" onClick={handleClear} disabled={submitting}>
-            Clear
-          </button>
-        </div>
-      )}
 
       <div className="hole-chips">
         {holes.map((h) => (
