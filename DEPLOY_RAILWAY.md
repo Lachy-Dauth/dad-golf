@@ -58,9 +58,9 @@ courses, groups, rounds and scores.
 
 Open the service → **Variables** and add:
 
-| Variable   | Value   | Why                                                 |
-| ---------- | ------- | --------------------------------------------------- |
-| `DATA_DIR` | `/data` | Tells the server to put `dad-golf.sqlite` here      |
+| Variable   | Value   | Why                                            |
+| ---------- | ------- | ---------------------------------------------- |
+| `DATA_DIR` | `/data` | Tells the server to put `dad-golf.sqlite` here |
 
 You do **not** need to set `PORT` — Railway injects it automatically and the
 server reads it from `process.env.PORT`.

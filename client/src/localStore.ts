@@ -26,10 +26,7 @@ export function getRecentRounds(): RecentRound[] {
 export function addRecentRound(r: RecentRound): void {
   const rounds = getRecentRounds().filter((x) => x.roomCode !== r.roomCode);
   rounds.unshift(r);
-  localStorage.setItem(
-    KEY_RECENT_ROUNDS,
-    JSON.stringify(rounds.slice(0, 10)),
-  );
+  localStorage.setItem(KEY_RECENT_ROUNDS, JSON.stringify(rounds.slice(0, 10)));
 }
 
 export function getActivePlayerId(roomCode: string): string | null {

@@ -15,9 +15,9 @@ A **freemium** model makes the most sense — the core scoring experience stays
 free forever (that's how you get adoption), and paid tiers unlock power-user,
 social, and analytics features. Two tiers probably suffice:
 
-| Tier | Price (rough) | Target |
-|------|--------------|--------|
-| **Free** | $0 | Casual players, first-timers |
+| Tier             | Price (rough)               | Target                            |
+| ---------------- | --------------------------- | --------------------------------- |
+| **Free**         | $0                          | Casual players, first-timers      |
 | **Dad Golf Pro** | ~$5–8/month or ~$40–60/year | Regular golfers, group organisers |
 
 A one-time lifetime purchase (~$30–50) could work well too given the audience
@@ -28,6 +28,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 1. Stats & Analytics
 
 ### 1a. Personal Stats Dashboard — PRO
+
 - Scoring averages over time (overall, per course, per hole)
 - Stableford points trend graph
 - Best/worst holes, par-3/4/5 breakdowns
@@ -38,6 +39,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > rounds — this is mostly frontend charting work and a few new endpoints.
 
 ### 1b. Head-to-Head Comparisons — PRO
+
 - Compare your stats against a mate across all shared rounds
 - Win/loss record between two players
 - "Rivalry" page for regular playing partners
@@ -45,6 +47,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Fun for competitive groups. Natural upsell from the stats dashboard.
 
 ### 1c. Round Replay & Hole-by-Hole Breakdown — FREE
+
 - Post-round detailed breakdown with visualisations
 - Hole-by-hole scoring summary for each player
 
@@ -57,6 +60,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 2. Leagues & Seasons
 
 ### 2a. Recurring Leagues — PRO
+
 - Create a league with a set of players and a season (e.g., 10 rounds over 3 months)
 - Automatic standings based on cumulative Stableford points
 - Configurable scoring: best N of M rounds, drop worst round, etc.
@@ -66,6 +70,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > this is the thing that keeps people paying month after month.
 
 ### 2b. League Leaderboard & Awards — PRO
+
 - Weekly/monthly leaderboards within a league
 - Auto-generated awards: "Most Improved", "Most Consistent", "Eagle King", etc.
 - Shareable league standings page (public link)
@@ -73,6 +78,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Natural extension of leagues. Awards are fun and low effort once leagues exist.
 
 ### 2c. Scheduled Rounds — FREE
+
 - Pre-schedule rounds for a league (date, time, course)
 - RSVP / availability tracking
 
@@ -84,6 +90,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 3. Course Database & GPS
 
 ### 3a. Community Course Database — FREE
+
 - Crowdsourced course data — when a user creates a course, it becomes available
   to all users (with moderation/verification)
 - Search courses by location, name, number of holes
@@ -94,6 +101,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > but nothing heavy.
 
 ### 3b. Course GPS & Hole Maps — WON'T DO
+
 - Upload or generate hole layouts
 - GPS distance to pin (requires geolocation API)
 - Hole flyover view
@@ -102,6 +110,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > this with dedicated teams. Not our lane.
 
 ### 3c. Course Condition Reports — FREE
+
 - Users can tag course conditions (wet, dry, fast greens, etc.)
 - Recent reports shown when selecting a course
 
@@ -113,6 +122,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 4. Social & Sharing
 
 ### 4a. Activity Feed — FREE
+
 - See recent rounds from your groups
 - Like/comment on rounds
 
@@ -120,6 +130,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > simple — just rounds from your groups, no algorithmic feed.
 
 ### 4b. Shareable Round Cards — PRO
+
 - Auto-generated image/card with round results (leaderboard, course, date)
 - Optimised for sharing to iMessage, WhatsApp, Instagram stories
 
@@ -127,6 +138,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > server-side image generation with canvas or SVG.
 
 ### 4c. Achievement Badges — FREE
+
 - Milestone badges: first eagle, 100 rounds played, 5 different courses, etc.
 - Display on profile
 
@@ -138,6 +150,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 5. Betting & Side Games
 
 ### 5a. Skins Game — PRO
+
 - Automatic skins tracking alongside the Stableford round
 - Configurable stakes (or just points)
 - Settlement summary at end of round
@@ -146,6 +159,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > feature that's easy to build alongside existing scoring.
 
 ### 5b. Nassau / Match Play Tracking — WON'T DO
+
 - Front 9, back 9, overall — automatic tracking
 - Press rules
 
@@ -153,6 +167,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > different house rules). High effort for a small audience.
 
 ### 5c. Closest to Pin / Longest Drive — FREE
+
 - Mark specific holes for side competitions
 - Players submit claims, leader verifies
 
@@ -160,6 +175,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > makes rounds more engaging for everyone.
 
 ### 5d. Drink Tracker — FREE
+
 - Track drink purchases owed (e.g., "buy a round if you 3-putt")
 - Settlement ledger at end of round
 - Pure fun feature, very on-brand for "Dad Golf"
@@ -172,6 +188,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 6. Group Management Upgrades
 
 ### 6b. Group Stats & History — PRO
+
 - All-time group leaderboard
 - Round history for the group
 - "Group records" — best individual round, most points on a hole, etc.
@@ -180,6 +197,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > every regular group wants answered. Drives competitive engagement.
 
 ### 6c. Group Roles & Permissions — FREE
+
 - Admins, captains, members
 - Captain can manage rounds; admin can manage membership
 - Multiple admins per group
@@ -188,6 +206,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > groups with more than one organiser.
 
 ### 6d. Group Chat / Noticeboard — WON'T DO
+
 - Simple message board within a group
 - Pin messages (e.g., "next round is Saturday 7am")
 
@@ -200,6 +219,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 7. Advanced Scoring Modes
 
 ### 7a. Multiple Scoring Formats — PRO
+
 - Stroke play (gross & net)
 - Ambrose / Scramble (team format)
 - Best ball / Four-ball
@@ -210,6 +230,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > serious groups want variety.
 
 ### 7b. Team Rounds — PRO
+
 - Split players into teams
 - Combined team scoring
 - Team leaderboard alongside individual
@@ -217,6 +238,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Pairs well with Ambrose/Scramble from 7a. Fun for larger groups.
 
 ### 7c. Handicap Auto-Adjustment — FREE
+
 - Track unofficial "Dad Golf Handicap" based on recent rounds
 - Automatically suggest handicap adjustments
 
@@ -229,6 +251,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 8. Quality of Life / Premium UX
 
 ### 8a. Offline Mode — WON'T DO
+
 - Full offline scoring with sync when back online
 - Conflict resolution for concurrent edits
 
@@ -237,6 +260,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > for a lightweight WebSocket connection.
 
 ### 8b. Apple Watch / Wear OS Companion — WON'T DO
+
 - Quick score entry from the wrist
 - Glanceable leaderboard
 
@@ -244,17 +268,20 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > skillset and maintenance burden. Not viable for a side project.
 
 ### 8c. Dark Mode / Themes — FREE
+
 - Dark mode + a few clean colour themes
 
 > Dark mode is table stakes in 2026. Just ship it for free.
 
 ### 8d. PWA Install Prompt — FREE
+
 - Make the "Add to Home Screen" experience seamless
 - Custom splash screen, app icon
 
 > Helps adoption. Makes the app feel native. Zero reason to gate this.
 
 ### 8e. Export / PDF Scorecards — PRO
+
 - Download a formatted scorecard as PDF
 - Print-ready layout
 - Email to the group after a round
@@ -267,6 +294,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 9. Integrations
 
 ### 9a. Calendar Integration — FREE
+
 - Add scheduled rounds to Google/Apple Calendar
 - One-tap RSVP
 
@@ -274,6 +302,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > an .ics link or use a calendar API. Makes scheduling feel complete.
 
 ### 9b. Weather Integration — FREE
+
 - Show weather forecast for round day / course location
 - Wind/rain warnings
 
@@ -281,6 +310,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > nice polish touch on the round creation screen.
 
 ### 9c. Photo Attachment — WON'T DO
+
 - Attach photos to specific holes
 - Group photo gallery per round
 
@@ -293,6 +323,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 ## 10. Admin & Org Features
 
 ### 10a. Club/Organisation Account — WON'T DO
+
 - For actual golf clubs running regular comps
 - Branded experience, bulk player management, competition scheduling
 
@@ -301,6 +332,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > players in a market we don't understand.
 
 ### 10b. Tournament Mode — WON'T DO
+
 - Multi-round tournaments with cuts
 - Tee time management, flight pairings
 - Live public leaderboard (spectator view)
@@ -312,39 +344,39 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ## Summary
 
-| # | Feature | Category |
-|---|---------|----------|
-| 1a | Personal Stats Dashboard | **PRO** |
-| 1b | Head-to-Head Comparisons | **PRO** |
-| 1c | Round Replay / Breakdown | **FREE** |
-| 2a | Recurring Leagues | **PRO** |
-| 2b | League Leaderboard & Awards | **PRO** |
-| 2c | Scheduled Rounds | **FREE** |
-| 3a | Community Course Database | **FREE** |
-| 3b | Course GPS & Hole Maps | **WON'T DO** |
-| 3c | Course Condition Reports | **FREE** |
-| 4a | Activity Feed | **FREE** |
-| 4b | Shareable Round Cards | **PRO** |
-| 4c | Achievement Badges | **FREE** |
-| 5a | Skins Game | **PRO** |
-| 5b | Nassau / Match Play | **WON'T DO** |
-| 5c | Closest to Pin / Longest Drive | **FREE** |
-| 5d | Drink Tracker | **FREE** |
-| 6b | Group Stats & History | **PRO** |
-| 6c | Group Roles & Permissions | **FREE** |
-| 6d | Group Chat / Noticeboard | **WON'T DO** |
-| 7a | Multiple Scoring Formats | **PRO** |
-| 7b | Team Rounds | **PRO** |
-| 7c | Handicap Auto-Adjustment | **FREE** |
-| 8a | Offline Mode | **WON'T DO** |
-| 8b | Apple Watch Companion | **WON'T DO** |
-| 8c | Dark Mode / Themes | **FREE** |
-| 8d | PWA Install Prompt | **FREE** |
-| 8e | PDF Scorecards | **PRO** |
-| 9a | Calendar Integration | **FREE** |
-| 9b | Weather Integration | **FREE** |
-| 9c | Photo Attachment | **WON'T DO** |
-| 10a | Club/Organisation Account | **WON'T DO** |
-| 10b | Tournament Mode | **WON'T DO** |
+| #   | Feature                        | Category     |
+| --- | ------------------------------ | ------------ |
+| 1a  | Personal Stats Dashboard       | **PRO**      |
+| 1b  | Head-to-Head Comparisons       | **PRO**      |
+| 1c  | Round Replay / Breakdown       | **FREE**     |
+| 2a  | Recurring Leagues              | **PRO**      |
+| 2b  | League Leaderboard & Awards    | **PRO**      |
+| 2c  | Scheduled Rounds               | **FREE**     |
+| 3a  | Community Course Database      | **FREE**     |
+| 3b  | Course GPS & Hole Maps         | **WON'T DO** |
+| 3c  | Course Condition Reports       | **FREE**     |
+| 4a  | Activity Feed                  | **FREE**     |
+| 4b  | Shareable Round Cards          | **PRO**      |
+| 4c  | Achievement Badges             | **FREE**     |
+| 5a  | Skins Game                     | **PRO**      |
+| 5b  | Nassau / Match Play            | **WON'T DO** |
+| 5c  | Closest to Pin / Longest Drive | **FREE**     |
+| 5d  | Drink Tracker                  | **FREE**     |
+| 6b  | Group Stats & History          | **PRO**      |
+| 6c  | Group Roles & Permissions      | **FREE**     |
+| 6d  | Group Chat / Noticeboard       | **WON'T DO** |
+| 7a  | Multiple Scoring Formats       | **PRO**      |
+| 7b  | Team Rounds                    | **PRO**      |
+| 7c  | Handicap Auto-Adjustment       | **FREE**     |
+| 8a  | Offline Mode                   | **WON'T DO** |
+| 8b  | Apple Watch Companion          | **WON'T DO** |
+| 8c  | Dark Mode / Themes             | **FREE**     |
+| 8d  | PWA Install Prompt             | **FREE**     |
+| 8e  | PDF Scorecards                 | **PRO**      |
+| 9a  | Calendar Integration           | **FREE**     |
+| 9b  | Weather Integration            | **FREE**     |
+| 9c  | Photo Attachment               | **WON'T DO** |
+| 10a | Club/Organisation Account      | **WON'T DO** |
+| 10b | Tournament Mode                | **WON'T DO** |
 
 **Totals: 15 FREE, 10 PRO, 8 WON'T DO**

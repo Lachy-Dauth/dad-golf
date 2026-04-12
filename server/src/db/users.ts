@@ -1,0 +1,122 @@
+import { scryptSync, randomBytes, timingSafeEqual } from "node:crypto";
+import type { User } from "@dad-golf/shared";
+import { pool } from "./pool.js";
+import { now, newId } from "./helpers.js";
+
+export function hashPassword(password: string): string {
+  const salt = randomBytes(16);
+  const hash = scryptSync(password, salt, 64);
+  return `${salt.toString("hex")}:${hash.toString("hex")}`;
+}
+
+function verifyPassword(password: string, stored: string): boolean {
+  const [saltHex, hashHex] = stored.split(":");
+  if (!saltHex || !hashHex) return false;
+  const salt = Buffer.from(saltHex, "hex");
+  const expected = Buffer.from(hashHex, "hex");
+  const actual = scryptSync(password, salt, expected.length);
+  if (actual.length !== expected.length) return false;
+  return timingSafeEqual(actual, expected);
+}
+
+export interface UserRow {
+  id: string;
+  username: string;
+  password_hash: string;
+  display_name: string;
+  handicap: number;
+  created_at: string;
+  is_admin: number;
+}
+
+function rowToUser(row: UserRow): User {
+  return {
+    id: row.id,
+    username: row.username,
+    displayName: row.display_name,
+    handicap: Number(row.handicap),
+    createdAt: row.created_at,
+    isAdmin: Boolean(row.is_admin),
+  };
+}
+
+export async function createUser(
+  username: string,
+  password: string,
+  displayName: string,
+  handicap: number,
+): Promise<User> {
+  const id = newId();
+  const createdAt = now();
+  const passwordHash = hashPassword(password);
+  await pool.query(
+    `INSERT INTO users (id, username, password_hash, display_name, handicap, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, username.toLowerCase(), passwordHash, displayName, handicap, createdAt],
+  );
+  return {
+    id,
+    username: username.toLowerCase(),
+    displayName,
+    handicap,
+    createdAt,
+    isAdmin: false,
+  };
+}
+
+export async function getUserByUsername(username: string): Promise<UserRow | null> {
+  const { rows } = await pool.query(`SELECT * FROM users WHERE username = $1`, [
+    username.toLowerCase(),
+  ]);
+  return (rows[0] as UserRow) ?? null;
+}
+
+export async function getUser(id: string): Promise<User | null> {
+  const { rows } = await pool.query(`SELECT * FROM users WHERE id = $1`, [id]);
+  const row = rows[0] as UserRow | undefined;
+  return row ? rowToUser(row) : null;
+}
+
+export async function authenticateUser(username: string, password: string): Promise<User | null> {
+  const row = await getUserByUsername(username);
+  if (!row) return null;
+  if (!verifyPassword(password, row.password_hash)) return null;
+  return rowToUser(row);
+}
+
+export async function updateUserProfile(
+  userId: string,
+  displayName: string,
+  handicap: number,
+): Promise<void> {
+  await pool.query(`UPDATE users SET display_name = $1, handicap = $2 WHERE id = $3`, [
+    displayName,
+    handicap,
+    userId,
+  ]);
+}
+
+export async function createSession(userId: string): Promise<string> {
+  const token = randomBytes(32).toString("hex");
+  await pool.query(`INSERT INTO sessions (token, user_id, created_at) VALUES ($1, $2, $3)`, [
+    token,
+    userId,
+    now(),
+  ]);
+  return token;
+}
+
+export async function getUserBySession(token: string): Promise<User | null> {
+  const { rows } = await pool.query(
+    `SELECT users.* FROM sessions
+     INNER JOIN users ON users.id = sessions.user_id
+     WHERE sessions.token = $1`,
+    [token],
+  );
+  const row = rows[0] as UserRow | undefined;
+  return row ? rowToUser(row) : null;
+}
+
+export async function deleteSession(token: string): Promise<void> {
+  await pool.query(`DELETE FROM sessions WHERE token = $1`, [token]);
+}

@@ -9,14 +9,10 @@ export default function NewRoundPage() {
   const nav = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [groups, setGroups] = useState<
-    Array<Group & { members: GroupMember[] }>
-  >([]);
+  const [groups, setGroups] = useState<Array<Group & { members: GroupMember[] }>>([]);
   const [courseId, setCourseId] = useState<string>("");
   const [groupId, setGroupId] = useState<string>("");
-  const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(
-    new Set(),
-  );
+  const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -36,9 +32,7 @@ export default function NewRoundPage() {
   const myGroups = useMemo(() => {
     if (!user) return [];
     return groups.filter(
-      (g) =>
-        g.ownerUserId === user.id ||
-        g.members.some((m) => m.userId === user.id),
+      (g) => g.ownerUserId === user.id || g.members.some((m) => m.userId === user.id),
     );
   }, [groups, user]);
 
@@ -115,10 +109,7 @@ export default function NewRoundPage() {
       <div className="page">
         <h1>Start a round</h1>
         <p className="muted">You need to log in to start a round.</p>
-        <Link
-          to={`/login?next=${encodeURIComponent("/rounds/new")}`}
-          className="btn btn-primary"
-        >
+        <Link to={`/login?next=${encodeURIComponent("/rounds/new")}`} className="btn btn-primary">
           Log in
         </Link>
       </div>
@@ -139,10 +130,7 @@ export default function NewRoundPage() {
         <div className="form">
           <label className="field">
             <span>Course</span>
-            <select
-              value={courseId}
-              onChange={(e) => setCourseId(e.target.value)}
-            >
+            <select value={courseId} onChange={(e) => setCourseId(e.target.value)}>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} ({c.holes.length} holes)
@@ -153,10 +141,7 @@ export default function NewRoundPage() {
 
           <label className="field">
             <span>Golf group (optional)</span>
-            <select
-              value={groupId}
-              onChange={(e) => setGroupId(e.target.value)}
-            >
+            <select value={groupId} onChange={(e) => setGroupId(e.target.value)}>
               <option value="">— None —</option>
               {myGroups.map((g) => (
                 <option key={g.id} value={g.id}>
@@ -192,20 +177,16 @@ export default function NewRoundPage() {
                         onClick={() => toggleMember(m.id)}
                       >
                         <div className="player-name">{m.name}</div>
-                        <div className="player-hcp">
-                          GA HCP {m.handicap.toFixed(1)}
-                        </div>
-                        <div className="player-toggle">
-                          {checked ? "✓ added" : "tap to add"}
-                        </div>
+                        <div className="player-hcp">GA HCP {m.handicap.toFixed(1)}</div>
+                        <div className="player-toggle">{checked ? "✓ added" : "tap to add"}</div>
                       </li>
                     );
                   })}
                 </ul>
               )}
               <p className="muted">
-                You'll be added automatically as the round leader. Anyone with
-                the link can also join after the round is created.
+                You'll be added automatically as the round leader. Anyone with the link can also
+                join after the round is created.
               </p>
             </section>
           )}
@@ -216,11 +197,7 @@ export default function NewRoundPage() {
             <Link to="/" className="btn">
               Cancel
             </Link>
-            <button
-              className="btn btn-primary"
-              onClick={handleCreate}
-              disabled={creating}
-            >
+            <button className="btn btn-primary" onClick={handleCreate} disabled={creating}>
               {creating ? "Creating…" : "Create round"}
             </button>
           </div>

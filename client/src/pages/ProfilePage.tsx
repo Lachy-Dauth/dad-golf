@@ -35,17 +35,10 @@ export default function ProfilePage() {
     setMsg(null);
     try {
       const handicapNum = Number(handicap);
-      if (
-        !Number.isFinite(handicapNum) ||
-        handicapNum < 0 ||
-        handicapNum > 54
-      ) {
+      if (!Number.isFinite(handicapNum) || handicapNum < 0 || handicapNum > 54) {
         throw new Error("Handicap must be a number between 0.0 and 54.0");
       }
-      await updateProfile(
-        displayName.trim(),
-        Math.round(handicapNum * 10) / 10,
-      );
+      await updateProfile(displayName.trim(), Math.round(handicapNum * 10) / 10);
       setMsg("Saved.");
     } catch (e) {
       setError((e as Error).message);
@@ -69,10 +62,7 @@ export default function ProfilePage() {
       <div className="form">
         <label className="field">
           <span>Display name</span>
-          <input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-          />
+          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
         </label>
         <label className="field">
           <span>Golf Australia handicap</span>

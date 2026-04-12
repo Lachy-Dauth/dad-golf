@@ -8,22 +8,23 @@ This is the build plan for the Stableford scoring app described in `README.md`. 
 
 A few choices need a definitive answer before scaffolding starts. Defaults are listed but should be confirmed:
 
-| Decision               | Default                                | Notes                                                                                          |
-| ---------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Frontend framework     | React + Vite + TypeScript              | Mobile-first, no native app needed. Vite gives fast dev loop                                   |
-| Backend runtime        | Node.js + Fastify                      | Same language as frontend → fewer context switches. Fastify is light and has good WS support  |
-| Real-time transport    | WebSockets via `ws` (raw)              | Simple broadcast pattern; Socket.IO if we need rooms/reconnect helpers                         |
-| Database               | SQLite (via `better-sqlite3`)          | Single file, zero-ops, fine for ≤10 concurrent players per round                               |
-| Auth model             | None — room code only                  | Casual rounds. Knowing the code = being in the round                                           |
-| Hosting target         | Fly.io or Railway                      | Both support persistent volumes for SQLite + WebSockets out of the box                         |
-| Course data source     | **Open question** — see Phase 4        | No clean free API exists. Likely: manual entry first, scraped/seeded list of common courses    |
-| State on disconnect    | Resume by room code + player name      | If a phone dies mid-round, rejoining restores their scorecard                                  |
+| Decision            | Default                           | Notes                                                                                        |
+| ------------------- | --------------------------------- | -------------------------------------------------------------------------------------------- |
+| Frontend framework  | React + Vite + TypeScript         | Mobile-first, no native app needed. Vite gives fast dev loop                                 |
+| Backend runtime     | Node.js + Fastify                 | Same language as frontend → fewer context switches. Fastify is light and has good WS support |
+| Real-time transport | WebSockets via `ws` (raw)         | Simple broadcast pattern; Socket.IO if we need rooms/reconnect helpers                       |
+| Database            | SQLite (via `better-sqlite3`)     | Single file, zero-ops, fine for ≤10 concurrent players per round                             |
+| Auth model          | None — room code only             | Casual rounds. Knowing the code = being in the round                                         |
+| Hosting target      | Fly.io or Railway                 | Both support persistent volumes for SQLite + WebSockets out of the box                       |
+| Course data source  | **Open question** — see Phase 4   | No clean free API exists. Likely: manual entry first, scraped/seeded list of common courses  |
+| State on disconnect | Resume by room code + player name | If a phone dies mid-round, rejoining restores their scorecard                                |
 
 ---
 
 ## Data model
 
 ### `course`
+
 - `id` (uuid)
 - `name` (string)
 - `location` (string, optional)
@@ -31,6 +32,7 @@ A few choices need a definitive answer before scaffolding starts. Defaults are l
 - `created_at`
 
 ### `round`
+
 - `id` (uuid)
 - `room_code` (short string, e.g. `GOLF-7K2P`)
 - `course_id` (fk → course)
@@ -39,6 +41,7 @@ A few choices need a definitive answer before scaffolding starts. Defaults are l
 - `started_at` (nullable)
 
 ### `player`
+
 - `id` (uuid)
 - `round_id` (fk → round)
 - `name` (string)
@@ -46,13 +49,14 @@ A few choices need a definitive answer before scaffolding starts. Defaults are l
 - `joined_at`
 
 ### `score`
+
 - `id` (uuid)
 - `round_id` (fk → round)
 - `player_id` (fk → player)
 - `hole_number` (int, 1–18)
 - `strokes` (int)
 - `created_at`
-- *unique constraint:* `(player_id, hole_number)` — one score per player per hole, updates overwrite
+- _unique constraint:_ `(player_id, hole_number)` — one score per player per hole, updates overwrite
 
 Stableford points and net scores are **derived**, not stored. They're computed from `score.strokes`, `player.handicap`, and `course.holes[].stroke_index`. Computing on read keeps the source of truth simple and means rule changes don't require migrations.
 
@@ -136,12 +140,14 @@ This lives in a single shared module (used by both server, for the leaderboard e
 **Goal:** users can add new courses without a developer touching the database.
 
 ### Manual entry (must-have)
+
 - [ ] "Add new course" form: name, location, 9 or 18 holes
 - [ ] Per-hole row: par (3/4/5) + stroke index (1–18, must be unique)
 - [ ] Validation: stroke indexes form a complete set, pars are sane
 - [ ] Saved courses are picked from a dropdown when creating a round
 
 ### Web fetch (open question — investigate before building)
+
 There's no obviously clean free public API for course data with stroke indexes. Options to evaluate:
 
 1. **USGA / R&A APIs** — gated, require partnership
@@ -196,7 +202,7 @@ These don't block Phase 1–3 but need answers before Phase 4–6:
 
 ## Testing strategy
 
-- **Unit tests:** Stableford module — exhaustive, this is the only logic that *must* be perfect
+- **Unit tests:** Stableford module — exhaustive, this is the only logic that _must_ be perfect
 - **Integration tests:** API endpoints (create round, add player, submit score, fetch leaderboard)
 - **Manual testing:** real four-phone test on a real round before declaring Phase 3 done
 - **No E2E browser tests** unless something specific keeps breaking — overkill for the size of this app

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../AuthContext.js";
 import {
@@ -38,19 +38,14 @@ function StatusBadge({ status }: { status: string }) {
       : status === "in_progress"
         ? "badge badge-active"
         : "badge badge-waiting";
-  const label = status === "in_progress" ? "In Progress" : status.charAt(0).toUpperCase() + status.slice(1);
+  const label =
+    status === "in_progress" ? "In Progress" : status.charAt(0).toUpperCase() + status.slice(1);
   return <span className={cls}>{label}</span>;
 }
 
 // ---------- Tab content components ----------
 
-function DashboardTab({
-  stats,
-  events,
-}: {
-  stats: AdminStats | null;
-  events: ActivityEvent[];
-}) {
+function DashboardTab({ stats, events }: { stats: AdminStats | null; events: ActivityEvent[] }) {
   if (!stats) return <div className="muted">Loading...</div>;
   return (
     <>
@@ -127,7 +122,11 @@ function UsersTab({
             <tr key={u.id}>
               <td>
                 @{u.username}
-                {u.isAdmin && <span className="badge badge-active" style={{ marginLeft: 6 }}>admin</span>}
+                {u.isAdmin && (
+                  <span className="badge badge-active" style={{ marginLeft: 6 }}>
+                    admin
+                  </span>
+                )}
               </td>
               <td>{u.displayName}</td>
               <td>{u.handicap.toFixed(1)}</td>
@@ -282,35 +281,59 @@ export default function AdminPage() {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user?.isAdmin) return;
-    loadTab(tab);
-  }, [tab, user]);
-
-  function loadTab(t: Tab) {
+  const loadTab = useCallback((t: Tab) => {
     setError(null);
     switch (t) {
       case "dashboard":
-        api.adminStats().then(setStats).catch((e) => setError((e as Error).message));
-        api.adminActivity(20).then((r) => setEvents(r.events)).catch(() => {});
+        api
+          .adminStats()
+          .then(setStats)
+          .catch((e) => setError((e as Error).message));
+        api
+          .adminActivity(20)
+          .then((r) => setEvents(r.events))
+          .catch(() => {});
         break;
       case "users":
-        api.adminUsers().then((r) => setUsers(r.users)).catch((e) => setError((e as Error).message));
+        api
+          .adminUsers()
+          .then((r) => setUsers(r.users))
+          .catch((e) => setError((e as Error).message));
         break;
       case "rounds":
-        api.adminRounds(100, 0).then((r) => { setRounds(r.rounds); setRoundsTotal(r.total); }).catch((e) => setError((e as Error).message));
+        api
+          .adminRounds(100, 0)
+          .then((r) => {
+            setRounds(r.rounds);
+            setRoundsTotal(r.total);
+          })
+          .catch((e) => setError((e as Error).message));
         break;
       case "courses":
-        api.adminCourses().then((r) => setCourses(r.courses)).catch((e) => setError((e as Error).message));
+        api
+          .adminCourses()
+          .then((r) => setCourses(r.courses))
+          .catch((e) => setError((e as Error).message));
         break;
       case "groups":
-        api.adminGroups().then((r) => setGroups(r.groups)).catch((e) => setError((e as Error).message));
+        api
+          .adminGroups()
+          .then((r) => setGroups(r.groups))
+          .catch((e) => setError((e as Error).message));
         break;
       case "activity":
-        api.adminActivity(100).then((r) => setEvents(r.events)).catch((e) => setError((e as Error).message));
+        api
+          .adminActivity(100)
+          .then((r) => setEvents(r.events))
+          .catch((e) => setError((e as Error).message));
         break;
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!user?.isAdmin) return;
+    loadTab(tab);
+  }, [tab, user, loadTab]);
 
   if (loading) {
     return (
@@ -344,12 +367,20 @@ export default function AdminPage() {
   }
 
   async function handleDeleteUser(id: string, username: string) {
-    if (!confirm(`Delete user @${username}? This will delete their account. Some related content may remain but no longer be associated with this user.`)) return;
+    if (
+      !confirm(
+        `Delete user @${username}? This will delete their account. Some related content may remain but no longer be associated with this user.`,
+      )
+    )
+      return;
     try {
       await api.adminDeleteUser(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
       // Refresh stats
-      api.adminStats().then(setStats).catch(() => {});
+      api
+        .adminStats()
+        .then(setStats)
+        .catch(() => {});
     } catch (e) {
       setError((e as Error).message);
     }
@@ -378,10 +409,16 @@ export default function AdminPage() {
           </button>
         ))}
       </div>
-      {error && <div className="error" style={{ marginBottom: 12 }}>{error}</div>}
+      {error && (
+        <div className="error" style={{ marginBottom: 12 }}>
+          {error}
+        </div>
+      )}
       <div className="admin-content">
         {tab === "dashboard" && <DashboardTab stats={stats} events={events} />}
-        {tab === "users" && <UsersTab users={users} currentUserId={user.id} onDelete={handleDeleteUser} />}
+        {tab === "users" && (
+          <UsersTab users={users} currentUserId={user.id} onDelete={handleDeleteUser} />
+        )}
         {tab === "rounds" && <RoundsTab rounds={rounds} total={roundsTotal} />}
         {tab === "courses" && <CoursesTab courses={courses} />}
         {tab === "groups" && <GroupsTab groups={groups} />}

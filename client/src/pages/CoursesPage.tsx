@@ -23,7 +23,7 @@ export default function CoursesPage() {
 
   async function handleDelete(c: Course) {
     if (c.favoriteCount > 0) {
-      alert("This course has favourites and cannot be deleted.");
+      setError("This course has favourites and cannot be deleted.");
       return;
     }
     if (!confirm(`Delete "${c.name}"?`)) return;
@@ -37,7 +37,7 @@ export default function CoursesPage() {
 
   async function handleToggleFav(c: Course) {
     if (!user) {
-      alert("Log in to favourite courses.");
+      setError("Log in to favourite courses.");
       return;
     }
     try {
@@ -81,11 +81,10 @@ export default function CoursesPage() {
                     <div className="list-primary">{c.name}</div>
                     <div className="list-secondary">
                       {c.location ? `${c.location} · ` : ""}
-                      {c.holes.length} holes · par {totalPar(c)} ·{" "}
-                      rating {c.rating.toFixed(1)} · slope {c.slope}
+                      {c.holes.length} holes · par {totalPar(c)} · rating {c.rating.toFixed(1)} ·
+                      slope {c.slope}
                       {c.createdByName && ` · by ${c.createdByName}`}
-                      {c.favoriteCount > 0 &&
-                        ` · ★ ${c.favoriteCount}`}
+                      {c.favoriteCount > 0 && ` · ★ ${c.favoriteCount}`}
                     </div>
                   </div>
                   <div className="row-actions">
@@ -102,11 +101,7 @@ export default function CoursesPage() {
                         className="btn-icon"
                         onClick={() => handleDelete(c)}
                         disabled={!canDelete}
-                        title={
-                          canDelete
-                            ? "Delete"
-                            : "Cannot delete: has favourites"
-                        }
+                        title={canDelete ? "Delete" : "Cannot delete: has favourites"}
                         aria-label="Delete"
                       >
                         ✕

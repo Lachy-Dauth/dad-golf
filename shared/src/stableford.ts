@@ -1,4 +1,4 @@
-import type { Course, Hole, Player, Score, LeaderboardRow } from "./types.js";
+import type { Course, Player, Score, LeaderboardRow } from "./types.js";
 
 /**
  * Convert a Golf Australia handicap (one decimal place) into the integer
@@ -10,10 +10,7 @@ import type { Course, Hole, Player, Score, LeaderboardRow } from "./types.js";
  * (higher slope) gives you more strokes and an easier course gives fewer.
  * Source: https://www.golf.org.au/handicapping
  */
-export function calculateDailyHandicap(
-  gaHandicap: number,
-  slope: number,
-): number {
+export function calculateDailyHandicap(gaHandicap: number, slope: number): number {
   if (!Number.isFinite(gaHandicap) || !Number.isFinite(slope) || slope <= 0) {
     return 0;
   }
@@ -28,10 +25,7 @@ export function calculateDailyHandicap(
  * Daily handicap 27 → 1 shot on every hole + an extra on stroke index 1-9.
  * Daily handicap 36+ → 2 shots on every hole + extras on the hardest holes.
  */
-export function strokesReceived(
-  dailyHandicap: number,
-  strokeIndex: number,
-): number {
+export function strokesReceived(dailyHandicap: number, strokeIndex: number): number {
   if (dailyHandicap < 0) return 0;
   const base = Math.floor(dailyHandicap / 18);
   const remainder = dailyHandicap - base * 18;
@@ -90,9 +84,7 @@ export function computePlayerHoles(
     const received = strokesReceived(dailyHandicap, h.strokeIndex);
     const net = strokes != null ? strokes - received : null;
     const points =
-      strokes != null
-        ? stablefordPoints(strokes, h.par, dailyHandicap, h.strokeIndex)
-        : 0;
+      strokes != null ? stablefordPoints(strokes, h.par, dailyHandicap, h.strokeIndex) : 0;
     return {
       holeNumber: h.number,
       par: h.par,
@@ -115,10 +107,7 @@ export function computeLeaderboard(
     const played = holes.filter((h) => h.strokes != null);
     const totalPoints = played.reduce((sum, h) => sum + h.points, 0);
     const totalStrokes = played.reduce((sum, h) => sum + (h.strokes || 0), 0);
-    const netStrokes = played.reduce(
-      (sum, h) => sum + ((h.strokes || 0) - h.strokesReceived),
-      0,
-    );
+    const netStrokes = played.reduce((sum, h) => sum + ((h.strokes || 0) - h.strokesReceived), 0);
     return {
       playerId: p.id,
       name: p.name,

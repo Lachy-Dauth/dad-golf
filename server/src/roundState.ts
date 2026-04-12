@@ -1,11 +1,6 @@
 import { computeLeaderboard } from "@dad-golf/shared";
 import type { RoundState } from "@dad-golf/shared";
-import {
-  getCourse,
-  getRoundByRoomCode,
-  listPlayers,
-  listScores,
-} from "./db.js";
+import { getCourse, getRoundByRoomCode, listPlayers, listScores } from "./db/index.js";
 
 export async function buildRoundState(
   roomCode: string,

@@ -1,10 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User } from "@dad-golf/shared";
 import { api } from "./api.js";
 import { getAuthToken, setAuthToken } from "./authStore.js";

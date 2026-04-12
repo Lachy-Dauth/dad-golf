@@ -38,11 +38,7 @@ export default function JoinRoundPage() {
           <Link to="/" className="btn">
             Cancel
           </Link>
-          <button
-            className="btn btn-primary"
-            disabled={!code.trim()}
-            onClick={handleJoin}
-          >
+          <button className="btn btn-primary" disabled={!code.trim()} onClick={handleJoin}>
             Join
           </button>
         </div>

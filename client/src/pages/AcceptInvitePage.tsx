@@ -71,8 +71,7 @@ export default function AcceptInvitePage() {
         <h1>Join {group.name}</h1>
         <p className="muted">
           You've been invited to <strong>{group.name}</strong>
-          {group.ownerName ? ` by ${group.ownerName}` : ""}. Log in or create
-          an account to accept.
+          {group.ownerName ? ` by ${group.ownerName}` : ""}. Log in or create an account to accept.
         </p>
         <div className="form-actions">
           <Link
@@ -98,11 +97,7 @@ export default function AcceptInvitePage() {
         <Link to="/" className="btn">
           Cancel
         </Link>
-        <button
-          className="btn btn-primary"
-          onClick={handleAccept}
-          disabled={accepting}
-        >
+        <button className="btn btn-primary" onClick={handleAccept} disabled={accepting}>
           {accepting ? "Joining…" : "Accept invite"}
         </button>
       </div>

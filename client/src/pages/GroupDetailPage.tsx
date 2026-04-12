@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import type { Group, GroupInvite, GroupMember } from "@dad-golf/shared";
@@ -17,7 +17,7 @@ export default function GroupDetailPage() {
 
   const isOwner = !!(user && group && group.ownerUserId === user.id);
 
-  const load = () => {
+  const load = useCallback(() => {
     if (!id) return;
     api
       .getGroup(id)
@@ -26,9 +26,9 @@ export default function GroupDetailPage() {
         setMembers(res.members);
       })
       .catch((e: Error) => setError(e.message));
-  };
+  }, [id]);
 
-  const loadInvites = () => {
+  const loadInvites = useCallback(() => {
     if (!id) return;
     api
       .listGroupInvites(id)
@@ -36,13 +36,13 @@ export default function GroupDetailPage() {
       .catch(() => {
         /* ignore: only owner can list invites */
       });
-  };
+  }, [id]);
 
-  useEffect(() => load(), [id, user?.id]);
+  useEffect(() => load(), [id, user?.id, load]);
   useEffect(() => {
     if (isOwner) loadInvites();
     else setInvites([]);
-  }, [isOwner, id]);
+  }, [isOwner, id, loadInvites]);
 
   async function handleAdd() {
     if (!id || !newName.trim()) return;
@@ -53,11 +53,7 @@ export default function GroupDetailPage() {
     }
     setAdding(true);
     try {
-      await api.addGroupMember(
-        id,
-        newName.trim(),
-        Math.round(n * 10) / 10,
-      );
+      await api.addGroupMember(id, newName.trim(), Math.round(n * 10) / 10);
       setNewName("");
       setNewHandicap("18.0");
       load();
@@ -128,9 +124,7 @@ export default function GroupDetailPage() {
         <h1>{group.name}</h1>
         <span className="badge">{members.length}</span>
       </div>
-      <p className="muted">
-        {group.ownerName ? `Owned by ${group.ownerName}` : "No owner"}
-      </p>
+      <p className="muted">{group.ownerName ? `Owned by ${group.ownerName}` : "No owner"}</p>
 
       {isOwner && (
         <section className="section">
@@ -171,9 +165,7 @@ export default function GroupDetailPage() {
               + New invite
             </button>
           </div>
-          <p className="muted">
-            Share an invite link so signed-in players can join the group.
-          </p>
+          <p className="muted">Share an invite link so signed-in players can join the group.</p>
           {invites.length === 0 ? (
             <div className="muted">No active invites.</div>
           ) : (
@@ -190,9 +182,7 @@ export default function GroupDetailPage() {
                     <div className="row-actions">
                       <button
                         className="btn"
-                        onClick={() =>
-                          navigator.clipboard?.writeText(inviteUrl(inv.token))
-                        }
+                        onClick={() => navigator.clipboard?.writeText(inviteUrl(inv.token))}
                       >
                         Copy
                       </button>
@@ -306,9 +296,7 @@ function MemberRow({
             {member.name}
             {member.userId === null && <span className="badge">guest</span>}
           </div>
-          <div className="list-secondary">
-            GA HCP {member.handicap.toFixed(1)}
-          </div>
+          <div className="list-secondary">GA HCP {member.handicap.toFixed(1)}</div>
         </div>
         <div className="row-actions">
           {canEdit && (

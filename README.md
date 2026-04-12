@@ -16,17 +16,17 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 
 Stableford gives points per hole based on net score (gross score minus handicap strokes received on that hole):
 
-| Net score vs. par   | Points |
-| ------------------- | ------ |
-| Albatross (-3)      | 5      |
-| Eagle (-2)          | 4      |
-| Birdie (-1)         | 3      |
-| Par                 | 2      |
-| Bogey (+1)          | 1      |
-| Double bogey worse  | 0      |
+| Net score vs. par  | Points |
+| ------------------ | ------ |
+| Albatross (-3)     | 5      |
+| Eagle (-2)         | 4      |
+| Birdie (-1)        | 3      |
+| Par                | 2      |
+| Bogey (+1)         | 1      |
+| Double bogey worse | 0      |
 
 **Handicap strokes received:**
-A player with handicap *H* receives strokes on the hardest holes first (by stroke index). If `H >= 18`, they get one stroke on every hole, plus an additional stroke on holes with stroke index `<= H - 18`, and so on.
+A player with handicap _H_ receives strokes on the hardest holes first (by stroke index). If `H >= 18`, they get one stroke on every hole, plus an additional stroke on holes with stroke index `<= H - 18`, and so on.
 
 ## Course data
 
@@ -77,6 +77,7 @@ See `plan.md` for the rationale. Short version:
 ## Key user flows
 
 ### Creating a round
+
 1. Open the app → tap "New round"
 2. Pick a course (search or pick from saved courses, or add a new one)
 3. Get a room code + share link
@@ -84,11 +85,13 @@ See `plan.md` for the rationale. Short version:
 5. Host taps "Start round" once everyone's in
 
 ### Scoring a hole
+
 1. On the current hole's screen, each player taps their gross score
 2. App calculates net score and Stableford points using their handicap and the hole's stroke index
 3. Score is sent to the server → broadcast to everyone → leaderboard updates
 
 ### Watching the leaderboard
+
 - Open at any time during the round
 - Sorted by total Stableford points (highest first)
 - Shows: name, handicap, holes played, total points, points back from leader

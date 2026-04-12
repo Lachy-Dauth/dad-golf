@@ -30,9 +30,7 @@ export default function NewCoursePage() {
   }
 
   function updateHole(i: number, patch: Partial<Hole>) {
-    setHoles((prev) =>
-      prev.map((h, idx) => (idx === i ? { ...h, ...patch } : h)),
-    );
+    setHoles((prev) => prev.map((h, idx) => (idx === i ? { ...h, ...patch } : h)));
   }
 
   async function handleSave() {
@@ -86,10 +84,7 @@ export default function NewCoursePage() {
       <div className="page">
         <h1>New course</h1>
         <p className="muted">You need to log in to create a course.</p>
-        <Link
-          to={`/login?next=${encodeURIComponent("/courses/new")}`}
-          className="btn btn-primary"
-        >
+        <Link to={`/login?next=${encodeURIComponent("/courses/new")}`} className="btn btn-primary">
           Log in
         </Link>
       </div>
@@ -175,9 +170,7 @@ export default function NewCoursePage() {
               <span className="hole-num">{h.number}</span>
               <select
                 value={h.par}
-                onChange={(e) =>
-                  updateHole(i, { par: Number(e.target.value) })
-                }
+                onChange={(e) => updateHole(i, { par: Number(e.target.value) })}
               >
                 {[3, 4, 5, 6].map((p) => (
                   <option key={p} value={p}>
@@ -187,17 +180,13 @@ export default function NewCoursePage() {
               </select>
               <select
                 value={h.strokeIndex}
-                onChange={(e) =>
-                  updateHole(i, { strokeIndex: Number(e.target.value) })
-                }
+                onChange={(e) => updateHole(i, { strokeIndex: Number(e.target.value) })}
               >
-                {Array.from({ length: holeCount }, (_, k) => k + 1).map(
-                  (si) => (
-                    <option key={si} value={si}>
-                      {si}
-                    </option>
-                  ),
-                )}
+                {Array.from({ length: holeCount }, (_, k) => k + 1).map((si) => (
+                  <option key={si} value={si}>
+                    {si}
+                  </option>
+                ))}
               </select>
             </div>
           ))}
@@ -208,11 +197,7 @@ export default function NewCoursePage() {
           <Link to="/courses" className="btn">
             Cancel
           </Link>
-          <button
-            className="btn btn-primary"
-            onClick={handleSave}
-            disabled={saving}
-          >
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? "Saving…" : "Save course"}
           </button>
         </div>
