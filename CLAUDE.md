@@ -39,7 +39,7 @@ After `npm install`, the shared package is automatically built via `postinstall`
 
 ### Shared (`@dad-golf/shared`)
 
-Exports types, Stableford scoring logic, and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
+Exports types, Stableford scoring logic, handicap calculation (GA/WHS), and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
 
 ### Server (`@dad-golf/server`)
 
@@ -50,6 +50,10 @@ Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Ea
 **Auth**: scrypt password hashing, random hex session tokens stored in `sessions` table. Bearer token in `Authorization` header. Helpers in `routes/validation.ts`: `getViewerUser(req)` (optional), `requireUser(req, reply)`, `requireAdmin(req, reply)`.
 
 **Real-time updates**: WebSocket pub/sub via `hub.ts` (`Map<roomCode, Set<WebSocket>>`). Clients connect to `/ws/:code?token=...`. After any mutation (score, join, start), the route rebuilds full `RoundState` via `roundState.ts` and broadcasts to all sockets in the room. Client uses `useRoundSocket.ts` hook which auto-reconnects and updates React state.
+
+**Calendar integration**: `calendar.ts` generates RFC 5545 `.ics` files, `calendarSync.ts` syncs RSVPs to Google Calendar (fire-and-forget), and `googleCalendar.ts` wraps the Google Calendar API. Calendar feed routes serve a subscribable iCal URL per user.
+
+**Location & weather**: `weather.ts` provides Open-Meteo weather lookups and Nominatim (OpenStreetMap) geocoding for course locations. Courses store optional `latitude`, `longitude`, and `location` fields.
 
 **Production serving**: if `client/dist/` exists, Fastify serves it as static files with SPA fallback (non-API 404s → `index.html`).
 
@@ -72,7 +76,7 @@ Raw parameterized SQL (`pool.query(sql, [params])`). Schema auto-created via `in
 
 ## Maintenance
 
-When adding or removing features, update `README.md` to reflect the change.
+When adding or removing features, update `README.md` to reflect the change. Keep `docs/roadmap.md` in sync with shipped status.
 
 ## Deployment
 

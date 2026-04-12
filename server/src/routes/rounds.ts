@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import {
   generateRoomCode,
-  normalizeRoomCode,
   calculateScoreDifferential,
   calculateHandicapIndex,
 } from "@dad-golf/shared";
@@ -45,6 +44,8 @@ import { broadcast } from "../hub.js";
 import {
   MAX_PLAYERS_PER_ROUND,
   getViewerUser,
+  parsePagination,
+  requireRound,
   requireUser,
   validateHandicap,
   validateName,
@@ -60,8 +61,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     async (req, reply) => {
       const user = await requireUser(req, reply);
       if (!user) return;
-      const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 50);
-      const offset = Math.max(Number(req.query.offset) || 0, 0);
+      const { limit, offset } = parsePagination(req.query);
       return listUserCompletedRounds(user.id, user.id, limit, offset);
     },
   );
@@ -122,9 +122,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
 
   app.get<{ Params: { code: string } }>("/api/rounds/:code", async (req, reply) => {
     const viewer = await getViewerUser(req);
-    const code = normalizeRoomCode(req.params.code);
-    const state = await buildRoundState(code, viewer?.id ?? null);
-    if (!state) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const state = await buildRoundState(result.code, viewer?.id ?? null);
     return { state };
   });
 
@@ -134,9 +134,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/rounds/:code/players", async (req, reply) => {
     try {
       const viewer = await getViewerUser(req);
-      const code = normalizeRoomCode(req.params.code);
-      const round = await getRoundByRoomCode(code);
-      if (!round) return reply.code(404).send({ error: "round not found" });
+      const result = await requireRound(req, reply);
+      if (!result) return;
+      const { code, round } = result;
       if (round.status === "complete") {
         return reply.code(400).send({ error: "round is already complete" });
       }
@@ -186,9 +186,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/rounds/:code/players/:playerId", async (req, reply) => {
     try {
       const viewer = await getViewerUser(req);
-      const code = normalizeRoomCode(req.params.code);
-      const round = await getRoundByRoomCode(code);
-      if (!round) return reply.code(404).send({ error: "round not found" });
+      const result = await requireRound(req, reply);
+      if (!result) return;
+      const { code, round } = result;
       const player = await getPlayer(req.params.playerId);
       if (!player || player.roundId !== round.id) {
         return reply.code(404).send({ error: "player not found" });
@@ -213,9 +213,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     Params: { code: string; playerId: string };
   }>("/api/rounds/:code/players/:playerId", async (req, reply) => {
     const viewer = await getViewerUser(req);
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { code, round } = result;
     const player = await getPlayer(req.params.playerId);
     if (!player || player.roundId !== round.id) {
       return reply.code(404).send({ error: "player not found" });
@@ -234,9 +234,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Params: { code: string } }>("/api/rounds/:code/start", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { code, round } = result;
     if (round.leaderUserId !== user.id) {
       return reply.code(403).send({ error: "only the round leader can start this round" });
     }
@@ -249,9 +249,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Params: { code: string } }>("/api/rounds/:code/complete", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { code, round } = result;
     if (round.leaderUserId !== user.id) {
       return reply.code(403).send({ error: "only the round leader can end this round" });
     }
@@ -326,9 +326,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     Body: { holeNumber?: number };
   }>("/api/rounds/:code/current-hole", async (req, reply) => {
     const viewer = await getViewerUser(req);
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { code, round } = result;
     const holeNumber = Number(req.body?.holeNumber);
     const course = await getCourse(round.courseId, viewer?.id ?? null);
     if (!course) return reply.code(500).send({ error: "course missing" });
@@ -351,9 +351,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/rounds/:code/scores", async (req, reply) => {
     try {
       const viewer = await getViewerUser(req);
-      const code = normalizeRoomCode(req.params.code);
-      const round = await getRoundByRoomCode(code);
-      if (!round) return reply.code(404).send({ error: "round not found" });
+      const result = await requireRound(req, reply);
+      if (!result) return;
+      const { code, round } = result;
       const course = await getCourse(round.courseId, viewer?.id ?? null);
       if (!course) return reply.code(500).send({ error: "course missing" });
       const playerId = String(req.body?.playerId ?? "");
@@ -383,9 +383,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     Body: { playerId?: string; holeNumber?: number };
   }>("/api/rounds/:code/scores", async (req, reply) => {
     const viewer = await getViewerUser(req);
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { code } = result;
     const playerId = String(req.body?.playerId ?? "");
     const holeNumber = Number(req.body?.holeNumber);
     if (!playerId || !Number.isInteger(holeNumber)) {
@@ -406,9 +406,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     const user = await requireUser(req, reply);
     if (!user) return;
     try {
-      const code = normalizeRoomCode(req.params.code);
-      const round = await getRoundByRoomCode(code);
-      if (!round) return reply.code(404).send({ error: "round not found" });
+      const result = await requireRound(req, reply);
+      if (!result) return;
+      const { code, round } = result;
       if (round.leaderUserId !== user.id) {
         return reply.code(403).send({ error: "only the round leader can create competitions" });
       }
@@ -436,9 +436,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/rounds/:code/competitions/:competitionId", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { code, round } = result;
     if (round.leaderUserId !== user.id) {
       return reply.code(403).send({ error: "only the round leader can delete competitions" });
     }
@@ -458,9 +458,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/rounds/:code/competitions/:competitionId/claims", async (req, reply) => {
     try {
       const viewer = await getViewerUser(req);
-      const code = normalizeRoomCode(req.params.code);
-      const round = await getRoundByRoomCode(code);
-      if (!round) return reply.code(404).send({ error: "round not found" });
+      const result = await requireRound(req, reply);
+      if (!result) return;
+      const { code, round } = result;
       const comp = await getCompetition(req.params.competitionId);
       if (!comp || comp.roundId !== round.id) {
         return reply.code(404).send({ error: "competition not found" });
@@ -492,9 +492,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     Body: { playerId?: string };
   }>("/api/rounds/:code/competitions/:competitionId/claims", async (req, reply) => {
     const viewer = await getViewerUser(req);
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { code, round } = result;
     const comp = await getCompetition(req.params.competitionId);
     if (!comp || comp.roundId !== round.id) {
       return reply.code(404).send({ error: "competition not found" });
@@ -522,9 +522,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/rounds/:code/competitions/:competitionId/winner", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { code, round } = result;
     if (round.leaderUserId !== user.id) {
       return reply.code(403).send({ error: "only the round leader can select winners" });
     }
@@ -545,9 +545,9 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
   }>("/api/rounds/:code/competitions/:competitionId/winner", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { code, round } = result;
     if (round.leaderUserId !== user.id) {
       return reply.code(403).send({ error: "only the round leader can clear winners" });
     }

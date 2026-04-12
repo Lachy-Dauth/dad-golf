@@ -1,15 +1,14 @@
 import type { FastifyInstance } from "fastify";
-import { normalizeRoomCode } from "@dad-golf/shared";
-import { getCourse, getRoundByRoomCode, updateCourseCoords } from "../db/index.js";
+import { getCourse, updateCourseCoords } from "../db/index.js";
 import { fetchWeather, geocodeLocation } from "../weather.js";
-import { getViewerUser } from "./validation.js";
+import { getViewerUser, requireRound } from "./validation.js";
 
 export async function registerWeatherRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { code: string } }>("/api/rounds/:code/weather", async (req, reply) => {
     const viewer = await getViewerUser(req);
-    const code = normalizeRoomCode(req.params.code);
-    const round = await getRoundByRoomCode(code);
-    if (!round) return reply.code(404).send({ error: "round not found" });
+    const result = await requireRound(req, reply);
+    if (!result) return;
+    const { round } = result;
 
     const course = await getCourse(round.courseId, viewer?.id ?? null);
     if (!course) return reply.code(404).send({ error: "course not found" });
