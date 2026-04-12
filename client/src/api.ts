@@ -1,4 +1,5 @@
 import type {
+  CompetitionType,
   Course,
   Group,
   GroupInvite,
@@ -301,7 +302,7 @@ export const api = {
     }).then((r) => json<{ ok: boolean }>(r)),
 
   // competitions
-  createCompetition: (code: string, holeNumber: number, type: string) =>
+  createCompetition: (code: string, holeNumber: number, type: CompetitionType) =>
     fetch(`/api/rounds/${code}/competitions`, {
       method: "POST",
       headers: jsonHeaders(),

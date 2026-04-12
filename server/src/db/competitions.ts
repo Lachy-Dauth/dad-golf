@@ -1,4 +1,4 @@
-import type { CompetitionType, HoleCompetition, CompetitionClaim } from "@dad-golf/shared";
+import type { CompetitionType, HoleCompetition } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 
@@ -10,27 +10,6 @@ interface CompetitionRow {
   created_at: string;
 }
 
-interface ClaimRow {
-  id: string;
-  competition_id: string;
-  player_id: string;
-  player_name: string;
-  claim: string;
-  is_winner: number;
-  created_at: string;
-}
-
-function rowToClaim(row: ClaimRow): CompetitionClaim {
-  return {
-    id: row.id,
-    competitionId: row.competition_id,
-    playerId: row.player_id,
-    playerName: row.player_name,
-    claim: row.claim,
-    isWinner: row.is_winner === 1,
-    createdAt: row.created_at,
-  };
-}
 
 export async function createCompetition(
   roundId: string,
@@ -80,22 +59,16 @@ export async function upsertClaim(
   competitionId: string,
   playerId: string,
   claim: string,
-): Promise<CompetitionClaim> {
+): Promise<void> {
   const id = newId();
   const createdAt = now();
-  const { rows } = await pool.query(
+  await pool.query(
     `INSERT INTO competition_claims (id, competition_id, player_id, claim, is_winner, created_at)
      VALUES ($1, $2, $3, $4, 0, $5)
      ON CONFLICT (competition_id, player_id) DO UPDATE
-       SET claim = EXCLUDED.claim, created_at = EXCLUDED.created_at
-     RETURNING *`,
+       SET claim = EXCLUDED.claim, created_at = EXCLUDED.created_at`,
     [id, competitionId, playerId, claim, createdAt],
   );
-  const row = rows[0] as ClaimRow;
-  // Need player name — fetch it
-  const playerRes = await pool.query(`SELECT name FROM players WHERE id = $1`, [playerId]);
-  const playerName = playerRes.rows.length > 0 ? (playerRes.rows[0] as { name: string }).name : "";
-  return rowToClaim({ ...row, player_name: playerName });
 }
 
 export async function deleteClaim(competitionId: string, playerId: string): Promise<void> {
@@ -106,13 +79,31 @@ export async function deleteClaim(competitionId: string, playerId: string): Prom
 }
 
 export async function setClaimWinner(competitionId: string, playerId: string): Promise<void> {
-  await pool.query(`UPDATE competition_claims SET is_winner = 0 WHERE competition_id = $1`, [
-    competitionId,
-  ]);
-  await pool.query(
-    `UPDATE competition_claims SET is_winner = 1 WHERE competition_id = $1 AND player_id = $2`,
-    [competitionId, playerId],
-  );
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(`UPDATE competition_claims SET is_winner = 0 WHERE competition_id = $1`, [
+      competitionId,
+    ]);
+    const result = await client.query(
+      `UPDATE competition_claims SET is_winner = 1 WHERE competition_id = $1 AND player_id = $2`,
+      [competitionId, playerId],
+    );
+    if ((result.rowCount ?? 0) === 0) {
+      await client.query("ROLLBACK");
+      throw new Error("no claim found for that player");
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      /* ignore rollback failure */
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function clearClaimWinner(competitionId: string): Promise<void> {

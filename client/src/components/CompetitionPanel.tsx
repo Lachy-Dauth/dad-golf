@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { HoleCompetition, Player, RoundState } from "@dad-golf/shared";
 import { api } from "../api.js";
 
@@ -17,12 +17,17 @@ export default function CompetitionPanel({
   roomCode,
   onStateUpdate,
 }: Props) {
-  const [claimText, setClaimText] = useState(() => {
-    if (!activePlayer) return "";
-    const existing = competition.claims.find((c) => c.playerId === activePlayer.id);
-    return existing?.claim ?? "";
-  });
+  const [claimText, setClaimText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!activePlayer) {
+      setClaimText("");
+      return;
+    }
+    const existing = competition.claims.find((c) => c.playerId === activePlayer.id);
+    setClaimText(existing?.claim ?? "");
+  }, [activePlayer?.id, competition.claims]);
 
   const label = competition.type === "ctp" ? "Closest to Pin" : "Longest Drive";
   const existingClaim = activePlayer

@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS hole_competitions (
   id TEXT PRIMARY KEY,
   round_id TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
   hole_number INTEGER NOT NULL,
-  type TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('ctp', 'longest_drive')),
   created_at TEXT NOT NULL,
   UNIQUE(round_id, hole_number, type)
 );

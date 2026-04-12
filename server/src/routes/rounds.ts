@@ -388,6 +388,11 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       if (!player || player.roundId !== round.id) {
         throw new Error("player not found in this round");
       }
+      const isLeader = viewer?.id === round.leaderUserId;
+      const isSelf = viewer && player.userId === viewer.id;
+      if (!isLeader && !isSelf) {
+        return reply.code(403).send({ error: "not allowed" });
+      }
       await upsertClaim(req.params.competitionId, playerId, claim);
       const state = await buildRoundState(code, viewer?.id ?? null);
       if (state) broadcast(code, { type: "competition_update", state });
