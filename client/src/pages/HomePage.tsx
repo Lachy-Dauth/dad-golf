@@ -8,8 +8,8 @@ export default function HomePage() {
       <div className="hero">
         <h1>Stableford scoring for casual rounds</h1>
         <p className="muted">
-          Up to 32 players per round. Everyone scores on their own phone, the
-          leaderboard updates live.
+          Up to 32 players per round. Everyone scores on their own phone, the leaderboard updates
+          live.
         </p>
       </div>
 

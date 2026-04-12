@@ -28,6 +28,7 @@ export default function RoundPage() {
   const [activePlayerId, setActivePlayer] = useState<string | null>(
     roomCode ? getActivePlayerId(roomCode) : null,
   );
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!roomCode) return;
@@ -66,9 +67,7 @@ export default function RoundPage() {
     return state.players.find((p) => p.id === activePlayerId) ?? null;
   }, [state, activePlayerId]);
 
-  const isLeader = !!(
-    state && viewer && state.round.leaderUserId === viewer.id
-  );
+  const isLeader = !!(state && viewer && state.round.leaderUserId === viewer.id);
 
   if (loadError) {
     return (
@@ -122,7 +121,7 @@ export default function RoundPage() {
       setState(res.state);
       setTab("scoring");
     } catch (e) {
-      alert((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
 
@@ -133,18 +132,13 @@ export default function RoundPage() {
       const res = await api.completeRound(roomCode);
       setState(res.state);
     } catch (e) {
-      alert((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
 
   async function handleScore(holeNumber: number, strokes: number) {
     if (!roomCode || !activePlayer) return;
-    const res = await api.submitScore(
-      roomCode,
-      activePlayer.id,
-      holeNumber,
-      strokes,
-    );
+    const res = await api.submitScore(roomCode, activePlayer.id, holeNumber, strokes);
     setState(res.state);
   }
 
@@ -166,7 +160,7 @@ export default function RoundPage() {
       await api.removeRoundPlayer(roomCode, playerId);
       if (playerId === activePlayerId) setActivePlayer(null);
     } catch (e) {
-      alert((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
 
@@ -196,14 +190,15 @@ export default function RoundPage() {
           <div className="round-meta muted">
             Rating {course.rating.toFixed(1)} · Slope {course.slope}
           </div>
-          {round.leaderName && (
-            <div className="round-meta muted">
-              Leader: {round.leaderName}
-            </div>
-          )}
+          {round.leaderName && <div className="round-meta muted">Leader: {round.leaderName}</div>}
         </div>
-        <div className={`conn-dot ${connected ? "on" : "off"}`} title={connected ? "Live" : "Reconnecting…"} />
+        <div
+          className={`conn-dot ${connected ? "on" : "off"}`}
+          title={connected ? "Live" : "Reconnecting…"}
+        />
       </div>
+
+      {actionError && <div className="error">{actionError}</div>}
 
       {showLobby && (
         <LobbyView
@@ -222,10 +217,7 @@ export default function RoundPage() {
       {!showLobby && (
         <>
           <nav className="tabs">
-            <button
-              className={tab === "scoring" ? "active" : ""}
-              onClick={() => setTab("scoring")}
-            >
+            <button className={tab === "scoring" ? "active" : ""} onClick={() => setTab("scoring")}>
               Score
             </button>
             <button
@@ -234,10 +226,7 @@ export default function RoundPage() {
             >
               Leaderboard
             </button>
-            <button
-              className={tab === "players" ? "active" : ""}
-              onClick={() => setTab("players")}
-            >
+            <button className={tab === "players" ? "active" : ""} onClick={() => setTab("players")}>
               Players
             </button>
           </nav>
@@ -256,9 +245,7 @@ export default function RoundPage() {
             />
           )}
 
-          {tab === "leaderboard" && (
-            <LeaderboardView state={state} />
-          )}
+          {tab === "leaderboard" && <LeaderboardView state={state} />}
 
           {tab === "players" && (
             <div className="section">
@@ -270,21 +257,15 @@ export default function RoundPage() {
                       <div>
                         <div className="list-primary">
                           {p.name}
-                          {p.userId != null &&
-                            p.userId === round.leaderUserId && (
-                              <span className="badge">leader</span>
-                            )}
+                          {p.userId != null && p.userId === round.leaderUserId && (
+                            <span className="badge">leader</span>
+                          )}
                           {p.isGuest && <span className="badge">guest</span>}
                         </div>
-                        <div className="list-secondary">
-                          GA HCP {p.handicap.toFixed(1)}
-                        </div>
+                        <div className="list-secondary">GA HCP {p.handicap.toFixed(1)}</div>
                       </div>
                       {canRemoveAnyPlayer(p.userId) && (
-                        <button
-                          className="btn-icon"
-                          onClick={() => handleRemovePlayer(p.id)}
-                        >
+                        <button className="btn-icon" onClick={() => handleRemovePlayer(p.id)}>
                           ✕
                         </button>
                       )}

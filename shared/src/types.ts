@@ -107,9 +107,7 @@ export interface RoundState {
   leaderboard: LeaderboardRow[];
 }
 
-export type WsClientMessage =
-  | { type: "hello"; roomCode: string }
-  | { type: "ping" };
+export type WsClientMessage = { type: "hello"; roomCode: string } | { type: "ping" };
 
 export type WsServerMessage =
   | { type: "state"; state: RoundState }

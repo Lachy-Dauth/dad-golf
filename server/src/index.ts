@@ -5,9 +5,9 @@ import fastifyStatic from "@fastify/static";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
-import { registerRoutes } from "./routes.js";
+import { registerRoutes } from "./routes/index.js";
 import { registerWebsocket } from "./ws.js";
-import { initDb, closeDb } from "./db.js";
+import { initDb, closeDb } from "./db/index.js";
 import { seedIfEmpty, bootstrapAdmin } from "./seed.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,8 +19,8 @@ async function main(): Promise<void> {
   await app.register(websocket);
 
   await initDb();
-  await seedIfEmpty();
-  await bootstrapAdmin();
+  await seedIfEmpty(app.log);
+  await bootstrapAdmin(app.log);
 
   app.addHook("onClose", async () => {
     await closeDb();

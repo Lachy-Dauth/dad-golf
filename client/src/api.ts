@@ -131,9 +131,7 @@ export const api = {
 
   // courses
   listCourses: () =>
-    fetch("/api/courses", { headers: authHeaders() }).then((r) =>
-      json<{ courses: Course[] }>(r),
-    ),
+    fetch("/api/courses", { headers: authHeaders() }).then((r) => json<{ courses: Course[] }>(r)),
   getCourse: (id: string) =>
     fetch(`/api/courses/${id}`, { headers: authHeaders() }).then((r) =>
       json<{ course: Course }>(r),
@@ -207,12 +205,7 @@ export const api = {
       headers: jsonHeaders(),
       body: JSON.stringify({ name, handicap }),
     }).then((r) => json<{ member: GroupMember }>(r)),
-  updateGroupMember: (
-    groupId: string,
-    memberId: string,
-    name: string,
-    handicap: number,
-  ) =>
+  updateGroupMember: (groupId: string, memberId: string, name: string, handicap: number) =>
     fetch(`/api/groups/${groupId}/members/${memberId}`, {
       method: "PATCH",
       headers: jsonHeaders(),
@@ -226,8 +219,8 @@ export const api = {
 
   // group invites
   listGroupInvites: (groupId: string) =>
-    fetch(`/api/groups/${groupId}/invites`, { headers: authHeaders() }).then(
-      (r) => json<{ invites: GroupInvite[] }>(r),
+    fetch(`/api/groups/${groupId}/invites`, { headers: authHeaders() }).then((r) =>
+      json<{ invites: GroupInvite[] }>(r),
     ),
   createGroupInvite: (groupId: string) =>
     fetch(`/api/groups/${groupId}/invites`, {
@@ -250,11 +243,7 @@ export const api = {
     }).then((r) => json<{ group: Group; member: GroupMember }>(r)),
 
   // rounds
-  createRound: (payload: {
-    courseId: string;
-    groupId: string | null;
-    memberIds: string[];
-  }) =>
+  createRound: (payload: { courseId: string; groupId: string | null; memberIds: string[] }) =>
     fetch("/api/rounds", {
       method: "POST",
       headers: jsonHeaders(),
@@ -264,21 +253,13 @@ export const api = {
     fetch(`/api/rounds/${code}`, { headers: authHeaders() }).then((r) =>
       json<{ state: RoundState }>(r),
     ),
-  joinRound: (
-    code: string,
-    payload: { name?: string; handicap?: number } = {},
-  ) =>
+  joinRound: (code: string, payload: { name?: string; handicap?: number } = {}) =>
     fetch(`/api/rounds/${code}/players`, {
       method: "POST",
       headers: jsonHeaders(),
       body: JSON.stringify(payload),
     }).then((r) => json<{ player: Player; state: RoundState }>(r)),
-  updateRoundPlayer: (
-    code: string,
-    playerId: string,
-    name: string,
-    handicap: number,
-  ) =>
+  updateRoundPlayer: (code: string, playerId: string, name: string, handicap: number) =>
     fetch(`/api/rounds/${code}/players/${playerId}`, {
       method: "PATCH",
       headers: jsonHeaders(),
@@ -305,12 +286,7 @@ export const api = {
       headers: jsonHeaders(),
       body: JSON.stringify({ holeNumber }),
     }).then((r) => json<{ state: RoundState }>(r)),
-  submitScore: (
-    code: string,
-    playerId: string,
-    holeNumber: number,
-    strokes: number,
-  ) =>
+  submitScore: (code: string, playerId: string, holeNumber: number, strokes: number) =>
     fetch(`/api/rounds/${code}/scores`, {
       method: "POST",
       headers: jsonHeaders(),
@@ -325,9 +301,7 @@ export const api = {
 
   // admin
   adminStats: () =>
-    fetch("/api/admin/stats", { headers: authHeaders() }).then((r) =>
-      json<AdminStats>(r),
-    ),
+    fetch("/api/admin/stats", { headers: authHeaders() }).then((r) => json<AdminStats>(r)),
   adminUsers: () =>
     fetch("/api/admin/users", { headers: authHeaders() }).then((r) =>
       json<{ users: AdminUser[] }>(r),

@@ -10,8 +10,7 @@ export default function SummaryView({ state }: Props) {
   const winner = leaderboard[0];
 
   const bestHole = (() => {
-    let best: { name: string; holeNumber: number; points: number } | null =
-      null;
+    let best: { name: string; holeNumber: number; points: number } | null = null;
     for (const p of players) {
       const holes = computePlayerHoles(course, p, scores);
       for (const h of holes) {

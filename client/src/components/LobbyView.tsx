@@ -31,8 +31,7 @@ export default function LobbyView({
   const [error, setError] = useState<string | null>(null);
 
   const players = state.players;
-  const alreadyJoined =
-    !!viewer && players.some((p) => p.userId === viewer.id);
+  const alreadyJoined = !!viewer && players.some((p) => p.userId === viewer.id);
 
   async function handleJoinGuest() {
     if (!name.trim()) return;
@@ -78,11 +77,7 @@ export default function LobbyView({
                 Joining as <strong>{viewer.displayName}</strong> (GA HCP{" "}
                 {viewer.handicap.toFixed(1)})
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={handleJoinUser}
-                disabled={joining}
-              >
+              <button className="btn btn-primary" onClick={handleJoinUser} disabled={joining}>
                 Join
               </button>
             </div>
@@ -126,11 +121,7 @@ export default function LobbyView({
         <div className="section-header">
           <h2>Players ({players.length})</h2>
           {isLeader ? (
-            <button
-              className="btn btn-primary"
-              onClick={onStart}
-              disabled={players.length === 0}
-            >
+            <button className="btn btn-primary" onClick={onStart} disabled={players.length === 0}>
               Start round
             </button>
           ) : (
@@ -143,20 +134,13 @@ export default function LobbyView({
         </div>
 
         {players.length === 0 ? (
-          <div className="muted">
-            No one has joined yet. Share the room code above.
-          </div>
+          <div className="muted">No one has joined yet. Share the room code above.</div>
         ) : (
           <ul className="player-grid">
             {players.map((p) => {
-              const canRemove =
-                isLeader || (viewer != null && p.userId === viewer.id);
-              const isLeaderPlayer =
-                p.userId != null && p.userId === state.round.leaderUserId;
-              const dh = calculateDailyHandicap(
-                p.handicap,
-                state.course.slope,
-              );
+              const canRemove = isLeader || (viewer != null && p.userId === viewer.id);
+              const isLeaderPlayer = p.userId != null && p.userId === state.round.leaderUserId;
+              const dh = calculateDailyHandicap(p.handicap, state.course.slope);
               return (
                 <li
                   key={p.id}
@@ -165,17 +149,13 @@ export default function LobbyView({
                 >
                   <div className="player-name">
                     {p.name}
-                    {isLeaderPlayer && (
-                      <span className="badge">leader</span>
-                    )}
+                    {isLeaderPlayer && <span className="badge">leader</span>}
                     {p.isGuest && <span className="badge">guest</span>}
                   </div>
                   <div className="player-hcp">
                     GA {p.handicap.toFixed(1)} · DH {dh}
                   </div>
-                  {activePlayerId === p.id && (
-                    <div className="player-me-badge">you</div>
-                  )}
+                  {activePlayerId === p.id && <div className="player-me-badge">you</div>}
                   {canRemove && (
                     <button
                       className="btn-icon remove"

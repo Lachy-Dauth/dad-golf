@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { normalizeRoomCode } from "@dad-golf/shared";
 import type { WsClientMessage } from "@dad-golf/shared";
 import { buildRoundState } from "./roundState.js";
-import { getUserBySession } from "./db.js";
+import { getUserBySession } from "./db/index.js";
 import { sendTo, subscribe, unsubscribe } from "./hub.js";
 
 export async function registerWebsocket(app: FastifyInstance): Promise<void> {

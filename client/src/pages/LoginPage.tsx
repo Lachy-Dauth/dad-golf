@@ -14,8 +14,7 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const next =
-    new URLSearchParams(loc.search).get("next") ?? "/";
+  const next = new URLSearchParams(loc.search).get("next") ?? "/";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,9 +67,7 @@ export default function LoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete={
-              mode === "signin" ? "current-password" : "new-password"
-            }
+            autoComplete={mode === "signin" ? "current-password" : "new-password"}
             required
           />
         </label>
@@ -105,11 +102,7 @@ export default function LoginPage() {
             Cancel
           </Link>
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy
-              ? "Working…"
-              : mode === "signin"
-                ? "Log in"
-                : "Create account"}
+            {busy ? "Working…" : mode === "signin" ? "Log in" : "Create account"}
           </button>
         </div>
       </form>
@@ -117,22 +110,14 @@ export default function LoginPage() {
         {mode === "signin" ? (
           <>
             New to Stableford?{" "}
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => setMode("signup")}
-            >
+            <button type="button" className="link-btn" onClick={() => setMode("signup")}>
               Create an account
             </button>
           </>
         ) : (
           <>
             Already have an account?{" "}
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => setMode("signin")}
-            >
+            <button type="button" className="link-btn" onClick={() => setMode("signin")}>
               Log in
             </button>
           </>

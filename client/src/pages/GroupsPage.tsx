@@ -6,9 +6,7 @@ import { useAuth } from "../AuthContext.js";
 
 export default function GroupsPage() {
   const { user } = useAuth();
-  const [groups, setGroups] = useState<
-    Array<Group & { members: GroupMember[] }> | null
-  >(null);
+  const [groups, setGroups] = useState<Array<Group & { members: GroupMember[] }> | null>(null);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -50,8 +48,7 @@ export default function GroupsPage() {
     <div className="page">
       <h1>Golf groups</h1>
       <p className="muted">
-        Save your regular players as a group and invite them to join. Up to 64
-        members per group.
+        Save your regular players as a group and invite them to join. Up to 64 members per group.
       </p>
 
       {user ? (
@@ -78,16 +75,12 @@ export default function GroupsPage() {
 
       {error && <div className="error">{error}</div>}
       {!groups && <div className="muted">Loading…</div>}
-      {groups && groups.length === 0 && (
-        <div className="muted">No groups yet.</div>
-      )}
+      {groups && groups.length === 0 && <div className="muted">No groups yet.</div>}
       {groups && groups.length > 0 && (
         <ul className="list">
           {groups.map((g) => {
             const isOwner = user && g.ownerUserId === user.id;
-            const isMember = !!(
-              user && g.members.some((m) => m.userId === user.id)
-            );
+            const isMember = !!(user && g.members.some((m) => m.userId === user.id));
             return (
               <li key={g.id}>
                 <div className="list-row">
@@ -95,13 +88,10 @@ export default function GroupsPage() {
                     <div className="list-primary">
                       {g.name}
                       {isOwner && <span className="badge">owner</span>}
-                      {!isOwner && isMember && (
-                        <span className="badge">member</span>
-                      )}
+                      {!isOwner && isMember && <span className="badge">member</span>}
                     </div>
                     <div className="list-secondary">
-                      {g.members.length}{" "}
-                      {g.members.length === 1 ? "member" : "members"}
+                      {g.members.length} {g.members.length === 1 ? "member" : "members"}
                       {g.ownerName && ` · ${g.ownerName}`}
                     </div>
                   </Link>

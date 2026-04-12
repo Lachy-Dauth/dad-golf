@@ -22,10 +22,7 @@ export default function LeaderboardView({ state }: Props) {
         <span className="lb-num">Back</span>
       </div>
       {leaderboard.map((row) => (
-        <div
-          key={row.playerId}
-          className={`lb-row ${row.position === 1 ? "lead" : ""}`}
-        >
+        <div key={row.playerId} className={`lb-row ${row.position === 1 ? "lead" : ""}`}>
           <span className="lb-pos">{row.position}</span>
           <span className="lb-name">
             <div className="lb-primary">{row.name}</div>
@@ -36,13 +33,9 @@ export default function LeaderboardView({ state }: Props) {
           <span className="lb-num">
             {row.holesPlayed}/{course.holes.length}
           </span>
-          <span className="lb-num lb-strokes">
-            {row.totalStrokes > 0 ? row.totalStrokes : "–"}
-          </span>
+          <span className="lb-num lb-strokes">{row.totalStrokes > 0 ? row.totalStrokes : "–"}</span>
           <span className="lb-num lb-points">{row.totalPoints}</span>
-          <span className="lb-num">
-            {row.position === 1 ? "—" : `-${row.pointsBack}`}
-          </span>
+          <span className="lb-num">{row.position === 1 ? "—" : `-${row.pointsBack}`}</span>
         </div>
       ))}
     </div>

@@ -18,7 +18,20 @@
     "dev:client": "npm run dev --workspace=client",
     "build": "npm run build --workspace=shared && npm run build --workspace=server && npm run build --workspace=client",
     "start": "npm run start --workspace=server",
-    "test": "npm run test --workspace=shared"
+    "test": "npm run test --workspace=shared",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "prettier": "^3.8.2",
+    "typescript-eslint": "^8.58.1"
+  }
 }

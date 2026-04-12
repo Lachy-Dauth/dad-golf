@@ -5,7 +5,12 @@ import {
   ensureAdminUser,
   getUserByUsername,
   listCourses,
-} from "./db.js";
+} from "./db/index.js";
+
+interface Logger {
+  info(msg: string): void;
+  warn(msg: string): void;
+}
 
 const SEED_COURSES: Array<{
   name: string;
@@ -70,7 +75,7 @@ const SEED_COURSES: Array<{
 
 const SEED_USERNAME = "stableford";
 
-export async function seedIfEmpty(): Promise<void> {
+export async function seedIfEmpty(log: Logger): Promise<void> {
   const existing = await listCourses(null);
   if (existing.length > 0) return;
 
@@ -84,19 +89,19 @@ export async function seedIfEmpty(): Promise<void> {
   for (const c of SEED_COURSES) {
     await createCourse(c.name, c.location, c.rating, c.slope, c.holes, seedUser.id);
   }
-  console.log(`Seeded ${SEED_COURSES.length} courses`);
+  log.info(`Seeded ${SEED_COURSES.length} courses`);
 }
 
-export async function bootstrapAdmin(): Promise<void> {
+export async function bootstrapAdmin(log: Logger): Promise<void> {
   const password = process.env.ADMIN_PASSWORD;
   if (!password) {
-    console.log("ADMIN_PASSWORD not set – skipping admin user bootstrap");
+    log.info("ADMIN_PASSWORD not set – skipping admin user bootstrap");
     return;
   }
   if (password.length < 6) {
-    console.warn("WARNING: ADMIN_PASSWORD is shorter than 6 characters – skipping");
+    log.warn("ADMIN_PASSWORD is shorter than 6 characters – skipping");
     return;
   }
   await ensureAdminUser(password);
-  console.log("Admin user 'admin' bootstrapped");
+  log.info("Admin user 'admin' bootstrapped");
 }
