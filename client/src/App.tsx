@@ -14,6 +14,7 @@ import AcceptInvitePage from "./pages/AcceptInvitePage.js";
 import AdminPage from "./pages/AdminPage.js";
 import HandicapPage from "./pages/HandicapPage.js";
 import ScheduledRoundPage from "./pages/ScheduledRoundPage.js";
+import UpcomingRoundsPage from "./pages/UpcomingRoundsPage.js";
 import { AuthProvider, useAuth } from "./AuthContext.js";
 import { ThemeProvider, useTheme } from "./ThemeContext.js";
 import InstallPrompt from "./components/InstallPrompt.js";
@@ -90,6 +91,7 @@ export default function App() {
               <Route path="/rounds/new" element={<NewRoundPage />} />
               <Route path="/join" element={<JoinRoundPage />} />
               <Route path="/r/:code" element={<RoundPage />} />
+              <Route path="/upcoming" element={<UpcomingRoundsPage />} />
               <Route path="/handicap" element={<HandicapPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>
