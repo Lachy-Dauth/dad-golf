@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
+    "test": "DATABASE_URL=postgresql://localhost/test node --test --import tsx ./src/*.test.ts ./src/**/*.test.ts",
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
