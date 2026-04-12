@@ -122,6 +122,31 @@ CREATE TABLE IF NOT EXISTS competition_claims (
   UNIQUE(competition_id, player_id)
 );
 CREATE INDEX IF NOT EXISTS idx_competition_claims_comp ON competition_claims(competition_id);
+
+CREATE TABLE IF NOT EXISTS scheduled_rounds (
+  id TEXT PRIMARY KEY,
+  group_id TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  course_id TEXT NOT NULL REFERENCES courses(id),
+  scheduled_date TEXT NOT NULL,
+  scheduled_time TEXT,
+  notes TEXT,
+  status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'started', 'cancelled')),
+  round_id TEXT REFERENCES rounds(id) ON DELETE SET NULL,
+  created_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_scheduled_rounds_group ON scheduled_rounds(group_id);
+CREATE INDEX IF NOT EXISTS idx_scheduled_rounds_date ON scheduled_rounds(scheduled_date);
+
+CREATE TABLE IF NOT EXISTS scheduled_round_rsvps (
+  id TEXT PRIMARY KEY,
+  scheduled_round_id TEXT NOT NULL REFERENCES scheduled_rounds(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL CHECK (status IN ('accepted', 'declined', 'tentative')),
+  updated_at TEXT NOT NULL,
+  UNIQUE(scheduled_round_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_scheduled_round_rsvps_round ON scheduled_round_rsvps(scheduled_round_id);
   `);
 
   // Migration: add lat/lng columns to courses (safe to re-run)

@@ -8,6 +8,9 @@ import type {
   Hole,
   Player,
   RoundState,
+  RsvpStatus,
+  ScheduledRound,
+  ScheduledRoundRsvp,
   Score,
   User,
   Weather,
@@ -250,6 +253,56 @@ export const api = {
       method: "POST",
       headers: authHeaders(),
     }).then((r) => json<{ group: Group; member: GroupMember }>(r)),
+
+  // scheduled rounds
+  listScheduledRounds: (groupId: string) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds`, { headers: authHeaders() }).then((r) =>
+      json<{ scheduledRounds: ScheduledRound[]; rsvps: Record<string, ScheduledRoundRsvp[]> }>(r),
+    ),
+  getScheduledRound: (groupId: string, id: string) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}`, { headers: authHeaders() }).then((r) =>
+      json<{ scheduledRound: ScheduledRound; rsvps: ScheduledRoundRsvp[] }>(r),
+    ),
+  createScheduledRound: (
+    groupId: string,
+    payload: { courseId: string; scheduledDate: string; scheduledTime?: string; notes?: string },
+  ) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
+    }).then((r) => json<{ scheduledRound: ScheduledRound }>(r)),
+  updateScheduledRound: (
+    groupId: string,
+    id: string,
+    payload: {
+      courseId?: string;
+      scheduledDate?: string;
+      scheduledTime?: string | null;
+      notes?: string | null;
+    },
+  ) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}`, {
+      method: "PATCH",
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
+    }).then((r) => json<{ scheduledRound: ScheduledRound }>(r)),
+  cancelScheduledRound: (groupId: string, id: string) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  rsvpScheduledRound: (groupId: string, id: string, status: RsvpStatus) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}/rsvp`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ status }),
+    }).then((r) => json<{ rsvp: ScheduledRoundRsvp }>(r)),
+  startScheduledRound: (groupId: string, id: string) =>
+    fetch(`/api/groups/${groupId}/scheduled-rounds/${id}/start`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ state: RoundState }>(r)),
 
   // rounds
   createRound: (payload: { courseId: string; groupId: string | null; memberIds: string[] }) =>

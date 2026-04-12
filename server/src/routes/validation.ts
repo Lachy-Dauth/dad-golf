@@ -85,6 +85,30 @@ export function validatePassword(p: unknown): string {
   return p;
 }
 
+export function validateScheduledDate(date: unknown): string {
+  if (typeof date !== "string") throw new Error("scheduledDate must be a string");
+  const trimmed = date.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    throw new Error("scheduledDate must be in YYYY-MM-DD format");
+  }
+  const parsed = new Date(trimmed + "T00:00:00");
+  if (isNaN(parsed.getTime())) throw new Error("scheduledDate is not a valid date");
+  return trimmed;
+}
+
+export function validateScheduledTime(time: unknown): string {
+  if (typeof time !== "string") throw new Error("scheduledTime must be a string");
+  const trimmed = time.trim();
+  if (!/^\d{2}:\d{2}$/.test(trimmed)) {
+    throw new Error("scheduledTime must be in HH:MM format");
+  }
+  const [h, m] = trimmed.split(":").map(Number);
+  if (h < 0 || h > 23 || m < 0 || m > 59) {
+    throw new Error("scheduledTime is not a valid time");
+  }
+  return trimmed;
+}
+
 export async function getViewerUser(req: FastifyRequest): Promise<User | null> {
   const auth = req.headers.authorization;
   if (!auth) return null;

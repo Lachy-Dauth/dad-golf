@@ -1417,6 +1417,61 @@ input:-webkit-autofill:focus {
 .btn-sm.btn-primary:hover {
   background: var(--primary-hover);
 }
+
+/* ---------- Scheduled Rounds ---------- */
+.scheduled-round-card {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.scheduled-round-card + .scheduled-round-card {
+  margin-top: 8px;
+}
+.scheduled-round-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.rsvp-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rsvp-count {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.rsvp-accepted {
+  background: rgba(59, 193, 107, 0.15);
+  color: var(--primary);
+}
+.rsvp-tentative {
+  background: rgba(255, 207, 92, 0.15);
+  color: var(--accent);
+}
+.rsvp-declined {
+  background: rgba(255, 99, 99, 0.1);
+  color: var(--danger);
+}
+.rsvp-names {
+  font-size: 13px;
+}
+.rsvp-buttons {
+  display: flex;
+  gap: 6px;
+}
+.scheduled-round-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 .hole-chip {
   position: relative;
 }

@@ -1,16 +1,40 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api.js";
-import type { Group, GroupInvite, GroupMember, GroupRole } from "@dad-golf/shared";
+import type {
+  Course,
+  Group,
+  GroupInvite,
+  GroupMember,
+  GroupRole,
+  RsvpStatus,
+  ScheduledRound,
+  ScheduledRoundRsvp,
+} from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
+import { addRecentRound } from "../localStore.js";
+import ScheduledRoundCard from "../components/ScheduledRoundCard.js";
 
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [invites, setInvites] = useState<GroupInvite[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Scheduled rounds state
+  const [scheduledRounds, setScheduledRounds] = useState<ScheduledRound[]>([]);
+  const [rsvpsByRound, setRsvpsByRound] = useState<Record<string, ScheduledRoundRsvp[]>>({});
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [scheduleForm, setScheduleForm] = useState({
+    courseId: "",
+    scheduledDate: "",
+    scheduledTime: "",
+    notes: "",
+  });
 
   const myMember = user ? members.find((m) => m.userId === user.id) : null;
   const isAdmin = myMember?.role === "admin";
@@ -37,11 +61,27 @@ export default function GroupDetailPage() {
       });
   }, [id]);
 
+  const loadScheduledRounds = useCallback(() => {
+    if (!id) return;
+    api
+      .listScheduledRounds(id)
+      .then((res) => {
+        setScheduledRounds(res.scheduledRounds);
+        setRsvpsByRound(res.rsvps);
+      })
+      .catch(() => {
+        /* ignore: user may not be a member */
+      });
+  }, [id]);
+
   useEffect(() => load(), [id, user?.id, load]);
   useEffect(() => {
     if (isAdmin) loadInvites();
     else setInvites([]);
   }, [isAdmin, id, loadInvites]);
+  useEffect(() => {
+    if (myMember) loadScheduledRounds();
+  }, [myMember, loadScheduledRounds]);
 
   async function handleRemove(memberId: string) {
     if (!id) return;
@@ -79,6 +119,72 @@ export default function GroupDetailPage() {
     try {
       await api.deleteGroupInvite(id, inviteId);
       loadInvites();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleOpenScheduleForm() {
+    setShowScheduleForm(true);
+    if (courses.length === 0) {
+      try {
+        const res = await api.listCourses();
+        setCourses(res.courses);
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    }
+  }
+
+  async function handleCreateScheduledRound() {
+    if (!id) return;
+    try {
+      await api.createScheduledRound(id, {
+        courseId: scheduleForm.courseId,
+        scheduledDate: scheduleForm.scheduledDate,
+        scheduledTime: scheduleForm.scheduledTime || undefined,
+        notes: scheduleForm.notes || undefined,
+      });
+      setShowScheduleForm(false);
+      setScheduleForm({ courseId: "", scheduledDate: "", scheduledTime: "", notes: "" });
+      loadScheduledRounds();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleRsvp(scheduledRoundId: string, status: RsvpStatus) {
+    if (!id) return;
+    try {
+      await api.rsvpScheduledRound(id, scheduledRoundId, status);
+      loadScheduledRounds();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleStartScheduledRound(scheduledRoundId: string, courseName: string) {
+    if (!id) return;
+    if (!confirm("Start this round now? All accepted players will be added.")) return;
+    try {
+      const res = await api.startScheduledRound(id, scheduledRoundId);
+      addRecentRound({
+        roomCode: res.state.round.roomCode,
+        courseName,
+        joinedAt: new Date().toISOString(),
+      });
+      navigate(`/r/${res.state.round.roomCode}`);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function handleCancelScheduledRound(scheduledRoundId: string) {
+    if (!id) return;
+    if (!confirm("Cancel this scheduled round?")) return;
+    try {
+      await api.cancelScheduledRound(id, scheduledRoundId);
+      loadScheduledRounds();
     } catch (e) {
       setError((e as Error).message);
     }
@@ -148,6 +254,82 @@ export default function GroupDetailPage() {
                 </li>
               ))}
             </ul>
+          )}
+        </section>
+      )}
+
+      {myMember && (
+        <section className="section">
+          <div className="section-header">
+            <h2>Upcoming rounds</h2>
+            {isAdmin && (
+              <button className="btn btn-primary" onClick={handleOpenScheduleForm}>
+                + Schedule
+              </button>
+            )}
+          </div>
+
+          {showScheduleForm && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: 12 }}>
+              <select
+                value={scheduleForm.courseId}
+                onChange={(e) => setScheduleForm((f) => ({ ...f, courseId: e.target.value }))}
+              >
+                <option value="">Select course...</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="date"
+                value={scheduleForm.scheduledDate}
+                onChange={(e) => setScheduleForm((f) => ({ ...f, scheduledDate: e.target.value }))}
+              />
+              <input
+                type="time"
+                value={scheduleForm.scheduledTime}
+                onChange={(e) => setScheduleForm((f) => ({ ...f, scheduledTime: e.target.value }))}
+                placeholder="Time (optional)"
+              />
+              <input
+                type="text"
+                value={scheduleForm.notes}
+                onChange={(e) => setScheduleForm((f) => ({ ...f, notes: e.target.value }))}
+                placeholder="Notes (optional)"
+                maxLength={200}
+              />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  className="btn btn-primary"
+                  disabled={!scheduleForm.courseId || !scheduleForm.scheduledDate}
+                  onClick={handleCreateScheduledRound}
+                >
+                  Create
+                </button>
+                <button className="btn" onClick={() => setShowScheduleForm(false)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {scheduledRounds.length === 0 ? (
+            <div className="muted">No upcoming rounds scheduled.</div>
+          ) : (
+            scheduledRounds.map((sr) => (
+              <ScheduledRoundCard
+                key={sr.id}
+                scheduledRound={sr}
+                rsvps={rsvpsByRound[sr.id] ?? []}
+                currentUserId={user?.id ?? null}
+                isAdmin={isAdmin}
+                onRsvp={(status) => handleRsvp(sr.id, status)}
+                onStart={() => handleStartScheduledRound(sr.id, sr.courseName)}
+                onCancel={() => handleCancelScheduledRound(sr.id)}
+              />
+            ))
           )}
         </section>
       )}

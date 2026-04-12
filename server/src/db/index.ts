@@ -70,6 +70,17 @@ export {
   clearClaimWinner,
   listCompetitions,
 } from "./competitions.js";
+export {
+  createScheduledRound,
+  getScheduledRound,
+  listScheduledRoundsForGroup,
+  updateScheduledRound,
+  updateScheduledRoundStatus,
+  deleteScheduledRound,
+  upsertRsvp,
+  listRsvps,
+  listAcceptedRsvpUserIds,
+} from "./scheduledRounds.js";
 export type {
   AdminStats,
   AdminUser,

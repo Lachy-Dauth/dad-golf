@@ -101,6 +101,34 @@ export interface GroupInvite {
   createdAt: string;
 }
 
+export type RsvpStatus = "accepted" | "declined" | "tentative";
+
+export type ScheduledRoundStatus = "scheduled" | "started" | "cancelled";
+
+export interface ScheduledRound {
+  id: string;
+  groupId: string;
+  courseId: string;
+  courseName: string;
+  scheduledDate: string;
+  scheduledTime: string | null;
+  notes: string | null;
+  status: ScheduledRoundStatus;
+  roundId: string | null;
+  createdByUserId: string;
+  createdByName: string;
+  createdAt: string;
+}
+
+export interface ScheduledRoundRsvp {
+  id: string;
+  scheduledRoundId: string;
+  userId: string;
+  userName: string;
+  status: RsvpStatus;
+  updatedAt: string;
+}
+
 export type CompetitionType = "ctp" | "longest_drive";
 
 export interface CompetitionClaim {
