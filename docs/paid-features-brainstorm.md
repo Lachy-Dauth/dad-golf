@@ -109,7 +109,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > Massive effort. Golfshot, 18Birdies, and every other golf app already does
 > this with dedicated teams. Not our lane.
 
-### 3c. Course Condition Reports — FREE
+### 3c. Course Condition Reports — WON'T DO
 
 - Users can tag course conditions (wet, dry, fast greens, etc.)
 - Recent reports shown when selecting a course
@@ -346,7 +346,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 | 2c  | Scheduled Rounds               | **FREE**     |
 | 3a  | Community Course Database      | **FREE**     |
 | 3b  | Course GPS & Hole Maps         | **WON'T DO** |
-| 3c  | Course Condition Reports       | **FREE**     |
+| 3c  | Course Condition Reports       | **WON'T DO** |
 | 4a  | Activity Feed                  | **FREE**     |
 | 4b  | Shareable Round Cards          | **PRO**      |
 | 4c  | Achievement Badges             | **FREE**     |
