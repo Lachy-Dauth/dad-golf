@@ -109,6 +109,29 @@ export function validateScheduledTime(time: unknown): string {
   return trimmed;
 }
 
+export function validateAdjustedGrossScore(s: unknown): number {
+  const n = Number(s);
+  if (!Number.isInteger(n) || n < 30 || n > 200) {
+    throw new Error("adjusted gross score must be an integer between 30 and 200");
+  }
+  return n;
+}
+
+export function validateDate(d: unknown): string {
+  if (typeof d !== "string") throw new Error("date must be a string");
+  const trimmed = d.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    throw new Error("date must be in YYYY-MM-DD format");
+  }
+  // Parse and reconstruct to catch invalid calendar dates (e.g. Feb 31)
+  const [y, m, day] = trimmed.split("-").map(Number);
+  const parsed = new Date(y, m - 1, day);
+  if (parsed.getFullYear() !== y || parsed.getMonth() !== m - 1 || parsed.getDate() !== day) {
+    throw new Error("date is not a valid calendar date");
+  }
+  return trimmed;
+}
+
 export async function getViewerUser(req: FastifyRequest): Promise<User | null> {
   const auth = req.headers.authorization;
   if (!auth) return null;

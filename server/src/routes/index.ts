@@ -6,6 +6,7 @@ import { registerRoundRoutes } from "./rounds.js";
 import { registerAdminRoutes } from "./admin.js";
 import { registerScheduledRoundRoutes } from "./scheduledRounds.js";
 import { registerWeatherRoutes } from "./weather.js";
+import { registerHandicapRoutes } from "./handicap.js";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get("/api/health", async () => ({ ok: true }));
@@ -17,4 +18,5 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await registerAdminRoutes(app);
   await registerScheduledRoundRoutes(app);
   await registerWeatherRoutes(app);
+  await registerHandicapRoutes(app);
 }

@@ -81,6 +81,14 @@ export default function ProfilePage() {
             placeholder="e.g. 12.3"
           />
         </label>
+        <Link to="/handicap" style={{ fontSize: 14, color: "var(--primary)" }}>
+          Manage handicap tracker &rarr;
+        </Link>
+        {user.handicapAutoAdjust && (
+          <div className="muted" style={{ fontSize: 13 }}>
+            Your handicap is auto-calculated from recent rounds.
+          </div>
+        )}
         {error && <div className="error">{error}</div>}
         {msg && <div className="muted">{msg}</div>}
         <div className="form-actions">

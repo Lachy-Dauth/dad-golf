@@ -8,6 +8,8 @@ export {
   createSession,
   getUserBySession,
   deleteSession,
+  updateUserHandicapAutoAdjust,
+  updateUserHandicap,
 } from "./users.js";
 export {
   createCourse,
@@ -100,3 +102,14 @@ export {
   deleteUserAsAdmin,
   ensureAdminUser,
 } from "./admin.js";
+export {
+  listHandicapRounds,
+  getHandicapRound,
+  createHandicapRound,
+  updateHandicapRound,
+  deleteHandicapRound,
+  reorderHandicapRounds,
+  countHandicapRounds,
+  findHandicapRoundByRoundId,
+  deleteOldestHandicapRound,
+} from "./handicapRounds.js";
