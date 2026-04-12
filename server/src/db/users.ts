@@ -1,5 +1,5 @@
 import { scryptSync, randomBytes, timingSafeEqual } from "node:crypto";
-import type { User } from "@dad-golf/shared";
+import type { ActivityVisibility, User } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 
@@ -27,6 +27,7 @@ export interface UserRow {
   handicap: number;
   handicap_auto_adjust: number;
   google_calendar_connected: number;
+  activity_visibility: string;
   created_at: string;
   is_admin: number;
 }
@@ -39,6 +40,7 @@ export function rowToUser(row: UserRow): User {
     handicap: Number(row.handicap),
     handicapAutoAdjust: Boolean(row.handicap_auto_adjust),
     googleCalendarConnected: Boolean(row.google_calendar_connected),
+    activityVisibility: (row.activity_visibility || "group") as ActivityVisibility,
     createdAt: row.created_at,
     isAdmin: Boolean(row.is_admin),
   };
@@ -65,6 +67,7 @@ export async function createUser(
     handicap,
     handicapAutoAdjust: false,
     googleCalendarConnected: false,
+    activityVisibility: "group",
     createdAt,
     isAdmin: false,
   };
@@ -139,4 +142,21 @@ export async function updateUserHandicapAutoAdjust(
 
 export async function updateUserHandicap(userId: string, handicap: number): Promise<void> {
   await pool.query(`UPDATE users SET handicap = $1 WHERE id = $2`, [handicap, userId]);
+}
+
+export async function updateActivityVisibility(
+  userId: string,
+  visibility: ActivityVisibility,
+): Promise<void> {
+  await pool.query(`UPDATE users SET activity_visibility = $1 WHERE id = $2`, [
+    visibility,
+    userId,
+  ]);
+}
+
+export async function getUserGroupIds(userId: string): Promise<string[]> {
+  const { rows } = await pool.query(`SELECT group_id FROM group_members WHERE user_id = $1`, [
+    userId,
+  ]);
+  return rows.map((r: { group_id: string }) => r.group_id);
 }

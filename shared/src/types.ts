@@ -4,6 +4,8 @@ export interface Hole {
   strokeIndex: number;
 }
 
+export type ActivityVisibility = "none" | "group" | "all";
+
 export interface User {
   id: string;
   username: string;
@@ -11,6 +13,7 @@ export interface User {
   handicap: number;
   handicapAutoAdjust: boolean;
   googleCalendarConnected: boolean;
+  activityVisibility: ActivityVisibility;
   createdAt: string;
   isAdmin: boolean;
 }
@@ -249,3 +252,68 @@ export type WsServerMessage =
   | { type: "competition_update"; state: RoundState }
   | { type: "error"; message: string }
   | { type: "pong" };
+
+// ---- Activity Feed ----
+
+export type ActivityEventType =
+  | "round_completed"
+  | "round_started"
+  | "member_joined"
+  | "scheduled_round_created"
+  | "competition_won"
+  | "handicap_change"
+  | "badge_earned";
+
+export interface ActivityFeedItem {
+  id: string;
+  type: ActivityEventType;
+  groupId: string | null;
+  groupName: string | null;
+  userId: string;
+  userName: string;
+  username: string;
+  roundId: string | null;
+  roomCode: string | null;
+  data: Record<string, unknown>;
+  createdAt: string;
+  likeCount: number;
+  commentCount: number;
+  viewerLiked: boolean;
+}
+
+export interface ActivityComment {
+  id: string;
+  eventId: string;
+  userId: string;
+  userName: string;
+  text: string;
+  createdAt: string;
+}
+
+// ---- Achievement Badges ----
+
+export type BadgeCategory = "milestones" | "scoring" | "social" | "competitions";
+
+export interface BadgeDefinition {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: BadgeCategory;
+}
+
+export interface UserBadge {
+  badgeId: string;
+  earnedAt: string;
+}
+
+export interface PublicUserProfile {
+  id: string;
+  username: string;
+  displayName: string;
+  handicap: number;
+  createdAt: string;
+  badges: UserBadge[];
+  recentRounds: RoundSummary[];
+  totalRounds: number;
+}

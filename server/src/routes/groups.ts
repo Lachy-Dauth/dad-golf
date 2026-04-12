@@ -19,7 +19,9 @@ import {
   removeGroupMember,
   updateGroupMember,
   updateGroupMemberRole,
+  createActivityEvent,
 } from "../db/index.js";
+import { evaluateBadges } from "../badgeEvaluator.js";
 import {
   MAX_MEMBERS_PER_GROUP,
   getViewerUser,
@@ -276,6 +278,21 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
         return reply.code(400).send({ error: "group is full" });
       }
       const member = await addGroupMember(group.id, user.displayName, user.handicap, user.id);
+      // Fire activity event and evaluate badges
+      createActivityEvent(
+        "member_joined",
+        user.id,
+        group.id,
+        null,
+        user.activityVisibility,
+        { groupName: group.name },
+      ).catch(() => {});
+      evaluateBadges({
+        trigger: "member_joined",
+        userId: user.id,
+        groupId: group.id,
+        visibility: user.activityVisibility,
+      }).catch(() => {});
       return reply.code(201).send({ group, member });
     },
   );

@@ -9,6 +9,8 @@ import { registerWeatherRoutes } from "./weather.js";
 import { registerHandicapRoutes } from "./handicap.js";
 import { registerGoogleCalendarRoutes } from "./googleCalendar.js";
 import { registerCalendarFeedRoutes } from "./calendarFeed.js";
+import { registerActivityRoutes } from "./activity.js";
+import { registerUserRoutes } from "./users.js";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get("/api/health", async () => ({ ok: true }));
@@ -23,4 +25,6 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await registerHandicapRoutes(app);
   await registerGoogleCalendarRoutes(app);
   await registerCalendarFeedRoutes(app);
+  await registerActivityRoutes(app);
+  await registerUserRoutes(app);
 }

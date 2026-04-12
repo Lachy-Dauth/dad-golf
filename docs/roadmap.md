@@ -24,11 +24,11 @@ flowchart TD
         P2F["3a. Community Courses ✅"]
     end
 
-    subgraph phase3["Phase 3: Free Features w/ Dependencies (in progress)"]
+    subgraph phase3["Phase 3: Free Features w/ Dependencies ✅"]
         P3B["2c. Scheduled Rounds ✅"]
         P3C["9a. Calendar Integration ✅"]
-        P3D["4a. Activity Feed\n2 weeks"]
-        P3E["4c. Achievement Badges\n1.5 weeks"]
+        P3D["4a. Activity Feed ✅"]
+        P3E["4c. Achievement Badges ✅"]
     end
 
     subgraph phase4["Phase 4: Pro Infrastructure (weeks 11-13)"]
@@ -172,10 +172,10 @@ gantt
 | ------------------------ | --------- | ---------- | --------------------------------------------------------------------- |
 | 2c. Scheduled Rounds     | 2 weeks   | 6c         | ✅ Shipped — date/time/course, RSVP, auto-start with accepted players |
 | 9a. Calendar Integration | 1 week    | 2c         | ✅ Shipped — .ics export, Google Calendar OAuth sync, iCal feed URL   |
-| 4a. Activity Feed        | 2 weeks   | 1c         | Group round feed + likes                                              |
-| 4c. Achievement Badges   | 1.5 weeks | 1c         | Badge definitions + unlock logic                                      |
+| 4a. Activity Feed        | 2 weeks   | 1c         | ✅ Shipped — Group activity feed with likes/comments, privacy controls, 7 event types |
+| 4c. Achievement Badges   | 1.5 weeks | 1c         | ✅ Shipped — 12 badges across 4 categories, public user profiles, auto-evaluation      |
 
-**Remaining: ~3.5 weeks** (Activity Feed + Achievement Badges)
+**All free features shipped!**
 
 ---
 
