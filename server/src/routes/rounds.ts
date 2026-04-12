@@ -38,7 +38,10 @@ import {
   createHandicapRound,
   listHandicapRounds,
   updateUserHandicap,
+  createActivityEvent,
+  getUserGroupIds,
 } from "../db/index.js";
+import { evaluateBadges } from "../badgeEvaluator.js";
 import { buildRoundState } from "../roundState.js";
 import { broadcast } from "../hub.js";
 import {
@@ -242,7 +245,16 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     }
     await updateRoundStatus(round.id, "in_progress");
     const state = await buildRoundState(code, user.id);
-    if (state) broadcast(code, { type: "round_started", state });
+    if (state) {
+      broadcast(code, { type: "round_started", state });
+      if (round.groupId) {
+        createActivityEvent("round_started", user.id, round.groupId, round.id, user.activityVisibility, {
+          courseName: state.course.name,
+          roomCode: code,
+          playerCount: state.players.length,
+        }).catch(() => {});
+      }
+    }
     return { state };
   });
 
@@ -260,6 +272,29 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
 
     // Auto-add handicap rounds for players with auto-adjust enabled
     if (state) {
+      // Fire round_completed activity event (fire-and-forget)
+      if (round.groupId) {
+        const winner = state.leaderboard[0];
+        const winnerPlayer = winner
+          ? state.players.find((p) => p.id === winner.playerId)
+          : null;
+        const winnerId = winnerPlayer?.userId ?? user.id;
+        createActivityEvent(
+          "round_completed",
+          winnerId,
+          round.groupId,
+          round.id,
+          user.activityVisibility,
+          {
+            courseName: state.course.name,
+            roomCode: code,
+            playerCount: state.players.length,
+            winnerName: winner?.name ?? null,
+            winnerPoints: winner?.totalPoints ?? null,
+          },
+        ).catch(() => {});
+      }
+
       for (const player of state.players) {
         if (!player.userId) continue;
         const playerUser = await getUser(player.userId);
@@ -312,8 +347,42 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
           hRounds.map((r) => ({ id: r.id, differential: r.scoreDifferential })),
         );
         if (calc) {
+          const oldHandicap = playerUser.handicap;
           await updateUserHandicap(player.userId, calc.handicapIndex);
+          // Fire handicap_change if significant change (fire-and-forget)
+          if (Math.abs(calc.handicapIndex - oldHandicap) >= 0.1) {
+            getUserGroupIds(player.userId)
+              .then((userGroups) =>
+                Promise.allSettled(
+                  userGroups.map((gId) =>
+                    createActivityEvent(
+                      "handicap_change",
+                      player.userId!,
+                      gId,
+                      round.id,
+                      playerUser.activityVisibility,
+                      { oldHandicap, newHandicap: calc.handicapIndex },
+                    ),
+                  ),
+                ),
+              )
+              .catch(() => {});
+          }
         }
+      }
+
+      // Evaluate badges for all players
+      for (const player of state.players) {
+        if (!player.userId) continue;
+        const playerUser = await getUser(player.userId);
+        evaluateBadges({
+          trigger: "round_completed",
+          userId: player.userId,
+          roundId: round.id,
+          groupId: round.groupId ?? undefined,
+          roundState: state,
+          visibility: playerUser?.activityVisibility ?? "group",
+        }).catch(() => {});
       }
 
       broadcast(code, { type: "round_completed", state });
@@ -536,7 +605,29 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     if (!playerId) return reply.code(400).send({ error: "playerId is required" });
     await setClaimWinner(req.params.competitionId, playerId);
     const state = await buildRoundState(code, user.id);
-    if (state) broadcast(code, { type: "competition_update", state });
+    if (state) {
+      broadcast(code, { type: "competition_update", state });
+      // Fire competition_won event
+      const winningPlayer = await getPlayer(playerId);
+      if (winningPlayer?.userId && round.groupId) {
+        const winnerUser = await getUser(winningPlayer.userId);
+        createActivityEvent(
+          "competition_won",
+          winningPlayer.userId,
+          round.groupId,
+          round.id,
+          winnerUser?.activityVisibility ?? "group",
+          { competitionType: comp!.type, roomCode: code, holeNumber: comp!.holeNumber },
+        ).catch(() => {});
+        evaluateBadges({
+          trigger: "competition_won",
+          userId: winningPlayer.userId,
+          roundId: round.id,
+          groupId: round.groupId,
+          visibility: winnerUser?.activityVisibility ?? "group",
+        }).catch(() => {});
+      }
+    }
     return { state };
   });
 

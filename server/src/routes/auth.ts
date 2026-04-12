@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import type { ActivityVisibility } from "@dad-golf/shared";
 import {
   authenticateUser,
   createSession,
@@ -6,6 +7,7 @@ import {
   deleteSession,
   getUserByUsername,
   updateUserProfile,
+  updateActivityVisibility,
 } from "../db/index.js";
 import {
   getViewerUser,
@@ -73,7 +75,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.patch<{
-    Body: { displayName?: string; handicap?: number };
+    Body: { displayName?: string; handicap?: number; activityVisibility?: string };
   }>("/api/auth/me", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
@@ -81,7 +83,15 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const displayName = validateName(req.body?.displayName, "display name");
       const handicap = validateHandicap(req.body?.handicap);
       await updateUserProfile(user.id, displayName, handicap);
-      return { user: { ...user, displayName, handicap } };
+      let activityVisibility = user.activityVisibility;
+      if (
+        req.body?.activityVisibility &&
+        ["none", "group"].includes(req.body.activityVisibility)
+      ) {
+        activityVisibility = req.body.activityVisibility as ActivityVisibility;
+        await updateActivityVisibility(user.id, activityVisibility);
+      }
+      return { user: { ...user, displayName, handicap, activityVisibility } };
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });
     }

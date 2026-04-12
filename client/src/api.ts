@@ -1,5 +1,8 @@
 import type {
   ActiveRoundSummary,
+  ActivityComment,
+  ActivityFeedItem,
+  ActivityVisibility,
   CompetitionType,
   Course,
   CourseReportReason,
@@ -11,6 +14,7 @@ import type {
   HandicapRound,
   Hole,
   Player,
+  PublicUserProfile,
   RoundState,
   RoundSummary,
   RsvpStatus,
@@ -18,6 +22,7 @@ import type {
   ScheduledRoundRsvp,
   Score,
   User,
+  UserBadge,
   UserScheduledRound,
   Weather,
 } from "@dad-golf/shared";
@@ -143,11 +148,11 @@ export const api = {
     fetch("/api/auth/me", {
       headers: authHeaders(),
     }).then((r) => json<{ user: User }>(r)),
-  updateProfile: (displayName: string, handicap: number) =>
+  updateProfile: (displayName: string, handicap: number, activityVisibility?: ActivityVisibility) =>
     fetch("/api/auth/me", {
       method: "PATCH",
       headers: jsonHeaders(),
-      body: JSON.stringify({ displayName, handicap }),
+      body: JSON.stringify({ displayName, handicap, activityVisibility }),
     }).then((r) => json<{ user: User }>(r)),
 
   // courses
@@ -535,6 +540,21 @@ export const api = {
       method: "DELETE",
       headers: authHeaders(),
     }).then((r) => json<{ ok: boolean }>(r)),
+  adminSeedActivity: () =>
+    fetch("/api/admin/seed-activity", {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) =>
+      json<{
+        ok: boolean;
+        usersCreated: number;
+        groupsCreated: number;
+        membersAdded: number;
+        eventsCreated: number;
+        badgesAwarded: number;
+        summary: string;
+      }>(r),
+    ),
 
   // handicap
   getHandicap: () =>
@@ -638,4 +658,40 @@ export const api = {
       method: "DELETE",
       headers: authHeaders(),
     }).then((r) => json<{ ok: boolean }>(r)),
+
+  // activity feed
+  getActivityFeed: (limit = 20, offset = 0) =>
+    fetch(`/api/activity?limit=${limit}&offset=${offset}`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ items: ActivityFeedItem[]; total: number }>(r)),
+  likeActivity: (eventId: string) =>
+    fetch(`/api/activity/${eventId}/like`, {
+      method: "POST",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  unlikeActivity: (eventId: string) =>
+    fetch(`/api/activity/${eventId}/like`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+  getActivityComments: (eventId: string) =>
+    fetch(`/api/activity/${eventId}/comments`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ comments: ActivityComment[] }>(r)),
+  addActivityComment: (eventId: string, text: string) =>
+    fetch(`/api/activity/${eventId}/comments`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ text }),
+    }).then((r) => json<{ comment: ActivityComment }>(r)),
+
+  // user profiles & badges
+  getUserProfile: (username: string) =>
+    fetch(`/api/users/${encodeURIComponent(username)}/profile`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ profile: PublicUserProfile }>(r)),
+  getUserBadges: (username: string) =>
+    fetch(`/api/users/${encodeURIComponent(username)}/badges`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ badges: UserBadge[] }>(r)),
 };

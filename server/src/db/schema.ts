@@ -277,6 +277,67 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_cal_feed_user ON calendar_feed_tokens(user_id);
   `);
+
+  // Migration: activity visibility setting on users
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS activity_visibility TEXT NOT NULL DEFAULT 'group';
+  `);
+
+  // Migration: activity events
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS activity_events (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      group_id TEXT REFERENCES groups(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      round_id TEXT REFERENCES rounds(id) ON DELETE SET NULL,
+      visibility TEXT NOT NULL DEFAULT 'group',
+      data_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_activity_events_group ON activity_events(group_id);
+    CREATE INDEX IF NOT EXISTS idx_activity_events_user ON activity_events(user_id);
+    CREATE INDEX IF NOT EXISTS idx_activity_events_created ON activity_events(created_at DESC);
+  `);
+
+  // Migration: activity likes
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS activity_likes (
+      event_id TEXT NOT NULL REFERENCES activity_events(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (event_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_activity_likes_event ON activity_likes(event_id);
+  `);
+
+  // Migration: activity comments
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS activity_comments (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL REFERENCES activity_events(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_activity_comments_event ON activity_comments(event_id);
+  `);
+
+  // Migration: user badges
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_badges (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      badge_id TEXT NOT NULL,
+      earned_at TEXT NOT NULL,
+      UNIQUE(user_id, badge_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_badges_user ON user_badges(user_id);
+  `);
+
+  // Migration: remove 'all' visibility option (replaced by 'group')
+  await pool.query(`UPDATE users SET activity_visibility = 'group' WHERE activity_visibility = 'all'`);
+  await pool.query(`UPDATE activity_events SET visibility = 'group' WHERE visibility = 'all'`);
 }
 
 export async function closeDb(): Promise<void> {

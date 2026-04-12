@@ -26,6 +26,7 @@ import {
   updateScheduledRoundStatus,
   upsertRsvp,
   findPlayerByName,
+  createActivityEvent,
 } from "../db/index.js";
 import { buildRoundState } from "../roundState.js";
 import {
@@ -174,6 +175,18 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         trimmedNotes,
         user.id,
       );
+      createActivityEvent(
+        "scheduled_round_created",
+        user.id,
+        group.id,
+        null,
+        user.activityVisibility,
+        {
+          courseName: course.name,
+          scheduledDate,
+          scheduledTime,
+        },
+      ).catch(() => {});
       return reply.code(201).send({ scheduledRound });
     } catch (e) {
       return reply.code(400).send({ error: (e as Error).message });

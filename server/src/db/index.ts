@@ -10,7 +10,11 @@ export {
   deleteSession,
   updateUserHandicapAutoAdjust,
   updateUserHandicap,
+  updateActivityVisibility,
+  getUserGroupIds,
 } from "./users.js";
+export type { UserRow } from "./users.js";
+export { rowToUser } from "./users.js";
 export {
   createCourse,
   listCourses,
@@ -153,3 +157,13 @@ export {
   findHandicapRoundByRoundId,
   deleteOldestHandicapRound,
 } from "./handicapRounds.js";
+export {
+  createActivityEvent,
+  getActivityFeedForUser,
+  likeActivityEvent,
+  unlikeActivityEvent,
+  getActivityComments,
+  addActivityComment,
+  canUserSeeEvent,
+} from "./activity.js";
+export { awardBadge, listUserBadges } from "./badges.js";

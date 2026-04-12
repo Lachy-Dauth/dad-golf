@@ -46,6 +46,13 @@ export default function HomePage() {
             <span className="action-sub">Past round history</span>
           </Link>
         )}
+        {user && (
+          <Link to="/activity" className="action-tile">
+            <span className="action-icon">📣</span>
+            <span className="action-label">Activity</span>
+            <span className="action-sub">See what your groups are up to</span>
+          </Link>
+        )}
       </div>
 
       <div className="home-footer">
