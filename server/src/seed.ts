@@ -23,7 +23,7 @@ const SEED_COURSES: Array<{
 }> = [
   {
     name: "Wembley Golf Course",
-    location: "200 The Blvd, Wembley Downs WA 6019",
+    location: "Wembley Downs",
     rating: 67.7,
     slope: 114,
     latitude: -31.94,

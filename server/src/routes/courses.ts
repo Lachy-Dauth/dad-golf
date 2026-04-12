@@ -4,6 +4,7 @@ import {
   deleteCourse,
   favoriteCourse,
   getCourse,
+  getCourseRoundCount,
   listCourses,
   unfavoriteCourse,
   updateCourse,
@@ -131,13 +132,13 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
         error: `course has ${course.favoriteCount} favorite${course.favoriteCount === 1 ? "" : "s"} and cannot be deleted`,
       });
     }
-    try {
-      await deleteCourse(course.id);
-    } catch {
-      return reply.code(409).send({
-        error: "course has associated rounds and cannot be deleted",
+    const roundCount = await getCourseRoundCount(course.id);
+    if (roundCount > 0) {
+      return reply.code(400).send({
+        error: `course has ${roundCount} associated round${roundCount === 1 ? "" : "s"} and cannot be deleted`,
       });
     }
+    await deleteCourse(course.id);
     return { ok: true };
   });
 

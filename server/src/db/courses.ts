@@ -142,6 +142,14 @@ export async function deleteCourse(id: string): Promise<void> {
   await pool.query(`DELETE FROM courses WHERE id = $1`, [id]);
 }
 
+export async function getCourseRoundCount(courseId: string): Promise<number> {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*) AS n FROM rounds WHERE course_id = $1`,
+    [courseId],
+  );
+  return Number((rows[0] as { n: string }).n);
+}
+
 export async function getCourseFavoriteCount(courseId: string): Promise<number> {
   const { rows } = await pool.query(
     `SELECT COUNT(*) AS n FROM course_favorites WHERE course_id = $1`,
