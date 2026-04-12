@@ -11,6 +11,8 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 - **Score on your phone** — every player enters their own scores for each hole on their own device
 - **Stableford scoring** — points are calculated automatically using the player's handicap and the course's stroke index
 - **Live leaderboard** — everyone sees the standings update in real time as scores come in
+- **Groups** — create groups, invite members, and track rounds together
+- **Admin dashboard** — view stats, manage users, and monitor activity
 
 ## Stableford scoring (the rules we follow)
 
@@ -28,77 +30,46 @@ Stableford gives points per hole based on net score (gross score minus handicap 
 **Handicap strokes received:**
 A player with handicap _H_ receives strokes on the hardest holes first (by stroke index). If `H >= 18`, they get one stroke on every hole, plus an additional stroke on holes with stroke index `<= H - 18`, and so on.
 
-## Course data
+## Tech stack
 
-A course needs: name, 18 holes (or 9), and for each hole: par + stroke index.
+- **Frontend:** React 18 + Vite + TypeScript, mobile-first responsive layout
+- **Backend:** Node.js + Fastify + WebSocket (`@fastify/websocket`)
+- **Database:** PostgreSQL
+- **Shared:** `@dad-golf/shared` package with types, Stableford scoring logic, and room code generation
+- **Tooling:** ESLint 9 (flat config) + Prettier + strict TypeScript
+- **Hosting:** Railway (see [deployment guide](./DEPLOY_RAILWAY.md))
 
-You can add a course in two ways:
-
-1. **Search the web** — fetch course details from a public source (see plan.md for the data source decision)
-2. **Manual entry** — type in par and stroke index for each hole. Saved courses are reusable for future rounds
-
-## Architecture at a glance
+## Project structure
 
 ```
-┌──────────────┐         ┌─────────────────┐         ┌──────────────┐
-│  Phone (P1)  │◄───────►│                 │◄───────►│  Phone (P2)  │
-└──────────────┘         │                 │         └──────────────┘
-┌──────────────┐         │   Server        │         ┌──────────────┐
-│  Phone (P3)  │◄───────►│   (WebSocket    │◄───────►│  Phone (P4)  │
-└──────────────┘         │    + REST)      │         └──────────────┘
-       ...               │                 │                ...
-┌──────────────┐         │                 │         ┌──────────────┐
-│  Phone (P10) │◄───────►│                 │◄───────►│  Leaderboard │
-└──────────────┘         └────────┬────────┘         └──────────────┘
-                                  │
-                                  ▼
-                          ┌──────────────┐
-                          │   Database   │
-                          │ (rounds,     │
-                          │  courses,    │
-                          │  scores)     │
-                          └──────────────┘
+dad-golf/
+├── client/                  # React + Vite frontend
+│   └── src/
+│       ├── pages/           # Route pages (Home, Round, Courses, Groups, Admin, …)
+│       └── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Summary)
+├── server/                  # Fastify backend
+│   └── src/
+│       ├── db/              # Database layer (pool, schema, per-domain modules)
+│       │   ├── users.ts     # User CRUD, auth, sessions
+│       │   ├── courses.ts   # Course CRUD + favourites
+│       │   ├── groups.ts    # Groups, members, invites
+│       │   ├── rounds.ts    # Round lifecycle
+│       │   ├── players.ts   # Player management
+│       │   ├── scores.ts    # Score tracking
+│       │   └── admin.ts     # Admin queries + stats
+│       ├── routes/          # REST API routes (per-domain modules)
+│       │   ├── auth.ts      # /api/auth/*
+│       │   ├── courses.ts   # /api/courses/*
+│       │   ├── groups.ts    # /api/groups/*
+│       │   ├── rounds.ts    # /api/rounds/*
+│       │   └── admin.ts     # /api/admin/*
+│       ├── ws.ts            # WebSocket handler for live round updates
+│       └── seed.ts          # Sample data seeding
+├── shared/                  # Shared types, scoring logic, room codes
+├── tsconfig.base.json       # Shared TypeScript config (strict, noUnused*)
+├── eslint.config.mjs        # ESLint 9 flat config
+└── prettier.config.mjs      # Prettier config
 ```
-
-- **Frontend** — mobile-first web app (no install required, just open a link)
-- **Backend** — REST for setup actions + WebSocket for live score broadcasting
-- **State** — server is the single source of truth; clients subscribe to round updates
-- **Rooms** — each round has a short code (e.g. `GOLF-7K2P`) so players can join from any device
-
-## Tech stack (proposed)
-
-See `plan.md` for the rationale. Short version:
-
-- **Frontend:** React + Vite + TypeScript, mobile-first responsive layout
-- **Backend:** Node.js + Fastify + WebSockets (`ws` or Socket.IO)
-- **Database:** SQLite for simplicity (single file, easy hosting), can swap to Postgres later
-- **Hosting:** A single small VM or a platform like Fly.io / Railway
-
-## Key user flows
-
-### Creating a round
-
-1. Open the app → tap "New round"
-2. Pick a course (search or pick from saved courses, or add a new one)
-3. Get a room code + share link
-4. Other players use the link → enter name + handicap → join
-5. Host taps "Start round" once everyone's in
-
-### Scoring a hole
-
-1. On the current hole's screen, each player taps their gross score
-2. App calculates net score and Stableford points using their handicap and the hole's stroke index
-3. Score is sent to the server → broadcast to everyone → leaderboard updates
-
-### Watching the leaderboard
-
-- Open at any time during the round
-- Sorted by total Stableford points (highest first)
-- Shows: name, handicap, holes played, total points, points back from leader
-
-## Project status
-
-Live and deployed: [golf-stableford-production.up.railway.app](https://golf-stableford-production.up.railway.app/). See `plan.md` for the original build plan.
 
 ## Getting started
 
@@ -118,6 +89,15 @@ Open http://localhost:5173. The Vite dev server proxies `/api` and `/ws` to
 the backend on `:3001`. Two sample courses are seeded on first run, so you
 can create a round immediately.
 
+### Environment variables
+
+| Variable       | Default   | Description                    |
+| -------------- | --------- | ------------------------------ |
+| `PORT`         | `3001`    | Server port                    |
+| `HOST`         | `0.0.0.0` | Server bind address            |
+| `DATABASE_URL` | —         | PostgreSQL connection string   |
+| `ADMIN_USER`   | —         | Username to bootstrap as admin |
+
 ### Production build
 
 ```bash
@@ -125,13 +105,22 @@ npm run build    # builds shared, server, and client
 npm run start    # starts the Fastify server (serves the built client too)
 ```
 
-The server reads `PORT` and `DATA_DIR` from the environment; in production
-it serves `client/dist/*` on the same port as the API.
+In production the server serves `client/dist/*` on the same port as the API.
+
+### Code quality
+
+```bash
+npm run lint           # ESLint check
+npm run lint:fix       # ESLint auto-fix
+npm run format:check   # Prettier check
+npm run format         # Prettier auto-format
+npm test               # Stableford scoring unit tests
+```
 
 ### Deploying to Railway
 
 See [`DEPLOY_RAILWAY.md`](./DEPLOY_RAILWAY.md) for a step-by-step guide.
-Short version: connect the repo, add a `/data` volume, set `DATA_DIR=/data`,
+Short version: connect the repo, add a Postgres plugin, set `DATABASE_URL`,
 generate a domain. The included `railway.json` and `nixpacks.toml` handle
 the rest.
 
