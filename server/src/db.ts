@@ -15,11 +15,27 @@ import type {
 
 const { Pool } = pg;
 
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
+
+const databaseUrl = process.env.DATABASE_URL;
+
+function parseSslConfig(): pg.PoolConfig["ssl"] {
+  try {
+    const sslmode = new URL(databaseUrl).searchParams.get("sslmode")?.toLowerCase();
+    if (sslmode === "require" || sslmode === "verify-ca" || sslmode === "verify-full") {
+      return { rejectUnauthorized: sslmode !== "require" };
+    }
+  } catch {
+    // not a valid URL — skip SSL
+  }
+  return undefined;
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes("sslmode=")
-    ? { rejectUnauthorized: false }
-    : undefined,
+  connectionString: databaseUrl,
+  ssl: parseSslConfig(),
 });
 
 export async function initDb(): Promise<void> {
@@ -898,8 +914,15 @@ export interface AdminStats {
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
-  const count = async (table: string) => {
-    const { rows } = await pool.query(`SELECT COUNT(*) AS n FROM ${table}`);
+  const countQueries = {
+    users: `SELECT COUNT(*) AS n FROM users`,
+    courses: `SELECT COUNT(*) AS n FROM courses`,
+    groups: `SELECT COUNT(*) AS n FROM groups`,
+    scores: `SELECT COUNT(*) AS n FROM scores`,
+    sessions: `SELECT COUNT(*) AS n FROM sessions`,
+  } as const;
+  const count = async (table: keyof typeof countQueries) => {
+    const { rows } = await pool.query(countQueries[table]);
     return Number((rows[0] as { n: string }).n);
   };
   const { rows: roundsByStatus } = await pool.query(

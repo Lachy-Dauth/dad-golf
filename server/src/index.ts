@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { registerRoutes } from "./routes.js";
 import { registerWebsocket } from "./ws.js";
-import { initDb } from "./db.js";
+import { initDb, closeDb } from "./db.js";
 import { seedIfEmpty, bootstrapAdmin } from "./seed.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -21,6 +21,10 @@ async function main(): Promise<void> {
   await initDb();
   await seedIfEmpty();
   await bootstrapAdmin();
+
+  app.addHook("onClose", async () => {
+    await closeDb();
+  });
 
   await registerRoutes(app);
   await registerWebsocket(app);
