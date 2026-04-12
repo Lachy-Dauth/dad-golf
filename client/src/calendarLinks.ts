@@ -1,3 +1,5 @@
+import { getAuthToken } from "./authStore.js";
+
 export interface CalendarLinkParams {
   courseName: string;
   scheduledDate: string; // YYYY-MM-DD
@@ -16,9 +18,11 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-/** Returns the .ics download URL (relative, so auth cookie/header works). */
+/** Returns the .ics download URL with auth token as query param for direct browser navigation. */
 export function icsDownloadUrl(groupId: string, scheduledRoundId: string): string {
-  return `/api/groups/${groupId}/scheduled-rounds/${scheduledRoundId}/ics`;
+  const token = getAuthToken();
+  const base = `/api/groups/${groupId}/scheduled-rounds/${scheduledRoundId}/ics`;
+  return token ? `${base}?token=${encodeURIComponent(token)}` : base;
 }
 
 /**

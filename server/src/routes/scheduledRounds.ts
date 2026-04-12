@@ -16,6 +16,7 @@ import {
   getGroup,
   getRoundByRoomCode,
   getScheduledRound,
+  getUserBySession,
   getUserRoleInGroup,
   listAcceptedRsvpUserIds,
   listGroupMembers,
@@ -30,6 +31,7 @@ import {
 import { buildRoundState } from "../roundState.js";
 import {
   MAX_PLAYERS_PER_ROUND,
+  getViewerUser,
   requireUser,
   validateDurationMinutes,
   validateScheduledDate,
@@ -82,11 +84,18 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
   );
 
   // Download .ics calendar file for a scheduled round
-  app.get<{ Params: { groupId: string; id: string } }>(
+  // Supports ?token= query param for direct browser downloads (no Authorization header)
+  app.get<{ Params: { groupId: string; id: string }; Querystring: { token?: string } }>(
     "/api/groups/:groupId/scheduled-rounds/:id/ics",
     async (req, reply) => {
-      const user = await requireUser(req, reply);
-      if (!user) return;
+      // Try Authorization header first, then fall back to ?token= query param
+      let user = await getViewerUser(req);
+      if (!user && req.query.token) {
+        user = await getUserBySession(req.query.token);
+      }
+      if (!user) {
+        return reply.code(401).send({ error: "sign in required" });
+      }
       const group = await getGroup(req.params.groupId);
       if (!group) return reply.code(404).send({ error: "group not found" });
       const role = await getUserRoleInGroup(group.id, user.id);
