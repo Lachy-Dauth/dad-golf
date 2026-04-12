@@ -37,7 +37,8 @@ function emitRoundCompletedActivity(
   if (!round.groupId) return;
   const winner = state.leaderboard[0];
   const winnerPlayer = winner ? state.players.find((p) => p.id === winner.playerId) : null;
-  const winnerId = winnerPlayer?.userId ?? round.leaderUserId ?? "";
+  const winnerId = winnerPlayer?.userId ?? round.leaderUserId;
+  if (!winnerId) return;
   fireAndForget(
     createActivityEvent("round_completed", winnerId, round.groupId, round.id, leaderVisibility, {
       courseName: state.course.name,
@@ -141,20 +142,20 @@ function emitPlayerBadgeEvaluations(
 ): void {
   for (const player of state.players) {
     if (!player.userId) continue;
-    // Look up user for visibility setting, then evaluate
-    getUser(player.userId).then((playerUser) => {
-      fireAndForget(
+    const userId = player.userId;
+    fireAndForget(
+      getUser(userId).then((playerUser) =>
         evaluateBadges({
           trigger: "round_completed",
-          userId: player.userId!,
+          userId,
           roundId: round.id,
           groupId: round.groupId ?? undefined,
           roundState: state,
           visibility: playerUser?.activityVisibility ?? "group",
         }),
-        log,
-        "round_completed badge evaluation",
-      );
-    });
+      ),
+      log,
+      "round_completed badge evaluation",
+    );
   }
 }

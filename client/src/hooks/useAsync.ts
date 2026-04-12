@@ -16,19 +16,34 @@ export function useAsync<T>(
     error: null,
   });
   const fnRef = useRef(fn);
+  const isMountedRef = useRef(true);
+  const requestIdRef = useRef(0);
   fnRef.current = fn;
 
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const execute = useCallback(async () => {
-    setState((s) => ({ ...s, loading: true, error: null }));
+    const requestId = ++requestIdRef.current;
+    if (isMountedRef.current) {
+      setState((s) => ({ ...s, loading: true, error: null }));
+    }
     try {
       const data = await fnRef.current();
+      if (!isMountedRef.current || requestId !== requestIdRef.current) return;
       setState({ data, loading: false, error: null });
     } catch (e) {
+      if (!isMountedRef.current || requestId !== requestIdRef.current) return;
       setState({ data: null, loading: false, error: e instanceof Error ? e.message : String(e) });
     }
   }, []);
 
   const setData = useCallback((data: T | null) => {
+    if (!isMountedRef.current) return;
     setState((s) => ({ ...s, data }));
   }, []);
 
