@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../AuthContext.js";
 
 export default function HomePage() {
+  const { user } = useAuth();
   return (
     <div className="page">
       <div className="hero">
@@ -37,6 +39,13 @@ export default function HomePage() {
           <span className="action-label">Upcoming rounds</span>
           <span className="action-sub">View and RSVP to scheduled rounds</span>
         </Link>
+        {user && (
+          <Link to="/rounds" className="action-tile">
+            <span className="action-icon">📋</span>
+            <span className="action-label">My rounds</span>
+            <span className="action-sub">Past round history</span>
+          </Link>
+        )}
       </div>
 
       <div className="home-footer">

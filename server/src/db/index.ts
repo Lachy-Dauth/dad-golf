@@ -52,6 +52,8 @@ export {
   updateRoundCurrentHole,
   listRecentRounds,
   listActiveRoundsForUser,
+  listUserCompletedRounds,
+  listGroupCompletedRounds,
 } from "./rounds.js";
 export {
   addPlayer,

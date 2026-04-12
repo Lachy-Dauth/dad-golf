@@ -10,6 +10,7 @@ import type {
   Hole,
   Player,
   RoundState,
+  RoundSummary,
   RsvpStatus,
   ScheduledRound,
   ScheduledRoundRsvp,
@@ -324,6 +325,16 @@ export const api = {
     fetch("/api/my/scheduled-rounds", { headers: authHeaders() }).then((r) =>
       json<{ scheduledRounds: UserScheduledRound[] }>(r),
     ),
+
+  // round history
+  listMyRounds: (limit = 20, offset = 0) =>
+    fetch(`/api/users/me/rounds?limit=${limit}&offset=${offset}`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ rounds: RoundSummary[]; total: number }>(r)),
+  listGroupRounds: (groupId: string, limit = 20, offset = 0) =>
+    fetch(`/api/groups/${groupId}/rounds?limit=${limit}&offset=${offset}`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ rounds: RoundSummary[]; total: number }>(r)),
 
   // rounds
   createRound: (payload: { courseId: string; groupId: string | null; memberIds: string[] }) =>
