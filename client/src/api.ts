@@ -157,9 +157,24 @@ export const api = {
     fetch(`/api/courses/${id}`, { headers: authHeaders() }).then((r) =>
       json<{ course: Course; viewerReview: CourseReview | null }>(r),
     ),
+  searchLocations: (query: string) =>
+    fetch(`/api/locations/search?q=${encodeURIComponent(query)}`, {
+      headers: authHeaders(),
+    }).then((r) =>
+      json<{
+        locations: Array<{
+          latitude: number;
+          longitude: number;
+          name: string;
+          displayName: string;
+        }>;
+      }>(r),
+    ),
   createCourse: (payload: {
     name: string;
     location: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     rating: number;
     slope: number;
     holes: Hole[];
@@ -174,6 +189,8 @@ export const api = {
     payload: {
       name: string;
       location: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
       rating: number;
       slope: number;
       holes: Hole[];
