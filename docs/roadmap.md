@@ -19,7 +19,6 @@ flowchart TD
     subgraph phase2["Phase 2: Core Free Features (weeks 3-8)"]
         P2A["1c. Round Replay\n1.5 weeks"]
         P2B["5c. CTP / Long Drive\n1 week"]
-        P2C["5d. Drink Tracker\n1 week"]
         P2D["6c. Group Roles\n1 week"]
         P2E["7c. Handicap Auto-Adj\n1 week"]
         P2F["3a. Community Courses\n2 weeks"]
@@ -83,7 +82,7 @@ flowchart TD
     classDef pro fill:#fff3cd,stroke:#ffc107,color:#000
     classDef infra fill:#d1ecf1,stroke:#17a2b8,color:#000
 
-    class P1B,P1C,P1D,P2A,P2B,P2C,P2D,P2E,P2F,P3A,P3B,P3C,P3D,P3E free
+    class P1B,P1C,P1D,P2A,P2B,P2D,P2E,P2F,P3A,P3B,P3C,P3D,P3E free
     class P5A,P5B,P5C,P5D,P5E,P6A,P6B,P6C,P7A,P7B pro
     class P4A,P4B infra
 ```
@@ -107,7 +106,6 @@ gantt
 
     section Phase 2: Core Free
     CTP / Longest Drive (5c)        :p2b, 2026-05-18, 5d
-    Drink Tracker (5d)              :p2c, 2026-05-18, 5d
     Group Roles (6c)                :p2d, 2026-05-25, 5d
     Handicap Auto-Adj (7c)          :p2e, 2026-05-25, 5d
     Round Replay (1c)               :p2a, 2026-06-01, 8d
@@ -164,7 +162,6 @@ Ship these immediately. Low risk, visible improvements, good momentum.
 | Feature                 | Duration  | Depends On | Notes                                    |
 | ----------------------- | --------- | ---------- | ---------------------------------------- |
 | 5c. CTP / Longest Drive | 1 week    | —          | Flag on hole + claim field               |
-| 5d. Drink Tracker       | 1 week    | —          | Simple ledger per round                  |
 | 6c. Group Roles         | 1 week    | —          | Role column + permission checks          |
 | 7c. Handicap Auto-Adj   | 1 week    | —          | Rolling calc from recent scores          |
 | 1c. Round Replay        | 1.5 weeks | —          | Summary view, hole-by-hole breakdown     |
