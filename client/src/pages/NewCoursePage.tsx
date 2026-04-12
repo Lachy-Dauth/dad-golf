@@ -260,9 +260,10 @@ export default function NewCoursePage() {
           </div>
         )}
         <div className="field" ref={locationWrapperRef}>
-          <span>Location (optional)</span>
+          <label htmlFor="course-location">Location (optional)</label>
           <div className="location-autocomplete">
             <input
+              id="course-location"
               value={location}
               onChange={(e) => handleLocationChange(e.target.value)}
               onFocus={() => {

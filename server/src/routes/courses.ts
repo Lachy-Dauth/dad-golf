@@ -47,6 +47,8 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
   });
 
   app.get<{ Querystring: { q?: string } }>("/api/locations/search", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
     const query = req.query.q?.trim();
     if (!query || query.length < 2) {
       return reply.code(400).send({ error: "q parameter must be at least 2 characters" });
@@ -89,6 +91,9 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
         Number.isFinite(bodyLat) &&
         Number.isFinite(bodyLng)
       ) {
+        if (bodyLat < -90 || bodyLat > 90 || bodyLng < -180 || bodyLng > 180) {
+          return reply.code(400).send({ error: "invalid coordinates" });
+        }
         latitude = bodyLat;
         longitude = bodyLng;
       } else if (location) {
@@ -160,6 +165,9 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
         Number.isFinite(bodyLat) &&
         Number.isFinite(bodyLng)
       ) {
+        if (bodyLat < -90 || bodyLat > 90 || bodyLng < -180 || bodyLng > 180) {
+          return reply.code(400).send({ error: "invalid coordinates" });
+        }
         latitude = bodyLat;
         longitude = bodyLng;
       } else if (location) {
