@@ -167,7 +167,8 @@ export function buildScheduledRoundEvent(params: {
   }
 
   const roundUrl = `${params.appUrl}/groups/${params.groupId}/schedule/${params.scheduledRoundId}`;
-  descParts.push(`View: ${roundUrl}`);
+  descParts.push(`View in Dad Golf:`);
+  descParts.push(roundUrl);
 
   return {
     uid: `${params.scheduledRoundId}@dadgolf.app`,
