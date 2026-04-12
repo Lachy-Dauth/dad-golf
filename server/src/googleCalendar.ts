@@ -105,7 +105,7 @@ export interface GoogleCalendarEvent {
 export function icsParamsToGoogleEvent(params: IcsEventParams): GoogleCalendarEvent {
   const event: GoogleCalendarEvent = {
     summary: params.summary,
-    description: params.description,
+    description: params.htmlDescription,
     start: params.allDay
       ? { date: formatIcsDate(params.dtstart) }
       : { dateTime: formatIcsDateTime(params.dtstart) },

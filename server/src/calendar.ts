@@ -4,6 +4,7 @@ export interface IcsEventParams {
   uid: string;
   summary: string;
   description: string;
+  htmlDescription: string;
   location: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -78,6 +79,7 @@ export function generateIcsEvent(params: IcsEventParams): string {
   }
 
   lines.push(`DESCRIPTION:${escapeText(params.description)}`);
+  lines.push(`X-ALT-DESC;FMTTYPE=text/html:${escapeText(params.htmlDescription)}`);
 
   if (params.url) {
     lines.push(`URL:${params.url}`);
@@ -170,10 +172,26 @@ export function buildScheduledRoundEvent(params: {
   descParts.push(`View in Stableford:`);
   descParts.push(roundUrl);
 
+  // HTML version for calendar clients that support it
+  const htmlParts: string[] = [];
+  htmlParts.push(`<b>Group:</b> ${params.groupName}`);
+  htmlParts.push(`<b>Scheduled by:</b> ${params.createdByName}`);
+  if (params.notes) {
+    htmlParts.push(`<b>Notes:</b> ${params.notes}`);
+  }
+  if (accepted.length > 0) {
+    htmlParts.push(`<b>Going:</b> ${accepted.map((r) => r.userName).join(", ")}`);
+  }
+  if (tentative.length > 0) {
+    htmlParts.push(`<b>Maybe:</b> ${tentative.map((r) => r.userName).join(", ")}`);
+  }
+  htmlParts.push(`<a href="${roundUrl}">View in Stableford</a>`);
+
   return {
     uid: `${params.scheduledRoundId}@stableford.app`,
     summary: `Golf @ ${params.courseName}`,
     description: descParts.join("\n"),
+    htmlDescription: htmlParts.join("<br>"),
     location: params.courseLocation,
     latitude: params.latitude,
     longitude: params.longitude,
