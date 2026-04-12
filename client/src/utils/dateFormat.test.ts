@@ -1,4 +1,4 @@
-import { test, mock } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   formatTime,
@@ -88,28 +88,23 @@ test("formatElapsedTime formats hours and minutes", () => {
 });
 
 // --- formatDate ---
+// Tests run with TZ=UTC for deterministic locale output.
 
-test("formatDate returns a non-empty string", () => {
+test("formatDate formats ISO string to readable date", () => {
   const result = formatDate("2025-03-15T10:00:00Z");
-  assert.ok(typeof result === "string" && result.length > 0);
-});
-
-test("formatDate includes year and day", () => {
-  const result = formatDate("2025-03-15T10:00:00Z");
+  // With TZ=UTC the date stays Mar 15, 2025 regardless of locale
   assert.ok(result.includes("2025"), `expected year in "${result}"`);
   assert.ok(result.includes("15"), `expected day in "${result}"`);
+  assert.ok(/mar/i.test(result), `expected month in "${result}"`);
 });
 
 // --- formatDateTime ---
 
-test("formatDateTime returns a non-empty string", () => {
-  const result = formatDateTime("2025-03-15T10:30:00Z");
-  assert.ok(typeof result === "string" && result.length > 0);
-});
-
-test("formatDateTime includes year", () => {
+test("formatDateTime formats ISO string to readable date+time", () => {
   const result = formatDateTime("2025-03-15T10:30:00Z");
   assert.ok(result.includes("2025"), `expected year in "${result}"`);
+  assert.ok(result.includes("15"), `expected day in "${result}"`);
+  assert.ok(/10:30|10\.30/i.test(result), `expected time in "${result}"`);
 });
 
 // --- relativeTime ---

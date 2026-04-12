@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test --import tsx ./src/**/*.test.ts",
+    "test": "TZ=UTC node --test --import tsx ./src/**/*.test.ts",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
