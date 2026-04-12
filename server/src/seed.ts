@@ -3,6 +3,7 @@ import {
   createCourse,
   createUser,
   db,
+  ensureAdminUser,
   getUserByUsername,
   listCourses,
 } from "./db.js";
@@ -85,4 +86,18 @@ export function seedIfEmpty(): void {
     createCourse(c.name, c.location, c.rating, c.slope, c.holes, seedUser.id);
   }
   console.log(`Seeded ${SEED_COURSES.length} courses`);
+}
+
+export function bootstrapAdmin(): void {
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password) {
+    console.log("ADMIN_PASSWORD not set – skipping admin user bootstrap");
+    return;
+  }
+  if (password.length < 6) {
+    console.warn("WARNING: ADMIN_PASSWORD is shorter than 6 characters – skipping");
+    return;
+  }
+  ensureAdminUser(password);
+  console.log("Admin user 'admin' bootstrapped");
 }

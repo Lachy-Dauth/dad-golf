@@ -19,10 +19,13 @@ import {
   deleteGroupInvite,
   deleteScore,
   deleteSession,
+  deleteUserAsAdmin,
   favoriteCourse,
   findGroupMemberByUser,
   findPlayerByName,
   findPlayerByUserId,
+  getActivityFeed,
+  getAdminStats,
   getCourse,
   getCourseFavoriteCount,
   getGroup,
@@ -33,6 +36,10 @@ import {
   getUserByUsername,
   getUserBySession,
   isUserInGroup,
+  listAllCourses,
+  listAllGroups,
+  listAllRounds,
+  listAllUsers,
   listCourses,
   listGroupInvites,
   listGroupMembers,
@@ -155,6 +162,16 @@ function requireUser(req: FastifyRequest, reply: FastifyReply): User | null {
   const user = getViewerUser(req);
   if (!user) {
     reply.code(401).send({ error: "sign in required" });
+    return null;
+  }
+  return user;
+}
+
+function requireAdmin(req: FastifyRequest, reply: FastifyReply): User | null {
+  const user = requireUser(req, reply);
+  if (!user) return null;
+  if (!user.isAdmin) {
+    reply.code(403).send({ error: "admin access required" });
     return null;
   }
   return user;
@@ -896,5 +913,62 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
     const state = buildRoundState(code, viewer?.id ?? null);
     if (state) broadcast(code, { type: "state", state });
     return { ok: true };
+  });
+
+  // ---------- admin ----------
+  app.get("/api/admin/stats", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    return getAdminStats();
+  });
+
+  app.get("/api/admin/users", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    return { users: listAllUsers() };
+  });
+
+  app.delete<{ Params: { id: string } }>(
+    "/api/admin/users/:id",
+    async (req, reply) => {
+      const user = requireAdmin(req, reply);
+      if (!user) return;
+      if (req.params.id === user.id) {
+        return reply.code(400).send({ error: "cannot delete yourself" });
+      }
+      deleteUserAsAdmin(req.params.id);
+      return { ok: true };
+    },
+  );
+
+  app.get<{
+    Querystring: { limit?: string; offset?: string };
+  }>("/api/admin/rounds", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    const offset = Number(req.query.offset) || 0;
+    return listAllRounds(limit, offset);
+  });
+
+  app.get("/api/admin/courses", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    return { courses: listAllCourses() };
+  });
+
+  app.get("/api/admin/groups", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    return { groups: listAllGroups() };
+  });
+
+  app.get<{
+    Querystring: { limit?: string };
+  }>("/api/admin/activity", async (req, reply) => {
+    const user = requireAdmin(req, reply);
+    if (!user) return;
+    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    return { events: getActivityFeed(limit) };
   });
 }

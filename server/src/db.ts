@@ -148,6 +148,7 @@ ensureColumn("groups", "owner_user_id", "owner_user_id TEXT");
 ensureColumn("group_members", "user_id", "user_id TEXT");
 ensureColumn("rounds", "leader_user_id", "leader_user_id TEXT");
 ensureColumn("players", "user_id", "user_id TEXT");
+ensureColumn("users", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0");
 
 // Indexes that reference columns added by the migrations above must run
 // after ensureColumn() so they work on pre-existing databases.
@@ -183,6 +184,7 @@ interface UserRow {
   display_name: string;
   handicap: number;
   created_at: string;
+  is_admin: number;
 }
 
 function rowToUser(row: UserRow): User {
@@ -192,6 +194,7 @@ function rowToUser(row: UserRow): User {
     displayName: row.display_name,
     handicap: row.handicap,
     createdAt: row.created_at,
+    isAdmin: Boolean(row.is_admin),
   };
 }
 
@@ -214,6 +217,7 @@ export function createUser(
     displayName,
     handicap,
     createdAt,
+    isAdmin: false,
   };
 }
 
@@ -903,4 +907,270 @@ export function listScores(roundId: string): Score[] {
     )
     .all(roundId) as ScoreRow[];
   return rows.map(rowToScore);
+}
+
+// ---------- admin ----------
+export interface AdminStats {
+  users: number;
+  courses: number;
+  groups: number;
+  rounds: { total: number; waiting: number; inProgress: number; complete: number };
+  scores: number;
+  sessions: number;
+}
+
+export function getAdminStats(): AdminStats {
+  const count = (table: string) =>
+    (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n;
+  const roundsByStatus = db
+    .prepare(
+      `SELECT status, COUNT(*) AS n FROM rounds GROUP BY status`,
+    )
+    .all() as Array<{ status: string; n: number }>;
+  const statusMap: Record<string, number> = {};
+  for (const r of roundsByStatus) statusMap[r.status] = r.n;
+  return {
+    users: count("users"),
+    courses: count("courses"),
+    groups: count("groups"),
+    rounds: {
+      total: (statusMap["waiting"] ?? 0) + (statusMap["in_progress"] ?? 0) + (statusMap["complete"] ?? 0),
+      waiting: statusMap["waiting"] ?? 0,
+      inProgress: statusMap["in_progress"] ?? 0,
+      complete: statusMap["complete"] ?? 0,
+    },
+    scores: count("scores"),
+    sessions: count("sessions"),
+  };
+}
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  displayName: string;
+  handicap: number;
+  isAdmin: boolean;
+  createdAt: string;
+  roundCount: number;
+  courseCount: number;
+}
+
+export function listAllUsers(): AdminUser[] {
+  const rows = db
+    .prepare(
+      `SELECT u.*,
+              (SELECT COUNT(*) FROM players p WHERE p.user_id = u.id) AS round_count,
+              (SELECT COUNT(*) FROM courses c WHERE c.created_by_user_id = u.id) AS course_count
+         FROM users u
+         ORDER BY u.created_at DESC`,
+    )
+    .all() as Array<UserRow & { round_count: number; course_count: number }>;
+  return rows.map((r) => ({
+    id: r.id,
+    username: r.username,
+    displayName: r.display_name,
+    handicap: r.handicap,
+    isAdmin: Boolean(r.is_admin),
+    createdAt: r.created_at,
+    roundCount: r.round_count,
+    courseCount: r.course_count,
+  }));
+}
+
+export interface AdminRound {
+  id: string;
+  roomCode: string;
+  courseName: string;
+  leaderName: string | null;
+  playerCount: number;
+  status: string;
+  createdAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export function listAllRounds(
+  limit = 50,
+  offset = 0,
+): { rounds: AdminRound[]; total: number } {
+  const total = (
+    db.prepare(`SELECT COUNT(*) AS n FROM rounds`).get() as { n: number }
+  ).n;
+  const rows = db
+    .prepare(
+      `SELECT r.id, r.room_code, r.status, r.created_at, r.started_at, r.completed_at,
+              c.name AS course_name,
+              u.display_name AS leader_name,
+              (SELECT COUNT(*) FROM players p WHERE p.round_id = r.id) AS player_count
+         FROM rounds r
+         LEFT JOIN courses c ON c.id = r.course_id
+         LEFT JOIN users u ON u.id = r.leader_user_id
+         ORDER BY r.created_at DESC
+         LIMIT ? OFFSET ?`,
+    )
+    .all(limit, offset) as Array<{
+    id: string;
+    room_code: string;
+    status: string;
+    created_at: string;
+    started_at: string | null;
+    completed_at: string | null;
+    course_name: string;
+    leader_name: string | null;
+    player_count: number;
+  }>;
+  return {
+    rounds: rows.map((r) => ({
+      id: r.id,
+      roomCode: r.room_code,
+      courseName: r.course_name,
+      leaderName: r.leader_name,
+      playerCount: r.player_count,
+      status: r.status,
+      createdAt: r.created_at,
+      startedAt: r.started_at,
+      completedAt: r.completed_at,
+    })),
+    total,
+  };
+}
+
+export interface AdminCourse {
+  id: string;
+  name: string;
+  location: string | null;
+  holeCount: number;
+  createdByName: string | null;
+  favoriteCount: number;
+  roundCount: number;
+  createdAt: string;
+}
+
+export function listAllCourses(): AdminCourse[] {
+  const rows = db
+    .prepare(
+      `SELECT c.id, c.name, c.location, c.holes_json, c.created_at,
+              u.display_name AS created_by_name,
+              (SELECT COUNT(*) FROM course_favorites cf WHERE cf.course_id = c.id) AS favorite_count,
+              (SELECT COUNT(*) FROM rounds r WHERE r.course_id = c.id) AS round_count
+         FROM courses c
+         LEFT JOIN users u ON u.id = c.created_by_user_id
+         ORDER BY c.name ASC`,
+    )
+    .all() as Array<{
+    id: string;
+    name: string;
+    location: string | null;
+    holes_json: string;
+    created_at: string;
+    created_by_name: string | null;
+    favorite_count: number;
+    round_count: number;
+  }>;
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    location: r.location,
+    holeCount: (JSON.parse(r.holes_json) as unknown[]).length,
+    createdByName: r.created_by_name,
+    favoriteCount: r.favorite_count,
+    roundCount: r.round_count,
+    createdAt: r.created_at,
+  }));
+}
+
+export interface AdminGroup {
+  id: string;
+  name: string;
+  ownerName: string | null;
+  memberCount: number;
+  createdAt: string;
+}
+
+export function listAllGroups(): AdminGroup[] {
+  const rows = db
+    .prepare(
+      `SELECT g.id, g.name, g.created_at,
+              u.display_name AS owner_name,
+              (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id = g.id) AS member_count
+         FROM groups g
+         LEFT JOIN users u ON u.id = g.owner_user_id
+         ORDER BY g.name ASC`,
+    )
+    .all() as Array<{
+    id: string;
+    name: string;
+    created_at: string;
+    owner_name: string | null;
+    member_count: number;
+  }>;
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    ownerName: r.owner_name,
+    memberCount: r.member_count,
+    createdAt: r.created_at,
+  }));
+}
+
+export interface ActivityEvent {
+  type: string;
+  description: string;
+  timestamp: string;
+}
+
+export function getActivityFeed(limit = 50): ActivityEvent[] {
+  const rows = db
+    .prepare(
+      `SELECT type, description, timestamp FROM (
+         SELECT 'user_registered' AS type,
+                'New user: ' || display_name || ' (@' || username || ')' AS description,
+                created_at AS timestamp
+           FROM users
+         UNION ALL
+         SELECT 'round_created' AS type,
+                'Round created: ' || r.room_code || ' on ' || COALESCE(c.name, 'Unknown') AS description,
+                r.created_at AS timestamp
+           FROM rounds r LEFT JOIN courses c ON c.id = r.course_id
+         UNION ALL
+         SELECT 'round_completed' AS type,
+                'Round completed: ' || r.room_code || ' on ' || COALESCE(c.name, 'Unknown') AS description,
+                r.completed_at AS timestamp
+           FROM rounds r LEFT JOIN courses c ON c.id = r.course_id
+           WHERE r.completed_at IS NOT NULL
+       ) events
+       ORDER BY timestamp DESC
+       LIMIT ?`,
+    )
+    .all(limit) as Array<{ type: string; description: string; timestamp: string }>;
+  return rows;
+}
+
+export function setUserAdmin(userId: string, isAdmin: boolean): void {
+  db.prepare(`UPDATE users SET is_admin = ? WHERE id = ?`).run(
+    isAdmin ? 1 : 0,
+    userId,
+  );
+}
+
+export function deleteUserAsAdmin(userId: string): void {
+  db.prepare(`DELETE FROM users WHERE id = ?`).run(userId);
+}
+
+export function ensureAdminUser(password: string): void {
+  const existing = getUserByUsername("admin");
+  if (existing) {
+    const newHash = hashPassword(password);
+    db.prepare(
+      `UPDATE users SET password_hash = ?, is_admin = 1 WHERE id = ?`,
+    ).run(newHash, existing.id);
+  } else {
+    const id = newId();
+    const createdAt = now();
+    const passwordHash = hashPassword(password);
+    db.prepare(
+      `INSERT INTO users (id, username, password_hash, display_name, handicap, created_at, is_admin)
+       VALUES (?, ?, ?, ?, ?, ?, 1)`,
+    ).run(id, "admin", passwordHash, "Admin", 18, createdAt);
+  }
 }

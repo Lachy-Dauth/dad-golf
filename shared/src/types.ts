@@ -10,6 +10,7 @@ export interface User {
   displayName: string;
   handicap: number;
   createdAt: string;
+  isAdmin: boolean;
 }
 
 export interface Course {
