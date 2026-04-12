@@ -34,7 +34,8 @@ import {
 const VALID_ROLES: GroupRole[] = ["admin", "member"];
 
 export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
-  app.get("/api/groups", async () => {
+  app.get("/api/groups", async (req) => {
+    const viewer = await getViewerUser(req);
     const groupRows = await listGroups();
     const groups = await Promise.all(
       groupRows.map(async (g) => ({
@@ -42,7 +43,8 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
         members: await listGroupMembers(g.id),
       })),
     );
-    return { groups };
+    if (!viewer) return { groups: [] };
+    return { groups: groups.filter((g) => g.members.some((m) => m.userId === viewer.id)) };
   });
 
   app.get<{ Params: { id: string } }>("/api/groups/:id", async (req, reply) => {
