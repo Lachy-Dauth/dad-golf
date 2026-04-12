@@ -11,8 +11,12 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 - **Score on your phone** — every player enters their own scores for each hole on their own device
 - **Stableford scoring** — points are calculated automatically using the player's handicap and the course's stroke index
 - **Live leaderboard** — everyone sees the standings update in real time as scores come in
+- **Hole competitions** — closest-to-pin and longest drive contests on selected holes
+- **Weather** — live weather conditions displayed for the course location
 - **Groups** — create groups, invite members, and track rounds together
 - **Admin dashboard** — view stats, manage users, and monitor activity
+- **Dark / light mode** — theme toggle that respects your preference
+- **PWA support** — install the app to your home screen for a native feel
 
 ## Stableford scoring (the rules we follow)
 
@@ -34,7 +38,7 @@ A player with handicap _H_ receives strokes on the hardest holes first (by strok
 
 - **Frontend:** React 18 + Vite + TypeScript, mobile-first responsive layout
 - **Backend:** Node.js + Fastify + WebSocket (`@fastify/websocket`)
-- **Database:** PostgreSQL
+- **Database:** PostgreSQL (production) / SQLite (local development)
 - **Shared:** `@dad-golf/shared` package with types, Stableford scoring logic, and room code generation
 - **Tooling:** ESLint 9 (flat config) + Prettier + strict TypeScript
 - **Hosting:** Railway
@@ -46,7 +50,9 @@ dad-golf/
 ├── client/                  # React + Vite frontend
 │   └── src/
 │       ├── pages/           # Route pages (Home, Round, Courses, Groups, Admin, …)
-│       └── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Summary)
+│       ├── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Summary, Weather)
+│       ├── AuthContext.tsx   # Session & user state
+│       └── ThemeContext.tsx  # Dark / light mode
 ├── server/                  # Fastify backend
 │   └── src/
 │       ├── db/              # Database layer (pool, schema, per-domain modules)
@@ -56,13 +62,16 @@ dad-golf/
 │       │   ├── rounds.ts    # Round lifecycle
 │       │   ├── players.ts   # Player management
 │       │   ├── scores.ts    # Score tracking
+│       │   ├── competitions.ts # Hole competitions (CTP, longest drive)
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
 │       │   ├── courses.ts   # /api/courses/*
 │       │   ├── groups.ts    # /api/groups/*
 │       │   ├── rounds.ts    # /api/rounds/*
+│       │   ├── weather.ts   # /api/weather/*
 │       │   └── admin.ts     # /api/admin/*
+│       ├── hub.ts           # WebSocket pub/sub hub
 │       ├── ws.ts            # WebSocket handler for live round updates
 │       └── seed.ts          # Sample data seeding
 ├── shared/                  # Shared types, scoring logic, room codes
