@@ -2,6 +2,8 @@ import type {
   ActiveRoundSummary,
   CompetitionType,
   Course,
+  CourseReportReason,
+  CourseReview,
   Group,
   GroupInvite,
   GroupMember,
@@ -71,6 +73,14 @@ export interface AdminGroup {
   ownerName: string | null;
   memberCount: number;
   createdAt: string;
+}
+
+export interface AdminCourseReport {
+  courseId: string;
+  courseName: string;
+  courseLocation: string | null;
+  reportCount: number;
+  reasons: CourseReportReason[];
 }
 
 export interface ActivityEvent {
@@ -145,7 +155,7 @@ export const api = {
     fetch("/api/courses", { headers: authHeaders() }).then((r) => json<{ courses: Course[] }>(r)),
   getCourse: (id: string) =>
     fetch(`/api/courses/${id}`, { headers: authHeaders() }).then((r) =>
-      json<{ course: Course }>(r),
+      json<{ course: Course; viewerReview: CourseReview | null }>(r),
     ),
   createCourse: (payload: {
     name: string;
@@ -189,6 +199,37 @@ export const api = {
       method: "DELETE",
       headers: authHeaders(),
     }).then((r) => json<{ course: Course }>(r)),
+
+  // course reviews
+  listCourseReviews: (courseId: string, limit = 20, offset = 0) =>
+    fetch(`/api/courses/${courseId}/reviews?limit=${limit}&offset=${offset}`, {
+      headers: authHeaders(),
+    }).then((r) => json<{ reviews: CourseReview[]; total: number }>(r)),
+  submitCourseReview: (courseId: string, rating: number, reviewText?: string) =>
+    fetch(`/api/courses/${courseId}/reviews`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ rating, reviewText: reviewText || null }),
+    }).then((r) => json<{ review: CourseReview }>(r)),
+  deleteCourseReview: (courseId: string) =>
+    fetch(`/api/courses/${courseId}/reviews`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
+
+  // course reports
+  reportCourse: (courseId: string, reason: CourseReportReason) =>
+    fetch(`/api/courses/${courseId}/report`, {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ reason }),
+    }).then((r) => json<{ ok: boolean }>(r)),
+
+  // course weather
+  getCourseWeather: (courseId: string) =>
+    fetch(`/api/courses/${courseId}/weather`, { headers: authHeaders() }).then((r) =>
+      json<{ weather: Weather }>(r),
+    ),
 
   // groups
   listGroups: () =>
@@ -468,6 +509,15 @@ export const api = {
     fetch(`/api/admin/activity?limit=${limit}`, {
       headers: authHeaders(),
     }).then((r) => json<{ events: ActivityEvent[] }>(r)),
+  adminCourseReports: () =>
+    fetch("/api/admin/course-reports", { headers: authHeaders() }).then((r) =>
+      json<{ reports: AdminCourseReport[] }>(r),
+    ),
+  adminDismissCourseReports: (courseId: string) =>
+    fetch(`/api/admin/course-reports/${courseId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    }).then((r) => json<{ ok: boolean }>(r)),
 
   // handicap
   getHandicap: () =>

@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import {
   deleteRound,
   deleteUserAsAdmin,
+  dismissCourseReports,
   getActivityFeed,
   getAdminStats,
   getRound,
@@ -10,6 +11,7 @@ import {
   listAllGroups,
   listAllRounds,
   listAllUsers,
+  listCourseReports,
 } from "../db/index.js";
 import { requireAdmin } from "./validation.js";
 
@@ -84,4 +86,22 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     const limit = Number.isFinite(parsed) ? Math.max(0, Math.min(Math.floor(parsed), 200)) : 50;
     return { events: await getActivityFeed(limit) };
   });
+
+  // --- Course Reports ---
+
+  app.get("/api/admin/course-reports", async (req, reply) => {
+    const user = await requireAdmin(req, reply);
+    if (!user) return;
+    return { reports: await listCourseReports() };
+  });
+
+  app.delete<{ Params: { courseId: string } }>(
+    "/api/admin/course-reports/:courseId",
+    async (req, reply) => {
+      const user = await requireAdmin(req, reply);
+      if (!user) return;
+      await dismissCourseReports(req.params.courseId);
+      return { ok: true };
+    },
+  );
 }

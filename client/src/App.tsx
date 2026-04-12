@@ -1,6 +1,7 @@
 import { Routes, Route, Link } from "react-router-dom";
 import HomePage from "./pages/HomePage.js";
 import CoursesPage from "./pages/CoursesPage.js";
+import CourseDetailPage from "./pages/CourseDetailPage.js";
 import NewCoursePage from "./pages/NewCoursePage.js";
 import GroupsPage from "./pages/GroupsPage.js";
 import GroupDetailPage from "./pages/GroupDetailPage.js";
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="/courses" element={<CoursesPage />} />
               <Route path="/courses/new" element={<NewCoursePage />} />
               <Route path="/courses/:id/edit" element={<NewCoursePage />} />
+              <Route path="/courses/:id" element={<CourseDetailPage />} />
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/groups/:id" element={<GroupDetailPage />} />
               <Route path="/groups/:groupId/schedule/:id" element={<ScheduledRoundPage />} />

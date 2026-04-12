@@ -76,6 +76,19 @@ export {
   listCompetitions,
 } from "./competitions.js";
 export {
+  upsertCourseReview,
+  deleteCourseReview,
+  getUserCourseReview,
+  listCourseReviews,
+} from "./courseReviews.js";
+export type { AdminCourseReport } from "./courseReports.js";
+export {
+  createCourseReport,
+  getUserCourseReport,
+  listCourseReports,
+  dismissCourseReports,
+} from "./courseReports.js";
+export {
   createScheduledRound,
   getScheduledRound,
   listScheduledRoundsForGroup,
