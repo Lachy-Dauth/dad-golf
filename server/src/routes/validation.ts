@@ -46,8 +46,8 @@ export function validateHandicap(h: unknown): number {
 
 export function validateCourseRating(r: unknown): number {
   const n = Number(r);
-  if (!Number.isFinite(n) || n < 50 || n > 90) {
-    throw new Error("course rating must be a number between 50.0 and 90.0");
+  if (!Number.isFinite(n) || n < 10 || n > 100) {
+    throw new Error("course rating must be a number between 10 and 100");
   }
   return Math.round(n * 10) / 10;
 }

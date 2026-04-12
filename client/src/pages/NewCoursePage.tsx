@@ -100,8 +100,8 @@ export default function NewCoursePage() {
       return;
     }
     const ratingNum = Number(rating);
-    if (!Number.isFinite(ratingNum) || ratingNum < 50 || ratingNum > 90) {
-      setError("Course rating must be a number between 50.0 and 90.0");
+    if (!Number.isFinite(ratingNum) || ratingNum < 10 || ratingNum > 100) {
+      setError("Course rating must be a number between 10 and 100");
       return;
     }
     const slopeNum = Number(slope);
