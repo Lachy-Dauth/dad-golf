@@ -10,7 +10,6 @@ interface CompetitionRow {
   created_at: string;
 }
 
-
 export async function createCompetition(
   roundId: string,
   holeNumber: number,
@@ -72,10 +71,10 @@ export async function upsertClaim(
 }
 
 export async function deleteClaim(competitionId: string, playerId: string): Promise<void> {
-  await pool.query(
-    `DELETE FROM competition_claims WHERE competition_id = $1 AND player_id = $2`,
-    [competitionId, playerId],
-  );
+  await pool.query(`DELETE FROM competition_claims WHERE competition_id = $1 AND player_id = $2`, [
+    competitionId,
+    playerId,
+  ]);
 }
 
 export async function setClaimWinner(competitionId: string, playerId: string): Promise<void> {

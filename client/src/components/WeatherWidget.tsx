@@ -48,14 +48,17 @@ export default function WeatherWidget({ roomCode, courseLocation }: Props) {
   // Refresh every 15 minutes
   useEffect(() => {
     let cancelled = false;
-    const interval = setInterval(() => {
-      api
-        .getRoundWeather(roomCode)
-        .then((res) => {
-          if (!cancelled) setWeather(res.weather);
-        })
-        .catch(() => {});
-    }, 15 * 60 * 1000);
+    const interval = setInterval(
+      () => {
+        api
+          .getRoundWeather(roomCode)
+          .then((res) => {
+            if (!cancelled) setWeather(res.weather);
+          })
+          .catch(() => {});
+      },
+      15 * 60 * 1000,
+    );
     return () => {
       cancelled = true;
       clearInterval(interval);

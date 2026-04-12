@@ -17,7 +17,9 @@ export async function geocodeLocation(query: string): Promise<GeocodingResult | 
   const url = `${OPEN_METEO_GEOCODING_URL}?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("geocoding service unavailable");
-  const data = (await res.json()) as { results?: Array<{ latitude: number; longitude: number; name: string }> };
+  const data = (await res.json()) as {
+    results?: Array<{ latitude: number; longitude: number; name: string }>;
+  };
   if (!data.results || data.results.length === 0) return null;
   const r = data.results[0];
   return { latitude: r.latitude, longitude: r.longitude, name: r.name };
@@ -33,7 +35,8 @@ export async function fetchWeather(latitude: number, longitude: number): Promise
   const params = new URLSearchParams({
     latitude: String(latitude),
     longitude: String(longitude),
-    current: "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,is_day",
+    current:
+      "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,is_day",
     wind_speed_unit: "kmh",
     timezone: "auto",
   });
