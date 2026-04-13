@@ -93,6 +93,58 @@ export interface ActivityEvent {
   description: string;
   timestamp: string;
 }
+
+export interface UserStats {
+  totalRounds: number;
+  wins: number;
+  totalHolesPlayed: number;
+  eagles: number;
+  birdies: number;
+  pars: number;
+  bogeys: number;
+  doublePlus: number;
+  strokesUnderPar: number;
+  strokesAtPar: number;
+  strokesOverOne: number;
+  strokesOverTwo: number;
+  strokesOverThreePlus: number;
+  par3AvgPoints: number | null;
+  par4AvgPoints: number | null;
+  par5AvgPoints: number | null;
+  par3AvgStrokes: number | null;
+  par4AvgStrokes: number | null;
+  par5AvgStrokes: number | null;
+  bestRoundPoints: number | null;
+  bestRoundCourse: string | null;
+  bestRoundCode: string | null;
+  bestRoundStrokes: number | null;
+  bestStrokesRoundStrokes: number | null;
+  bestStrokesRoundCourse: string | null;
+  bestStrokesRoundCode: string | null;
+  avgPointsPerRound: number | null;
+  avgStrokesPerRound: number | null;
+  courseStats: Array<{
+    courseId: string;
+    courseName: string;
+    courseLocation: string | null;
+    timesPlayed: number;
+    avgPoints: number;
+    bestPoints: number;
+    avgStrokes: number;
+    bestStrokes: number;
+    coursePar: number;
+  }>;
+  recentRounds: Array<{
+    roomCode: string;
+    courseName: string;
+    completedAt: string;
+    totalPoints: number;
+    totalStrokes: number;
+    position: number;
+    playerCount: number;
+    coursePar: number;
+  }>;
+}
 import { getAuthToken } from "./authStore.js";
 
 async function json<T>(res: Response): Promise<T> {
@@ -694,4 +746,8 @@ export const api = {
     fetch(`/api/users/${encodeURIComponent(username)}/badges`, {
       headers: authHeaders(),
     }).then((r) => json<{ badges: UserBadge[] }>(r)),
+
+  // stats
+  getStats: () =>
+    fetch("/api/stats", { headers: authHeaders() }).then((r) => json<{ stats: UserStats }>(r)),
 };
