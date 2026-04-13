@@ -88,6 +88,64 @@ export interface AdminCourseReport {
   reasons: CourseReportReason[];
 }
 
+export interface GroupMemberStats {
+  playerId: string;
+  playerName: string;
+  userId: string | null;
+  roundsPlayed: number;
+  wins: number;
+  totalPoints: number;
+  avgPoints: number;
+  bestPoints: number;
+  bestRoundCode: string | null;
+  totalStrokes: number;
+  avgStrokes: number;
+  bestStrokes: number;
+  bestStrokesRoundCode: string | null;
+  eagles: number;
+  birdies: number;
+  pars: number;
+  bogeys: number;
+  doublePlus: number;
+  strokesUnderPar: number;
+  strokesAtPar: number;
+  strokesOverOne: number;
+  strokesOverTwo: number;
+  strokesOverThreePlus: number;
+}
+
+export interface GroupRecord {
+  type: string;
+  value: number;
+  playerName: string;
+  courseName: string;
+  roomCode: string;
+  date: string;
+}
+
+export interface GroupStats {
+  totalRounds: number;
+  totalHolesPlayed: number;
+  memberStats: GroupMemberStats[];
+  records: GroupRecord[];
+  courseStats: Array<{
+    courseId: string;
+    courseName: string;
+    timesPlayed: number;
+    avgPoints: number;
+    avgStrokes: number;
+  }>;
+  recentRounds: Array<{
+    roomCode: string;
+    courseName: string;
+    completedAt: string;
+    winnerName: string | null;
+    winnerPoints: number | null;
+    playerCount: number;
+    coursePar: number;
+  }>;
+}
+
 export interface ActivityEvent {
   type: string;
   description: string;
@@ -750,4 +808,8 @@ export const api = {
   // stats
   getStats: () =>
     fetch("/api/stats", { headers: authHeaders() }).then((r) => json<{ stats: UserStats }>(r)),
+  getGroupStats: (groupId: string) =>
+    fetch(`/api/groups/${groupId}/stats`, { headers: authHeaders() }).then((r) =>
+      json<{ stats: GroupStats }>(r),
+    ),
 };

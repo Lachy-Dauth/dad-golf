@@ -408,3 +408,423 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
     recentRounds: recentRounds.slice(0, 20),
   };
 }
+
+// ================================================================
+// Group Stats
+// ================================================================
+
+export interface GroupMemberStats {
+  playerId: string; // group_member id or player name key
+  playerName: string;
+  userId: string | null;
+  roundsPlayed: number;
+  wins: number;
+  totalPoints: number;
+  avgPoints: number;
+  bestPoints: number;
+  bestRoundCode: string | null;
+  totalStrokes: number;
+  avgStrokes: number;
+  bestStrokes: number;
+  bestStrokesRoundCode: string | null;
+  eagles: number;
+  birdies: number;
+  pars: number;
+  bogeys: number;
+  doublePlus: number;
+  strokesUnderPar: number;
+  strokesAtPar: number;
+  strokesOverOne: number;
+  strokesOverTwo: number;
+  strokesOverThreePlus: number;
+}
+
+export interface GroupRecord {
+  type: string;
+  value: number;
+  playerName: string;
+  courseName: string;
+  roomCode: string;
+  date: string;
+}
+
+export interface GroupStatsResult {
+  totalRounds: number;
+  totalHolesPlayed: number;
+  memberStats: GroupMemberStats[];
+  records: GroupRecord[];
+  courseStats: Array<{
+    courseId: string;
+    courseName: string;
+    timesPlayed: number;
+    avgPoints: number;
+    avgStrokes: number;
+  }>;
+  recentRounds: Array<{
+    roomCode: string;
+    courseName: string;
+    completedAt: string;
+    winnerName: string | null;
+    winnerPoints: number | null;
+    playerCount: number;
+    coursePar: number;
+  }>;
+}
+
+export async function getGroupStats(groupId: string): Promise<GroupStatsResult> {
+  // Get all completed rounds for this group
+  const { rows: roundRows } = await pool.query(
+    `SELECT r.id AS round_id, r.room_code,
+            c.name AS course_name, c.id AS course_id,
+            c.rating AS course_rating, c.slope AS course_slope, c.holes_json,
+            r.completed_at,
+            (SELECT COUNT(*)::int FROM players p2 WHERE p2.round_id = r.id) AS player_count
+     FROM rounds r
+     JOIN courses c ON c.id = r.course_id
+     WHERE r.status = 'complete' AND r.group_id = $1
+     ORDER BY r.completed_at DESC`,
+    [groupId],
+  );
+
+  if (roundRows.length === 0) {
+    return {
+      totalRounds: 0,
+      totalHolesPlayed: 0,
+      memberStats: [],
+      records: [],
+      courseStats: [],
+      recentRounds: [],
+    };
+  }
+
+  const roundIds = roundRows.map((r) => (r as Record<string, unknown>).round_id as string);
+
+  // Batch-fetch all players and scores
+  const { rows: allPlayerRows } = await pool.query(
+    `SELECT id, round_id, user_id, name, handicap FROM players WHERE round_id = ANY($1)`,
+    [roundIds],
+  );
+  const { rows: allScoreRows } = await pool.query(
+    `SELECT id, round_id, player_id, hole_number, strokes, created_at FROM scores WHERE round_id = ANY($1)`,
+    [roundIds],
+  );
+
+  // Index by round
+  const playersByRound = new Map<
+    string,
+    Array<{ id: string; roundId: string; userId: string | null; name: string; handicap: number }>
+  >();
+  for (const p of allPlayerRows as Record<string, unknown>[]) {
+    const roundId = p.round_id as string;
+    const player = {
+      id: p.id as string,
+      roundId,
+      userId: p.user_id as string | null,
+      name: p.name as string,
+      handicap: Number(p.handicap),
+    };
+    const list = playersByRound.get(roundId);
+    if (list) list.push(player);
+    else playersByRound.set(roundId, [player]);
+  }
+
+  const scoresByRound = new Map<
+    string,
+    Array<{
+      id: string;
+      roundId: string;
+      playerId: string;
+      holeNumber: number;
+      strokes: number;
+      createdAt: string;
+    }>
+  >();
+  for (const s of allScoreRows as Record<string, unknown>[]) {
+    const roundId = s.round_id as string;
+    const score = {
+      id: s.id as string,
+      roundId,
+      playerId: s.player_id as string,
+      holeNumber: Number(s.hole_number),
+      strokes: Number(s.strokes),
+      createdAt: s.created_at as string,
+    };
+    const list = scoresByRound.get(roundId);
+    if (list) list.push(score);
+    else scoresByRound.set(roundId, [score]);
+  }
+
+  // Accumulate per-member stats (keyed by userId for registered users, name for guests)
+  const memberMap = new Map<
+    string,
+    GroupMemberStats & { _pointsList: number[]; _strokesList: number[] }
+  >();
+
+  function getMemberKey(
+    userId: string | null,
+    name: string,
+  ): { key: string; userId: string | null } {
+    if (userId) return { key: `user:${userId}`, userId };
+    return { key: `guest:${name}`, userId: null };
+  }
+
+  function getOrCreateMember(key: string, name: string, userId: string | null) {
+    let m = memberMap.get(key);
+    if (!m) {
+      m = {
+        playerId: key,
+        playerName: name,
+        userId,
+        roundsPlayed: 0,
+        wins: 0,
+        totalPoints: 0,
+        avgPoints: 0,
+        bestPoints: 0,
+        bestRoundCode: null,
+        totalStrokes: 0,
+        avgStrokes: 0,
+        bestStrokes: 0,
+        bestStrokesRoundCode: null,
+        eagles: 0,
+        birdies: 0,
+        pars: 0,
+        bogeys: 0,
+        doublePlus: 0,
+        strokesUnderPar: 0,
+        strokesAtPar: 0,
+        strokesOverOne: 0,
+        strokesOverTwo: 0,
+        strokesOverThreePlus: 0,
+        _pointsList: [],
+        _strokesList: [],
+      };
+      memberMap.set(key, m);
+    }
+    return m;
+  }
+
+  // Track records
+  let recordBestPoints: GroupRecord | null = null;
+  let recordMostEagles: {
+    playerName: string;
+    count: number;
+    roomCode: string;
+    courseName: string;
+    date: string;
+  } | null = null;
+  let recordBestStrokes: GroupRecord | null = null;
+
+  // Course aggregation
+  const courseAgg = new Map<
+    string,
+    { courseId: string; courseName: string; points: number[]; strokes: number[] }
+  >();
+
+  const recentRounds: GroupStatsResult["recentRounds"] = [];
+  let totalHolesPlayed = 0;
+
+  for (const row of roundRows as Record<string, unknown>[]) {
+    const roundId = row.round_id as string;
+    const roomCode = row.room_code as string;
+    const courseName = row.course_name as string;
+    const courseId = row.course_id as string;
+    const completedAt = row.completed_at as string;
+    const playerCount = Number(row.player_count);
+    const holes = JSON.parse(row.holes_json as string) as Array<{
+      number: number;
+      par: number;
+      strokeIndex: number;
+    }>;
+    const course = {
+      holes,
+      slope: Number(row.course_slope),
+      rating: Number(row.course_rating),
+    } as Course;
+    const coursePar = holes.reduce((sum, h) => sum + h.par, 0);
+
+    const players = playersByRound.get(roundId) ?? [];
+    const scores = scoresByRound.get(roundId) ?? [];
+
+    // Compute each player's results
+    let roundWinner: { name: string; points: number } | null = null;
+
+    for (const player of players) {
+      const playerHoles = computePlayerHoles(
+        course,
+        { ...player, joinedAt: "", isGuest: false },
+        scores,
+      );
+      const played = playerHoles.filter((h) => h.strokes != null);
+      if (played.length === 0) continue;
+
+      const pts = played.reduce((sum, h) => sum + h.points, 0);
+      const strk = played.reduce((sum, h) => sum + (h.strokes || 0), 0);
+
+      const { key, userId } = getMemberKey(player.userId, player.name);
+      const m = getOrCreateMember(key, player.name, userId);
+      m.roundsPlayed++;
+      m.totalPoints += pts;
+      m.totalStrokes += strk;
+      m._pointsList.push(pts);
+      m._strokesList.push(strk);
+
+      if (pts > m.bestPoints) {
+        m.bestPoints = pts;
+        m.bestRoundCode = roomCode;
+      }
+      if (m.bestStrokes === 0 || (played.length === holes.length && strk < m.bestStrokes)) {
+        m.bestStrokes = strk;
+        m.bestStrokesRoundCode = roomCode;
+      }
+
+      // Score distribution (Stableford)
+      let roundEagles = 0;
+      for (const h of played) {
+        if (h.points >= 4) {
+          m.eagles++;
+          roundEagles++;
+        } else if (h.points === 3) m.birdies++;
+        else if (h.points === 2) m.pars++;
+        else if (h.points === 1) m.bogeys++;
+        else m.doublePlus++;
+
+        const grossDiff = (h.strokes ?? 0) - h.par;
+        if (grossDiff < 0) m.strokesUnderPar++;
+        else if (grossDiff === 0) m.strokesAtPar++;
+        else if (grossDiff === 1) m.strokesOverOne++;
+        else if (grossDiff === 2) m.strokesOverTwo++;
+        else m.strokesOverThreePlus++;
+      }
+
+      totalHolesPlayed += played.length;
+
+      if (!roundWinner || pts > roundWinner.points) {
+        roundWinner = { name: player.name, points: pts };
+      }
+
+      // Track records
+      if (!recordBestPoints || pts > recordBestPoints.value) {
+        recordBestPoints = {
+          type: "best_points",
+          value: pts,
+          playerName: player.name,
+          courseName,
+          roomCode,
+          date: completedAt,
+        };
+      }
+      if (
+        played.length === holes.length &&
+        (!recordBestStrokes || strk < recordBestStrokes.value)
+      ) {
+        recordBestStrokes = {
+          type: "best_strokes",
+          value: strk,
+          playerName: player.name,
+          courseName,
+          roomCode,
+          date: completedAt,
+        };
+      }
+      if (!recordMostEagles || roundEagles > recordMostEagles.count) {
+        recordMostEagles = {
+          playerName: player.name,
+          count: roundEagles,
+          roomCode,
+          courseName,
+          date: completedAt,
+        };
+      }
+    }
+
+    // Mark winner
+    if (roundWinner) {
+      for (const player of players) {
+        const playerHoles = computePlayerHoles(
+          course,
+          { ...player, joinedAt: "", isGuest: false },
+          scores,
+        );
+        const played = playerHoles.filter((h) => h.strokes != null);
+        const pts = played.reduce((sum, h) => sum + h.points, 0);
+        if (pts === roundWinner.points) {
+          const { key } = getMemberKey(player.userId, player.name);
+          const m = memberMap.get(key);
+          if (m) m.wins++;
+        }
+      }
+    }
+
+    // Course aggregation
+    const courseEntry = courseAgg.get(courseId);
+    const roundTotalPoints = roundWinner?.points ?? 0;
+    if (courseEntry) {
+      courseEntry.points.push(roundTotalPoints);
+    } else {
+      courseAgg.set(courseId, { courseId, courseName, points: [roundTotalPoints], strokes: [] });
+    }
+
+    recentRounds.push({
+      roomCode,
+      courseName,
+      completedAt,
+      winnerName: roundWinner?.name ?? null,
+      winnerPoints: roundWinner?.points ?? null,
+      playerCount,
+      coursePar,
+    });
+  }
+
+  // Finalize member stats
+  const memberStats = Array.from(memberMap.values()).map((m) => {
+    const { _pointsList, _strokesList, ...rest } = m;
+    return {
+      ...rest,
+      avgPoints: m.roundsPlayed > 0 ? Math.round((m.totalPoints / m.roundsPlayed) * 10) / 10 : 0,
+      avgStrokes: m.roundsPlayed > 0 ? Math.round((m.totalStrokes / m.roundsPlayed) * 10) / 10 : 0,
+    };
+  });
+  // Sort by total points desc
+  memberStats.sort((a, b) => {
+    if (b.avgPoints !== a.avgPoints) return b.avgPoints - a.avgPoints;
+    return b.wins - a.wins;
+  });
+
+  // Records
+  const records: GroupRecord[] = [];
+  if (recordBestPoints) records.push(recordBestPoints);
+  if (recordBestStrokes) records.push(recordBestStrokes);
+  if (recordMostEagles && recordMostEagles.count > 0) {
+    records.push({
+      type: "most_eagles_round",
+      value: recordMostEagles.count,
+      playerName: recordMostEagles.playerName,
+      courseName: recordMostEagles.courseName,
+      roomCode: recordMostEagles.roomCode,
+      date: recordMostEagles.date,
+    });
+  }
+
+  // Course stats
+  const courseStats = Array.from(courseAgg.values())
+    .map((c) => ({
+      courseId: c.courseId,
+      courseName: c.courseName,
+      timesPlayed: c.points.length,
+      avgPoints: Math.round((c.points.reduce((a, b) => a + b, 0) / c.points.length) * 10) / 10,
+      avgStrokes:
+        c.strokes.length > 0
+          ? Math.round((c.strokes.reduce((a, b) => a + b, 0) / c.strokes.length) * 10) / 10
+          : 0,
+    }))
+    .sort((a, b) => b.timesPlayed - a.timesPlayed);
+
+  return {
+    totalRounds: roundRows.length,
+    totalHolesPlayed,
+    memberStats,
+    records,
+    courseStats,
+    recentRounds: recentRounds.slice(0, 20),
+  };
+}

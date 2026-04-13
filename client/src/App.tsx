@@ -20,6 +20,7 @@ import RoundsPage from "./pages/RoundsPage.js";
 import ActivityPage from "./pages/ActivityPage.js";
 import UserProfilePage from "./pages/UserProfilePage.js";
 import StatsPage from "./pages/StatsPage.js";
+import GroupStatsPage from "./pages/GroupStatsPage.js";
 import { AuthProvider, useAuth } from "./AuthContext.js";
 import { ThemeProvider, useTheme } from "./ThemeContext.js";
 import InstallPrompt from "./components/InstallPrompt.js";
@@ -92,6 +93,7 @@ export default function App() {
               <Route path="/courses/:id" element={<CourseDetailPage />} />
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/groups/:id" element={<GroupDetailPage />} />
+              <Route path="/groups/:id/stats" element={<GroupStatsPage />} />
               <Route path="/groups/:groupId/schedule/:id" element={<ScheduledRoundPage />} />
               <Route path="/groups/join/:token" element={<AcceptInvitePage />} />
               <Route path="/rounds" element={<RoundsPage />} />

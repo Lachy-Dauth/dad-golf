@@ -228,6 +228,145 @@
   font-weight: 400;
 }
 
+/* ================================================================
+   Group Stats
+   ================================================================ */
+
+/* -- Section subtitle -- */
+.section-sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+/* -- Group leaderboard bar chart -- */
+.group-lb-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.group-lb-row {
+  display: grid;
+  grid-template-columns: 28px minmax(60px, auto) 1fr 44px;
+  gap: 8px;
+  align-items: center;
+}
+.group-lb-pos {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-dim);
+  text-align: center;
+}
+.group-lb-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.group-lb-bar-track {
+  height: 24px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.group-lb-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  min-width: 3px;
+}
+.group-lb-val {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* -- Group records -- */
+.group-records {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+.group-record-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.group-record-card:hover {
+  border-color: var(--primary-dim);
+}
+.group-record-type {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+.group-record-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.1;
+}
+.group-record-meta {
+  font-size: 13px;
+  color: var(--text);
+  margin-top: 2px;
+}
+.group-record-date {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* -- Member detail expansion -- */
+.member-row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.member-row:hover {
+  background: var(--surface-hover);
+}
+.member-row.expanded {
+  background: var(--surface-2);
+}
+.member-detail-row td {
+  padding: 0 !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.member-detail {
+  padding: 10px 12px 14px;
+  background: var(--surface);
+}
+.member-detail-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dist-row.compact {
+  grid-template-columns: 52px 1fr 28px 36px;
+  gap: 6px;
+}
+.dist-row.compact .dist-label {
+  font-size: 12px;
+}
+.dist-row.compact .dist-bar-track {
+  height: 16px;
+}
+.dist-row.compact .dist-count {
+  font-size: 12px;
+}
+.dist-row.compact .dist-pct {
+  font-size: 11px;
+}
+
 /* -- Responsive -- */
 @media (max-width: 420px) {
   .stats-overview {
