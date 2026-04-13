@@ -72,7 +72,7 @@ test("rowToUser converts boolean integers correctly", () => {
     handicap: 0,
     handicap_auto_adjust: 0,
     google_calendar_connected: 1,
-    activity_visibility: "group",
+    activity_visibility: "public",
     created_at: "2025-01-01T00:00:00Z",
     is_admin: 1,
   };
@@ -82,7 +82,7 @@ test("rowToUser converts boolean integers correctly", () => {
   assert.equal(user.isAdmin, true);
 });
 
-test("rowToUser defaults empty activity_visibility to group", () => {
+test("rowToUser defaults empty activity_visibility to public", () => {
   const row: UserRow = {
     id: "u3",
     username: "carol",
@@ -96,5 +96,5 @@ test("rowToUser defaults empty activity_visibility to group", () => {
     is_admin: 0,
   };
   const user = rowToUser(row);
-  assert.equal(user.activityVisibility, "group");
+  assert.equal(user.activityVisibility, "public");
 });

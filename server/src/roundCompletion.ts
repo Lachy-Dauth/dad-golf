@@ -151,7 +151,7 @@ function emitPlayerBadgeEvaluations(
           roundId: round.id,
           groupId: round.groupId ?? undefined,
           roundState: state,
-          visibility: playerUser?.activityVisibility ?? "group",
+          visibility: playerUser?.activityVisibility ?? "public",
         }),
       ),
       log,

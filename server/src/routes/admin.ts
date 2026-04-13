@@ -862,7 +862,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         fakeUsers[0].id,
         cr.group_id,
         cr.id,
-        "group",
+        "public",
         {
           courseName: cr.course_name,
           roomCode: cr.room_code,
@@ -886,7 +886,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         fakeUsers[1].id,
         cr.group_id,
         cr.id,
-        "group",
+        "public",
         {
           courseName: cr.course_name,
           roomCode: cr.room_code,
@@ -908,7 +908,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         fakeUsers[i].id,
         groups[i].id,
         null,
-        "group",
+        "public",
         {
           courseName: courses[i]?.name ?? "Unknown",
           scheduledDate: daysFromNow(7 + i * 7),
@@ -926,7 +926,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     // member_joined events
     for (let i = 5; i < 8; i++) {
       const g = pick(groups);
-      const eid = await createActivityEvent("member_joined", fakeUsers[i].id, g.id, null, "group", {
+      const eid = await createActivityEvent("member_joined", fakeUsers[i].id, g.id, null, "public", {
         groupName: g.name,
       });
       await pool.query(`UPDATE activity_events SET created_at = $1 WHERE id = $2`, [
@@ -945,7 +945,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         u.id,
         groups[i % groups.length].id,
         null,
-        "group",
+        "public",
         {
           oldHandicap: u.handicap,
           newHandicap: Math.round((u.handicap - 0.3 - Math.random() * 0.5) * 10) / 10,
@@ -975,7 +975,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           fakeUsers[i % fakeUsers.length].id,
           cr.group_id,
           cr.id,
-          "group",
+          "public",
           {
             competitionType: compTypes[i],
             roomCode: cr.room_code,
@@ -1054,7 +1054,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           const ts = new Date(Date.now() - hoursAgo * 3600000).toISOString();
           await pool.query(
             `INSERT INTO activity_events (id, type, group_id, user_id, round_id, visibility, data_json, created_at)
-             VALUES (gen_random_uuid(), 'badge_earned', $1, $2, NULL, 'group', $3, $4)`,
+             VALUES (gen_random_uuid(), 'badge_earned', $1, $2, NULL, 'public', $3, $4)`,
             [pick(groups).id, u.id, JSON.stringify({ badgeId }), ts],
           );
         }
