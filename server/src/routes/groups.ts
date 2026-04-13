@@ -12,6 +12,7 @@ import {
   getGroupInviteByToken,
   getGroupMember,
   getUserRoleInGroup,
+  isUserInGroup,
   listGroupCompletedRounds,
   listGroupInvites,
   listGroupMembers,
@@ -50,8 +51,13 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get<{ Params: { id: string } }>("/api/groups/:id", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
     const g = await getGroup(req.params.id);
     if (!g) return reply.code(404).send({ error: "group not found" });
+    if (!(await isUserInGroup(g.id, user.id))) {
+      return reply.code(403).send({ error: "you must be a member of this group" });
+    }
     const members = await listGroupMembers(g.id);
     return { group: g, members };
   });
@@ -59,11 +65,15 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
   app.get<{ Params: { id: string }; Querystring: { limit?: string; offset?: string } }>(
     "/api/groups/:id/rounds",
     async (req, reply) => {
-      const viewer = await getViewerUser(req);
+      const user = await requireUser(req, reply);
+      if (!user) return;
       const g = await getGroup(req.params.id);
       if (!g) return reply.code(404).send({ error: "group not found" });
+      if (!(await isUserInGroup(g.id, user.id))) {
+        return reply.code(403).send({ error: "you must be a member of this group" });
+      }
       const { limit, offset } = parsePagination(req.query);
-      return listGroupCompletedRounds(g.id, viewer?.id ?? null, limit, offset);
+      return listGroupCompletedRounds(g.id, user.id, limit, offset);
     },
   );
 
@@ -284,14 +294,9 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
       const member = await addGroupMember(group.id, user.displayName, user.handicap, user.id);
       // Fire activity event and evaluate badges
       fireAndForget(
-        createActivityEvent(
-          "member_joined",
-          user.id,
-          group.id,
-          null,
-          user.activityVisibility,
-          { groupName: group.name },
-        ),
+        createActivityEvent("member_joined", user.id, group.id, null, user.activityVisibility, {
+          groupName: group.name,
+        }),
         req.log,
         "member_joined activity event",
       );

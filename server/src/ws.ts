@@ -2,7 +2,12 @@ import type { FastifyInstance } from "fastify";
 import { normalizeRoomCode } from "@dad-golf/shared";
 import type { WsClientMessage } from "@dad-golf/shared";
 import { buildRoundState } from "./roundState.js";
-import { getUserBySession } from "./db/index.js";
+import {
+  getUserBySession,
+  getRoundByRoomCode,
+  findPlayerByUserId,
+  isUserInGroup,
+} from "./db/index.js";
 import { sendTo, subscribe, unsubscribe } from "./hub.js";
 
 export async function registerWebsocket(app: FastifyInstance): Promise<void> {
@@ -16,6 +21,29 @@ export async function registerWebsocket(app: FastifyInstance): Promise<void> {
     const token = url.searchParams.get("token");
     const viewer = token ? await getUserBySession(token) : null;
     const viewerId = viewer?.id ?? null;
+
+    const round = await getRoundByRoomCode(code);
+    if (!round) {
+      sendTo(socket, { type: "error", message: "round not found" });
+      socket.close();
+      return;
+    }
+
+    // Completed rounds require the viewer to be a participant or group member
+    if (round.status === "complete") {
+      if (!viewer) {
+        sendTo(socket, { type: "error", message: "authentication required" });
+        socket.close();
+        return;
+      }
+      const isPlayer = !!(await findPlayerByUserId(round.id, viewer.id));
+      const inGroup = round.groupId ? await isUserInGroup(round.groupId, viewer.id) : false;
+      if (!isPlayer && !inGroup) {
+        sendTo(socket, { type: "error", message: "access denied" });
+        socket.close();
+        return;
+      }
+    }
 
     const state = await buildRoundState(code, viewerId);
     if (!state) {

@@ -47,8 +47,10 @@ import {
 } from "./validation.js";
 
 export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
-  app.get("/api/rounds/recent", async () => {
-    return { rounds: await listRecentRounds(20) };
+  app.get("/api/rounds/recent", async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return;
+    return { rounds: await listRecentRounds(user.id, 20) };
   });
 
   app.get<{ Querystring: { limit?: string; offset?: string } }>(
@@ -119,7 +121,19 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
     const viewer = await getViewerUser(req);
     const result = await requireRound(req, reply);
     if (!result) return;
-    const state = await buildRoundState(result.code, viewer?.id ?? null);
+    const { code, round } = result;
+
+    // Completed rounds require the viewer to be a participant or group member
+    if (round.status === "complete") {
+      if (!viewer) return reply.code(401).send({ error: "authentication required" });
+      const isPlayer = !!(await findPlayerByUserId(round.id, viewer.id));
+      const inGroup = round.groupId ? await isUserInGroup(round.groupId, viewer.id) : false;
+      if (!isPlayer && !inGroup) {
+        return reply.code(403).send({ error: "you must be a participant or group member" });
+      }
+    }
+
+    const state = await buildRoundState(code, viewer?.id ?? null);
     return { state };
   });
 
@@ -241,11 +255,18 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       broadcast(code, { type: "round_started", state });
       if (round.groupId) {
         fireAndForget(
-          createActivityEvent("round_started", user.id, round.groupId, round.id, user.activityVisibility, {
-            courseName: state.course.name,
-            roomCode: code,
-            playerCount: state.players.length,
-          }),
+          createActivityEvent(
+            "round_started",
+            user.id,
+            round.groupId,
+            round.id,
+            user.activityVisibility,
+            {
+              courseName: state.course.name,
+              roomCode: code,
+              playerCount: state.players.length,
+            },
+          ),
           req.log,
           "round_started activity event",
         );
@@ -499,7 +520,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
             winningPlayer.userId,
             round.groupId,
             round.id,
-            winnerUser?.activityVisibility ?? "group",
+            winnerUser?.activityVisibility ?? "public",
             { competitionType: comp!.type, roomCode: code, holeNumber: comp!.holeNumber },
           ),
           req.log,
@@ -511,7 +532,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
             userId: winningPlayer.userId,
             roundId: round.id,
             groupId: round.groupId,
-            visibility: winnerUser?.activityVisibility ?? "group",
+            visibility: winnerUser?.activityVisibility ?? "public",
           }),
           req.log,
           "competition_won badge evaluation",
