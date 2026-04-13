@@ -48,6 +48,7 @@ function LeaderboardChart({ members, mode }: { members: GroupMemberStats[]; mode
 
   const values = sorted.map((m) => (mode === "stableford" ? m.avgPoints : m.avgStrokes));
   const maxVal = Math.max(...values, 1);
+  const minVal = Math.min(...values, 1);
 
   return (
     <div className="section">
@@ -61,7 +62,11 @@ function LeaderboardChart({ members, mode }: { members: GroupMemberStats[]; mode
         {sorted.map((m, i) => {
           const val = mode === "stableford" ? m.avgPoints : m.avgStrokes;
           const pct =
-            mode === "stableford" ? (val / maxVal) * 100 : maxVal > 0 ? (val / maxVal) * 100 : 0;
+            mode === "stableford"
+              ? (val / maxVal) * 100
+              : val > 0
+                ? (minVal / val) * 100
+                : 0;
           return (
             <div key={m.playerId} className="group-lb-row">
               <span className="group-lb-pos">{i + 1}</span>
