@@ -1,7 +1,9 @@
 # Dad Golf Roadmap
 
-Dependency graph and estimated durations for all FREE and PRO features.
+Dependency graph and estimated durations for all planned features.
 Estimates assume a solo developer working part-time (~15-20 hrs/week).
+
+All features are free — Dad Golf is a free app.
 
 ---
 
@@ -16,7 +18,7 @@ flowchart TD
         P1D["9b. Weather ✅"]
     end
 
-    subgraph phase2["Phase 2: Core Free Features ✅"]
+    subgraph phase2["Phase 2: Core Features ✅"]
         P2A["1c. Round Replay ✅"]
         P2B["5c. CTP / Long Drive ✅"]
         P2D["6c. Group Roles ✅"]
@@ -24,35 +26,30 @@ flowchart TD
         P2F["3a. Community Courses ✅"]
     end
 
-    subgraph phase3["Phase 3: Free Features w/ Dependencies ✅"]
+    subgraph phase3["Phase 3: Features w/ Dependencies ✅"]
         P3B["2c. Scheduled Rounds ✅"]
         P3C["9a. Calendar Integration ✅"]
         P3D["4a. Activity Feed ✅"]
         P3E["4c. Achievement Badges ✅"]
     end
 
-    subgraph phase4["Phase 4: Pro Infrastructure (weeks 11-13)"]
-        P4A["Stripe / Payment System\n2-3 weeks"]
-        P4B["Pro Gating Middleware\n3 days"]
+    subgraph phase4["Phase 4: Wave 1"]
+        P4A["1a. Stats Dashboard\n2-3 weeks"]
+        P4B["5a. Skins Game\n2 weeks"]
+        P4C["4b. Shareable Cards\n2 weeks"]
+        P4D["8e. PDF Scorecards\n1.5 weeks"]
+        P4E["6b. Group Stats\n2 weeks"]
     end
 
-    subgraph phase5["Phase 5: Pro Wave 1 (weeks 14-20)"]
-        P5A["1a. Stats Dashboard\n2-3 weeks"]
-        P5B["5a. Skins Game\n2 weeks"]
-        P5C["4b. Shareable Cards\n2 weeks"]
-        P5D["8e. PDF Scorecards\n1.5 weeks"]
-        P5E["6b. Group Stats\n2 weeks"]
+    subgraph phase5["Phase 5: Wave 2"]
+        P5A["1b. Head-to-Head\n2 weeks"]
+        P5B["2a. Recurring Leagues\n4-5 weeks"]
+        P5C["7a. Scoring Formats\n3-4 weeks"]
     end
 
-    subgraph phase6["Phase 6: Pro Wave 2 (weeks 21-30)"]
-        P6A["1b. Head-to-Head\n2 weeks"]
-        P6B["2a. Recurring Leagues\n4-5 weeks"]
-        P6C["7a. Scoring Formats\n3-4 weeks"]
-    end
-
-    subgraph phase7["Phase 7: Pro Wave 3 (weeks 29-34)"]
-        P7A["2b. League Awards\n2 weeks"]
-        P7B["7b. Team Rounds\n2-3 weeks"]
+    subgraph phase6["Phase 6: Wave 3"]
+        P6A["2b. League Awards\n2 weeks"]
+        P6B["7b. Team Rounds\n2-3 weeks"]
     end
 
     %% Dependencies
@@ -61,31 +58,18 @@ flowchart TD
     P2A --> P3D
     P2A --> P3E
 
-    P4A --> P4B
-    P4B --> P5A
-    P4B --> P5B
-    P4B --> P5C
-    P4B --> P5D
-    P4B --> P5E
-
-    P5A --> P6A
-    P4B --> P6B
-    P4B --> P6C
-
-    P6B --> P7A
-    P6C --> P7B
+    P2A --> P4A
+    P4A --> P5A
+    P5B --> P6A
+    P5C --> P6B
 
     %% Styling
     classDef free fill:#d4edda,stroke:#28a745,color:#000
-    classDef pro fill:#fff3cd,stroke:#ffc107,color:#000
-    classDef infra fill:#d1ecf1,stroke:#17a2b8,color:#000
 
-    class P1B,P1C,P1D,P2A,P2B,P2D,P2E,P2F,P3B,P3C,P3D,P3E free
-    class P5A,P5B,P5C,P5D,P5E,P6A,P6B,P6C,P7A,P7B pro
-    class P4A,P4B infra
+    class P1B,P1C,P1D,P2A,P2B,P2D,P2E,P2F,P3B,P3C,P3D,P3E,P4A,P4B,P4C,P4D,P4E,P5A,P5B,P5C,P6A,P6B free
 ```
 
-**Legend:** Green = FREE, Yellow = PRO, Blue = Infrastructure
+**Legend:** Green = FREE (all features)
 
 ---
 
@@ -102,38 +86,34 @@ gantt
     Weather Integration (9b)        :done, p1c, 2026-05-04, 3d
     Dark Mode (8c)                  :done, p1d, 2026-05-07, 5d
 
-    section Phase 2: Core Free ✅
+    section Phase 2: Core Features ✅
     CTP / Longest Drive (5c)        :done, p2b, 2026-05-18, 5d
     Group Roles (6c)                :done, p2d, 2026-05-25, 5d
     Handicap Auto-Adj (7c)          :done, p2e, 2026-05-25, 5d
     Round Replay (1c)               :done, p2a, 2026-06-01, 8d
     Community Courses (3a)          :done, p2f, 2026-06-01, 10d
 
-    section Phase 3: Free w/ Deps
+    section Phase 3: Features w/ Deps ✅
     Scheduled Rounds (2c)           :done, p3b, after p2d, 10d
     Calendar Integration (9a)       :done, p3c, after p3b, 5d
-    Activity Feed (4a)              :p3d, after p2a, 10d
-    Achievement Badges (4c)         :p3e, after p2a, 8d
+    Activity Feed (4a)              :done, p3d, after p2a, 10d
+    Achievement Badges (4c)         :done, p3e, after p2a, 8d
 
-    section Phase 4: Pro Infra
-    Stripe / Payments               :p4a, 2026-07-13, 15d
-    Pro Gating Middleware            :p4b, after p4a, 3d
+    section Phase 4: Wave 1
+    Stats Dashboard (1a)            :p4a, 2026-07-13, 15d
+    Skins Game (5a)                 :p4b, 2026-07-13, 10d
+    Shareable Cards (4b)            :p4c, after p4b, 10d
+    PDF Scorecards (8e)             :p4d, after p4c, 8d
+    Group Stats (6b)                :p4e, after p4b, 10d
 
-    section Phase 5: Pro Wave 1
-    Stats Dashboard (1a)            :p5a, after p4b, 15d
-    Skins Game (5a)                 :p5b, after p4b, 10d
-    Shareable Cards (4b)            :p5c, after p5b, 10d
-    PDF Scorecards (8e)             :p5d, after p5c, 8d
-    Group Stats (6b)                :p5e, after p5b, 10d
+    section Phase 5: Wave 2
+    Head-to-Head (1b)               :p5a, after p4a, 10d
+    Recurring Leagues (2a)          :p5b, after p4e, 25d
+    Scoring Formats (7a)            :p5c, after p5a, 20d
 
-    section Phase 6: Pro Wave 2
-    Head-to-Head (1b)               :p6a, after p5a, 10d
-    Recurring Leagues (2a)          :p6b, after p5e, 25d
-    Scoring Formats (7a)            :p6c, after p6a, 20d
-
-    section Phase 7: Pro Wave 3
-    League Awards (2b)              :p7a, after p6b, 10d
-    Team Rounds (7b)                :p7b, after p6c, 13d
+    section Phase 6: Wave 3
+    League Awards (2b)              :p6a, after p5b, 10d
+    Team Rounds (7b)                :p6b, after p5c, 13d
 ```
 
 ---
@@ -152,7 +132,7 @@ gantt
 
 ---
 
-### Phase 2: Core Free Features ✅
+### Phase 2: Core Features ✅
 
 | Feature                 | Duration  | Depends On | Notes                                                            |
 | ----------------------- | --------- | ---------- | ---------------------------------------------------------------- |
@@ -166,7 +146,7 @@ gantt
 
 ---
 
-### Phase 3: Free Features with Dependencies (In Progress)
+### Phase 3: Features with Dependencies ✅
 
 | Feature                  | Duration  | Depends On | Notes                                                                 |
 | ------------------------ | --------- | ---------- | --------------------------------------------------------------------- |
@@ -175,66 +155,49 @@ gantt
 | 4a. Activity Feed        | 2 weeks   | 1c         | ✅ Shipped — Group activity feed with likes/comments, privacy controls, 7 event types |
 | 4c. Achievement Badges   | 1.5 weeks | 1c         | ✅ Shipped — 12 badges across 4 categories, public user profiles, auto-evaluation      |
 
-**All free features shipped!**
+**All shipped!**
 
 ---
 
-### Phase 4: Pro Infrastructure (Weeks 11-13)
-
-| Feature                 | Duration  | Depends On | Notes                                 |
-| ----------------------- | --------- | ---------- | ------------------------------------- |
-| Stripe / Payment System | 2-3 weeks | —          | Checkout, webhooks, subscription mgmt |
-| Pro Gating Middleware   | 3 days    | Stripe     | Server middleware + client UI gates   |
-
-**Phase total: ~3 weeks**
-
-Must be solid before shipping any Pro features. Include subscription
-management page, billing portal link, and graceful upgrade prompts.
-
----
-
-### Phase 5: Pro Wave 1 (Weeks 14-20)
+### Phase 4: Wave 1
 
 | Feature             | Duration  | Depends On | Notes                                   |
 | ------------------- | --------- | ---------- | --------------------------------------- |
-| 1a. Stats Dashboard | 2-3 weeks | Pro infra  | Charts, API endpoints, history queries  |
-| 5a. Skins Game      | 2 weeks   | Pro infra  | Parallel scoring layer on rounds        |
-| 4b. Shareable Cards | 2 weeks   | Pro infra  | Server-side image gen (canvas/SVG)      |
-| 8e. PDF Scorecards  | 1.5 weeks | Pro infra  | PDF generation (pdfkit or similar)      |
-| 6b. Group Stats     | 2 weeks   | Pro infra  | Aggregate queries, all-time leaderboard |
+| 1a. Stats Dashboard | 2-3 weeks | 1c         | Charts, API endpoints, history queries  |
+| 5a. Skins Game      | 2 weeks   | —          | Parallel scoring layer on rounds        |
+| 4b. Shareable Cards | 2 weeks   | —          | Server-side image gen (canvas/SVG)      |
+| 8e. PDF Scorecards  | 1.5 weeks | —          | PDF generation (pdfkit or similar)      |
+| 6b. Group Stats     | 2 weeks   | —          | Aggregate queries, all-time leaderboard |
 
 **Phase total: ~7 weeks** (some can run in parallel)
 
-This is the Pro launch. These five features form the initial "Dad Golf Pro"
-package — enough to justify the price.
-
 ---
 
-### Phase 6: Pro Wave 2 (Weeks 21-30)
+### Phase 5: Wave 2
 
 | Feature               | Duration  | Depends On | Notes                                |
 | --------------------- | --------- | ---------- | ------------------------------------ |
 | 1b. Head-to-Head      | 2 weeks   | 1a         | Extends stats infra with comparisons |
-| 2a. Recurring Leagues | 4-5 weeks | Pro infra  | New data models, standings, seasons  |
-| 7a. Scoring Formats   | 3-4 weeks | Pro infra  | Stroke, Ambrose, best ball, par comp |
+| 2a. Recurring Leagues | 4-5 weeks | —          | New data models, standings, seasons  |
+| 7a. Scoring Formats   | 3-4 weeks | —          | Stroke, Ambrose, best ball, par comp |
 
 **Phase total: ~9 weeks** (parallel tracks possible)
 
 The big features. Leagues (2a) is the highest-effort item on the entire
-roadmap but also the stickiest Pro feature.
+roadmap but also the stickiest feature.
 
 ---
 
-### Phase 7: Pro Wave 3 (Weeks 29-34)
+### Phase 6: Wave 3
 
 | Feature           | Duration  | Depends On | Notes                                  |
 | ----------------- | --------- | ---------- | -------------------------------------- |
 | 2b. League Awards | 2 weeks   | 2a         | Auto-generated awards from league data |
 | 7b. Team Rounds   | 2-3 weeks | 7a         | Team assignment + combined scoring     |
 
-**Phase total: ~4 weeks** (can overlap with late Phase 6)
+**Phase total: ~4 weeks** (can overlap with late Phase 5)
 
-Extensions of Phase 6 features. Only buildable once the parent features
+Extensions of Phase 5 features. Only buildable once the parent features
 are stable.
 
 ---
@@ -244,17 +207,15 @@ are stable.
 The longest dependency chain determines the earliest possible completion:
 
 ```
-Pro Infra (3w) → Stats Dashboard (3w) → Head-to-Head (2w)
-Pro Infra (3w) → Recurring Leagues (5w) → League Awards (2w)    ← longest
-Pro Infra (3w) → Scoring Formats (4w) → Team Rounds (3w)
+Stats Dashboard (3w) → Head-to-Head (2w)
+Recurring Leagues (5w) → League Awards (2w)    ← longest
+Scoring Formats (4w) → Team Rounds (3w)
 ```
 
-**Longest chain: Pro Infra → Leagues → Awards = ~10 weeks**
+**Longest chain: Leagues → Awards = ~7 weeks**
 
-Including free features before Pro, total roadmap is approximately
-**8-9 months** at part-time pace. The free features (Phases 1-3) could
-ship within the first **3 months**, with Pro features rolling out over
-the following **5-6 months**.
+Including shipped features (Phases 1-3), the remaining features (Phases 4-6)
+could ship over approximately **5-6 months** at part-time pace.
 
 ---
 
@@ -262,13 +223,11 @@ the following **5-6 months**.
 
 | Category           | Features                | Est. Weeks      |
 | ------------------ | ----------------------- | --------------- |
-| FREE (shipped)     | 12 features ✅          | ~0 weeks        |
-| FREE (remaining)   | 2 features              | ~3.5 weeks      |
-| PRO Infrastructure | Payment + gating        | ~3 weeks        |
-| PRO                | 10 features             | ~24 weeks       |
-| **Remaining**      | **12 features + infra** | **~30.5 weeks** |
+| Shipped            | 14 features ✅          | ~0 weeks        |
+| Remaining          | 10 features             | ~24 weeks       |
+| **Total remaining**| **10 features**         | **~24 weeks**   |
 
-**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration (plus location autocomplete and course reviews).
+**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges (plus location autocomplete and course reviews).
 
-At part-time pace (~15-20 hrs/week), remaining work is roughly **7-8 months** of
+At part-time pace (~15-20 hrs/week), remaining work is roughly **5-6 months** of
 calendar time with some parallelism.
