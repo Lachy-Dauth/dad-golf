@@ -146,6 +146,59 @@ export interface GroupStats {
   }>;
 }
 
+export interface Opponent {
+  userId: string;
+  displayName: string;
+  username: string;
+  sharedRounds: number;
+}
+
+export interface H2HPlayerStats {
+  userId: string;
+  displayName: string;
+  wins: number;
+  totalPoints: number;
+  avgPoints: number;
+  bestPoints: number;
+  totalStrokes: number;
+  avgStrokes: number;
+  bestStrokes: number;
+  eagles: number;
+  birdies: number;
+  pars: number;
+  bogeys: number;
+  doublePlus: number;
+  strokesUnderPar: number;
+  strokesAtPar: number;
+  strokesOverOne: number;
+  strokesOverTwo: number;
+  strokesOverThreePlus: number;
+  par3AvgPoints: number | null;
+  par4AvgPoints: number | null;
+  par5AvgPoints: number | null;
+  par3AvgStrokes: number | null;
+  par4AvgStrokes: number | null;
+  par5AvgStrokes: number | null;
+}
+
+export interface HeadToHeadStats {
+  sharedRounds: number;
+  draws: number;
+  player1: H2HPlayerStats;
+  player2: H2HPlayerStats;
+  rounds: Array<{
+    roomCode: string;
+    courseName: string;
+    completedAt: string;
+    coursePar: number;
+    p1Points: number;
+    p1Strokes: number;
+    p2Points: number;
+    p2Strokes: number;
+    winnerId: string | null;
+  }>;
+}
+
 export interface ActivityEvent {
   type: string;
   description: string;
@@ -811,5 +864,15 @@ export const api = {
   getGroupStats: (groupId: string) =>
     fetch(`/api/groups/${groupId}/stats`, { headers: authHeaders() }).then((r) =>
       json<{ stats: GroupStats }>(r),
+    ),
+
+  // head-to-head
+  getOpponents: () =>
+    fetch("/api/stats/h2h/opponents", { headers: authHeaders() }).then((r) =>
+      json<{ opponents: Opponent[] }>(r),
+    ),
+  getHeadToHead: (opponentId: string) =>
+    fetch(`/api/stats/h2h/${opponentId}`, { headers: authHeaders() }).then((r) =>
+      json<{ stats: HeadToHeadStats }>(r),
     ),
 };

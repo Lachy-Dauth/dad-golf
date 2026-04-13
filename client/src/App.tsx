@@ -21,6 +21,7 @@ import ActivityPage from "./pages/ActivityPage.js";
 import UserProfilePage from "./pages/UserProfilePage.js";
 import StatsPage from "./pages/StatsPage.js";
 import GroupStatsPage from "./pages/GroupStatsPage.js";
+import HeadToHeadPage from "./pages/HeadToHeadPage.js";
 import { AuthProvider, useAuth } from "./AuthContext.js";
 import { ThemeProvider, useTheme } from "./ThemeContext.js";
 import InstallPrompt from "./components/InstallPrompt.js";
@@ -105,6 +106,8 @@ export default function App() {
               <Route path="/activity" element={<ActivityPage />} />
               <Route path="/user/:username" element={<UserProfilePage />} />
               <Route path="/stats" element={<StatsPage />} />
+              <Route path="/h2h" element={<HeadToHeadPage />} />
+              <Route path="/h2h/:opponentId" element={<HeadToHeadPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>
           </main>

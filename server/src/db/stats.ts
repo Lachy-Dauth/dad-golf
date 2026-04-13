@@ -828,3 +828,431 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
     recentRounds: recentRounds.slice(0, 20),
   };
 }
+
+// ================================================================
+// Head-to-Head Comparison
+// ================================================================
+
+interface H2HPlayerStats {
+  userId: string;
+  displayName: string;
+  wins: number;
+  totalPoints: number;
+  avgPoints: number;
+  bestPoints: number;
+  totalStrokes: number;
+  avgStrokes: number;
+  bestStrokes: number;
+  eagles: number;
+  birdies: number;
+  pars: number;
+  bogeys: number;
+  doublePlus: number;
+  strokesUnderPar: number;
+  strokesAtPar: number;
+  strokesOverOne: number;
+  strokesOverTwo: number;
+  strokesOverThreePlus: number;
+  par3AvgPoints: number | null;
+  par4AvgPoints: number | null;
+  par5AvgPoints: number | null;
+  par3AvgStrokes: number | null;
+  par4AvgStrokes: number | null;
+  par5AvgStrokes: number | null;
+}
+
+export interface HeadToHeadResult {
+  sharedRounds: number;
+  draws: number;
+  player1: H2HPlayerStats;
+  player2: H2HPlayerStats;
+  // Per-round history (most recent first)
+  rounds: Array<{
+    roomCode: string;
+    courseName: string;
+    completedAt: string;
+    coursePar: number;
+    p1Points: number;
+    p1Strokes: number;
+    p2Points: number;
+    p2Strokes: number;
+    winnerId: string | null; // null = draw
+  }>;
+}
+
+export async function getHeadToHead(
+  userId1: string,
+  displayName1: string,
+  userId2: string,
+  displayName2: string,
+): Promise<HeadToHeadResult> {
+  // Find all completed rounds where both users participated
+  const { rows: roundRows } = await pool.query(
+    `SELECT r.id AS round_id, r.room_code,
+            c.name AS course_name, c.id AS course_id,
+            c.rating AS course_rating, c.slope AS course_slope, c.holes_json,
+            r.completed_at
+     FROM rounds r
+     JOIN courses c ON c.id = r.course_id
+     WHERE r.status = 'complete'
+       AND EXISTS (SELECT 1 FROM players p1 WHERE p1.round_id = r.id AND p1.user_id = $1)
+       AND EXISTS (SELECT 1 FROM players p2 WHERE p2.round_id = r.id AND p2.user_id = $2)
+     ORDER BY r.completed_at DESC`,
+    [userId1, userId2],
+  );
+
+  const emptyStats = (userId: string, displayName: string): H2HPlayerStats => ({
+    userId,
+    displayName,
+    wins: 0,
+    totalPoints: 0,
+    avgPoints: 0,
+    bestPoints: 0,
+    totalStrokes: 0,
+    avgStrokes: 0,
+    bestStrokes: 0,
+    eagles: 0,
+    birdies: 0,
+    pars: 0,
+    bogeys: 0,
+    doublePlus: 0,
+    strokesUnderPar: 0,
+    strokesAtPar: 0,
+    strokesOverOne: 0,
+    strokesOverTwo: 0,
+    strokesOverThreePlus: 0,
+    par3AvgPoints: null,
+    par4AvgPoints: null,
+    par5AvgPoints: null,
+    par3AvgStrokes: null,
+    par4AvgStrokes: null,
+    par5AvgStrokes: null,
+  });
+
+  if (roundRows.length === 0) {
+    return {
+      sharedRounds: 0,
+      draws: 0,
+      player1: emptyStats(userId1, displayName1),
+      player2: emptyStats(userId2, displayName2),
+      rounds: [],
+    };
+  }
+
+  const roundIds = roundRows.map((r) => (r as Record<string, unknown>).round_id as string);
+
+  // Batch-fetch players and scores for shared rounds
+  const { rows: allPlayerRows } = await pool.query(
+    `SELECT id, round_id, user_id, name, handicap FROM players WHERE round_id = ANY($1)`,
+    [roundIds],
+  );
+  const { rows: allScoreRows } = await pool.query(
+    `SELECT id, round_id, player_id, hole_number, strokes, created_at FROM scores WHERE round_id = ANY($1)`,
+    [roundIds],
+  );
+
+  // Index by round
+  const playersByRound = new Map<
+    string,
+    Array<{ id: string; roundId: string; userId: string | null; name: string; handicap: number }>
+  >();
+  for (const p of allPlayerRows as Record<string, unknown>[]) {
+    const roundId = p.round_id as string;
+    const player = {
+      id: p.id as string,
+      roundId,
+      userId: p.user_id as string | null,
+      name: p.name as string,
+      handicap: Number(p.handicap),
+    };
+    const list = playersByRound.get(roundId);
+    if (list) list.push(player);
+    else playersByRound.set(roundId, [player]);
+  }
+
+  const scoresByRound = new Map<
+    string,
+    Array<{
+      id: string;
+      roundId: string;
+      playerId: string;
+      holeNumber: number;
+      strokes: number;
+      createdAt: string;
+    }>
+  >();
+  for (const s of allScoreRows as Record<string, unknown>[]) {
+    const roundId = s.round_id as string;
+    const score = {
+      id: s.id as string,
+      roundId,
+      playerId: s.player_id as string,
+      holeNumber: Number(s.hole_number),
+      strokes: Number(s.strokes),
+      createdAt: s.created_at as string,
+    };
+    const list = scoresByRound.get(roundId);
+    if (list) list.push(score);
+    else scoresByRound.set(roundId, [score]);
+  }
+
+  const p1 = emptyStats(userId1, displayName1);
+  const p2 = emptyStats(userId2, displayName2);
+  let draws = 0;
+
+  // Per-par accumulators
+  let p1Par3Pts = 0,
+    p1Par3Strk = 0,
+    p1Par3Count = 0;
+  let p1Par4Pts = 0,
+    p1Par4Strk = 0,
+    p1Par4Count = 0;
+  let p1Par5Pts = 0,
+    p1Par5Strk = 0,
+    p1Par5Count = 0;
+  let p2Par3Pts = 0,
+    p2Par3Strk = 0,
+    p2Par3Count = 0;
+  let p2Par4Pts = 0,
+    p2Par4Strk = 0,
+    p2Par4Count = 0;
+  let p2Par5Pts = 0,
+    p2Par5Strk = 0,
+    p2Par5Count = 0;
+
+  const roundHistory: HeadToHeadResult["rounds"] = [];
+
+  for (const row of roundRows as Record<string, unknown>[]) {
+    const roundId = row.round_id as string;
+    const roomCode = row.room_code as string;
+    const courseName = row.course_name as string;
+    const completedAt = row.completed_at as string;
+    const holes = JSON.parse(row.holes_json as string) as Array<{
+      number: number;
+      par: number;
+      strokeIndex: number;
+    }>;
+    const course = {
+      holes,
+      slope: Number(row.course_slope),
+      rating: Number(row.course_rating),
+    } as Course;
+    const coursePar = holes.reduce((sum, h) => sum + h.par, 0);
+
+    const players = playersByRound.get(roundId) ?? [];
+    const scores = scoresByRound.get(roundId) ?? [];
+
+    const player1Rec = players.find((p) => p.userId === userId1);
+    const player2Rec = players.find((p) => p.userId === userId2);
+    if (!player1Rec || !player2Rec) continue;
+
+    // Compute hole results for each
+    const p1Holes = computePlayerHoles(
+      course,
+      { ...player1Rec, joinedAt: "", isGuest: false },
+      scores,
+    );
+    const p2Holes = computePlayerHoles(
+      course,
+      { ...player2Rec, joinedAt: "", isGuest: false },
+      scores,
+    );
+
+    const p1Played = p1Holes.filter((h) => h.strokes != null);
+    const p2Played = p2Holes.filter((h) => h.strokes != null);
+
+    const p1Pts = p1Played.reduce((sum, h) => sum + h.points, 0);
+    const p1Strk = p1Played.reduce((sum, h) => sum + (h.strokes || 0), 0);
+    const p2Pts = p2Played.reduce((sum, h) => sum + h.points, 0);
+    const p2Strk = p2Played.reduce((sum, h) => sum + (h.strokes || 0), 0);
+
+    // Win/loss/draw
+    let winnerId: string | null = null;
+    if (p1Pts > p2Pts) {
+      p1.wins++;
+      winnerId = userId1;
+    } else if (p2Pts > p1Pts) {
+      p2.wins++;
+      winnerId = userId2;
+    } else {
+      draws++;
+    }
+
+    // Accumulate totals
+    p1.totalPoints += p1Pts;
+    p1.totalStrokes += p1Strk;
+    if (p1Pts > p1.bestPoints) p1.bestPoints = p1Pts;
+    if (p1.bestStrokes === 0 || (p1Played.length === holes.length && p1Strk < p1.bestStrokes)) {
+      p1.bestStrokes = p1Strk;
+    }
+
+    p2.totalPoints += p2Pts;
+    p2.totalStrokes += p2Strk;
+    if (p2Pts > p2.bestPoints) p2.bestPoints = p2Pts;
+    if (p2.bestStrokes === 0 || (p2Played.length === holes.length && p2Strk < p2.bestStrokes)) {
+      p2.bestStrokes = p2Strk;
+    }
+
+    // Scoring distribution for both
+    function accumulateHoleStats(
+      played: typeof p1Played,
+      stats: H2HPlayerStats,
+      parAccum: {
+        par3Pts: number;
+        par3Strk: number;
+        par3Count: number;
+        par4Pts: number;
+        par4Strk: number;
+        par4Count: number;
+        par5Pts: number;
+        par5Strk: number;
+        par5Count: number;
+      },
+    ) {
+      for (const h of played) {
+        if (h.points >= 4) stats.eagles++;
+        else if (h.points === 3) stats.birdies++;
+        else if (h.points === 2) stats.pars++;
+        else if (h.points === 1) stats.bogeys++;
+        else stats.doublePlus++;
+
+        const grossDiff = (h.strokes ?? 0) - h.par;
+        if (grossDiff < 0) stats.strokesUnderPar++;
+        else if (grossDiff === 0) stats.strokesAtPar++;
+        else if (grossDiff === 1) stats.strokesOverOne++;
+        else if (grossDiff === 2) stats.strokesOverTwo++;
+        else stats.strokesOverThreePlus++;
+
+        if (h.par === 3) {
+          parAccum.par3Pts += h.points;
+          parAccum.par3Strk += h.strokes ?? 0;
+          parAccum.par3Count++;
+        } else if (h.par === 4) {
+          parAccum.par4Pts += h.points;
+          parAccum.par4Strk += h.strokes ?? 0;
+          parAccum.par4Count++;
+        } else if (h.par >= 5) {
+          parAccum.par5Pts += h.points;
+          parAccum.par5Strk += h.strokes ?? 0;
+          parAccum.par5Count++;
+        }
+      }
+      return parAccum;
+    }
+
+    const p1Accum = {
+      par3Pts: 0,
+      par3Strk: 0,
+      par3Count: 0,
+      par4Pts: 0,
+      par4Strk: 0,
+      par4Count: 0,
+      par5Pts: 0,
+      par5Strk: 0,
+      par5Count: 0,
+    };
+    accumulateHoleStats(p1Played, p1, p1Accum);
+    p1Par3Pts += p1Accum.par3Pts;
+    p1Par3Strk += p1Accum.par3Strk;
+    p1Par3Count += p1Accum.par3Count;
+    p1Par4Pts += p1Accum.par4Pts;
+    p1Par4Strk += p1Accum.par4Strk;
+    p1Par4Count += p1Accum.par4Count;
+    p1Par5Pts += p1Accum.par5Pts;
+    p1Par5Strk += p1Accum.par5Strk;
+    p1Par5Count += p1Accum.par5Count;
+
+    const p2Accum = {
+      par3Pts: 0,
+      par3Strk: 0,
+      par3Count: 0,
+      par4Pts: 0,
+      par4Strk: 0,
+      par4Count: 0,
+      par5Pts: 0,
+      par5Strk: 0,
+      par5Count: 0,
+    };
+    accumulateHoleStats(p2Played, p2, p2Accum);
+    p2Par3Pts += p2Accum.par3Pts;
+    p2Par3Strk += p2Accum.par3Strk;
+    p2Par3Count += p2Accum.par3Count;
+    p2Par4Pts += p2Accum.par4Pts;
+    p2Par4Strk += p2Accum.par4Strk;
+    p2Par4Count += p2Accum.par4Count;
+    p2Par5Pts += p2Accum.par5Pts;
+    p2Par5Strk += p2Accum.par5Strk;
+    p2Par5Count += p2Accum.par5Count;
+
+    roundHistory.push({
+      roomCode,
+      courseName,
+      completedAt,
+      coursePar,
+      p1Points: p1Pts,
+      p1Strokes: p1Strk,
+      p2Points: p2Pts,
+      p2Strokes: p2Strk,
+      winnerId,
+    });
+  }
+
+  const sharedRounds = roundHistory.length;
+  const round1 = (v: number) => Math.round(v * 10) / 10;
+
+  p1.avgPoints = sharedRounds > 0 ? round1(p1.totalPoints / sharedRounds) : 0;
+  p1.avgStrokes = sharedRounds > 0 ? round1(p1.totalStrokes / sharedRounds) : 0;
+  p1.par3AvgPoints = p1Par3Count > 0 ? round1(p1Par3Pts / p1Par3Count) : null;
+  p1.par4AvgPoints = p1Par4Count > 0 ? round1(p1Par4Pts / p1Par4Count) : null;
+  p1.par5AvgPoints = p1Par5Count > 0 ? round1(p1Par5Pts / p1Par5Count) : null;
+  p1.par3AvgStrokes = p1Par3Count > 0 ? round1(p1Par3Strk / p1Par3Count) : null;
+  p1.par4AvgStrokes = p1Par4Count > 0 ? round1(p1Par4Strk / p1Par4Count) : null;
+  p1.par5AvgStrokes = p1Par5Count > 0 ? round1(p1Par5Strk / p1Par5Count) : null;
+
+  p2.avgPoints = sharedRounds > 0 ? round1(p2.totalPoints / sharedRounds) : 0;
+  p2.avgStrokes = sharedRounds > 0 ? round1(p2.totalStrokes / sharedRounds) : 0;
+  p2.par3AvgPoints = p2Par3Count > 0 ? round1(p2Par3Pts / p2Par3Count) : null;
+  p2.par4AvgPoints = p2Par4Count > 0 ? round1(p2Par4Pts / p2Par4Count) : null;
+  p2.par5AvgPoints = p2Par5Count > 0 ? round1(p2Par5Pts / p2Par5Count) : null;
+  p2.par3AvgStrokes = p2Par3Count > 0 ? round1(p2Par3Strk / p2Par3Count) : null;
+  p2.par4AvgStrokes = p2Par4Count > 0 ? round1(p2Par4Strk / p2Par4Count) : null;
+  p2.par5AvgStrokes = p2Par5Count > 0 ? round1(p2Par5Strk / p2Par5Count) : null;
+
+  return {
+    sharedRounds,
+    draws,
+    player1: p1,
+    player2: p2,
+    rounds: roundHistory,
+  };
+}
+
+/** List all registered users who have played against the given user. */
+export async function getOpponents(
+  userId: string,
+): Promise<Array<{ userId: string; displayName: string; username: string; sharedRounds: number }>> {
+  const { rows } = await pool.query(
+    `SELECT u.id AS user_id, u.display_name, u.username, COUNT(DISTINCT r.id)::int AS shared_rounds
+     FROM players p1
+     JOIN rounds r ON r.id = p1.round_id AND r.status = 'complete'
+     JOIN players p2 ON p2.round_id = r.id AND p2.user_id IS NOT NULL AND p2.user_id != $1
+     JOIN users u ON u.id = p2.user_id
+     WHERE p1.user_id = $1
+     GROUP BY u.id, u.display_name, u.username
+     ORDER BY shared_rounds DESC, u.display_name ASC`,
+    [userId],
+  );
+  return (
+    rows as Array<{
+      user_id: string;
+      display_name: string;
+      username: string;
+      shared_rounds: number;
+    }>
+  ).map((r) => ({
+    userId: r.user_id,
+    displayName: r.display_name,
+    username: r.username,
+    sharedRounds: r.shared_rounds,
+  }));
+}

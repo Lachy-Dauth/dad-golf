@@ -23,13 +23,17 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 > stats table, and recent rounds table. Server-side aggregation endpoint
 > computes all stats from hole-level score data.
 
-### 1b. Head-to-Head Comparisons — FREE
+### 1b. Head-to-Head Comparisons — FREE ✅
 
 - Compare your stats against a mate across all shared rounds
 - Win/loss record between two players
 - "Rivalry" page for regular playing partners
 
-> Fun for competitive groups. Natural extension of the stats dashboard.
+> Shipped. Dedicated /h2h page with opponent picker showing all shared
+> opponents sorted by rounds played. Rivalry view includes win/loss/draw
+> bar, Stableford/Strokes toggle, stat comparison rows (avg, best, total),
+> par-type comparison, butterfly scoring distribution chart, dual-line trend
+> chart, and full round-by-round history table. Accessible from Stats page.
 
 ### 1c. Round Replay & Hole-by-Hole Breakdown — FREE ✅
 
@@ -333,7 +337,7 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 | #   | Feature                        | Category     |
 | --- | ------------------------------ | ------------ |
 | 1a  | Personal Stats Dashboard       | **FREE** ✅  |
-| 1b  | Head-to-Head Comparisons       | **FREE**     |
+| 1b  | Head-to-Head Comparisons       | **FREE** ✅  |
 | 1c  | Round Replay / Breakdown       | **FREE** ✅  |
 | 2a  | Recurring Leagues              | **FREE**     |
 | 2b  | League Leaderboard & Awards    | **FREE**     |
@@ -364,4 +368,4 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 | 10a | Club/Organisation Account      | **WON'T DO** |
 | 10b | Tournament Mode                | **WON'T DO** |
 
-**Totals: 24 FREE (16 shipped), 8 WON'T DO**
+**Totals: 24 FREE (17 shipped), 8 WON'T DO**

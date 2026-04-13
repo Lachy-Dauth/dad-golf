@@ -453,6 +453,12 @@ export default function StatsPage() {
         </div>
       )}
 
+      <div className="section">
+        <Link to="/h2h" className="btn btn-primary" style={{ display: "inline-block" }}>
+          Head to Head
+        </Link>
+      </div>
+
       <Link to="/" className="back-link">
         &larr; Home
       </Link>

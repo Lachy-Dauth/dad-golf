@@ -42,7 +42,7 @@ flowchart TD
     end
 
     subgraph phase5["Phase 5: Wave 2"]
-        P5A["1b. Head-to-Head\n2 weeks"]
+        P5A["1b. Head-to-Head ✅"]
         P5B["2a. Recurring Leagues\n4-5 weeks"]
         P5C["7a. Scoring Formats\n3-4 weeks"]
     end
@@ -177,7 +177,7 @@ gantt
 
 | Feature               | Duration  | Depends On | Notes                                |
 | --------------------- | --------- | ---------- | ------------------------------------ |
-| 1b. Head-to-Head      | 2 weeks   | 1a         | Extends stats infra with comparisons |
+| 1b. Head-to-Head      | 2 weeks   | 1a         | ✅ Shipped — Rivalry page with opponent picker, win/loss/draw, stat comparison, distributions, trend chart, round history |
 | 2a. Recurring Leagues | 4-5 weeks | —          | New data models, standings, seasons  |
 | 7a. Scoring Formats   | 3-4 weeks | —          | Stroke, Ambrose, best ball, par comp |
 
@@ -223,11 +223,11 @@ could ship over approximately **5-6 months** at part-time pace.
 
 | Category           | Features                | Est. Weeks      |
 | ------------------ | ----------------------- | --------------- |
-| Shipped            | 16 features ✅          | ~0 weeks        |
-| Remaining          | 8 features              | ~19 weeks       |
-| **Total remaining**| **8 features**          | **~19 weeks**   |
+| Shipped            | 17 features ✅          | ~0 weeks        |
+| Remaining          | 7 features              | ~17 weeks       |
+| **Total remaining**| **7 features**          | **~17 weeks**   |
 
-**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges, 1a Stats Dashboard, 6b Group Stats (plus location autocomplete and course reviews).
+**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges, 1a Stats Dashboard, 6b Group Stats, 1b Head-to-Head (plus location autocomplete and course reviews).
 
 At part-time pace (~15-20 hrs/week), remaining work is roughly **5-6 months** of
 calendar time with some parallelism.
