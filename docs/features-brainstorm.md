@@ -9,24 +9,31 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 
 ## 1. Stats & Analytics
 
-### 1a. Personal Stats Dashboard — FREE
+### 1a. Personal Stats Dashboard — FREE ✅
 
 - Scoring averages over time (overall, per course, per hole)
 - Stableford points trend graph
 - Best/worst holes, par-3/4/5 breakdowns
-- Handicap trend tracking (unofficial, based on round history)
+- Stableford / raw strokes toggle
 - "Personal bests" badges
 
-> The data already exists from completed rounds — this is mostly frontend
-> charting work and a few new endpoints.
+> Shipped. Dedicated /stats page with Stableford/Strokes toggle, overview
+> cards (rounds, wins, avg, best), scoring distribution bar chart, points/
+> strokes trend line chart, performance by par type (3/4/5), per-course
+> stats table, and recent rounds table. Server-side aggregation endpoint
+> computes all stats from hole-level score data.
 
-### 1b. Head-to-Head Comparisons — FREE
+### 1b. Head-to-Head Comparisons — FREE ✅
 
 - Compare your stats against a mate across all shared rounds
 - Win/loss record between two players
 - "Rivalry" page for regular playing partners
 
-> Fun for competitive groups. Natural extension of the stats dashboard.
+> Shipped. Dedicated /h2h page with opponent picker showing all shared
+> opponents sorted by rounds played. Rivalry view includes win/loss/draw
+> bar, Stableford/Strokes toggle, stat comparison rows (avg, best, total),
+> par-type comparison, butterfly scoring distribution chart, dual-line trend
+> chart, and full round-by-round history table. Accessible from Stats page.
 
 ### 1c. Round Replay & Hole-by-Hole Breakdown — FREE ✅
 
@@ -164,14 +171,17 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 
 ## 6. Group Management Upgrades
 
-### 6b. Group Stats & History — FREE
+### 6b. Group Stats & History — FREE ✅
 
 - All-time group leaderboard
 - Round history for the group
 - "Group records" — best individual round, most points on a hole, etc.
 
-> "Who's the all-time best in the group?" is a question every regular group
-> wants answered. Drives competitive engagement.
+> Shipped. Dedicated /groups/:id/stats page with Stableford/Strokes toggle,
+> group records (best points, best strokes, most eagles), all-time leaderboard
+> bar chart, expandable member breakdown with per-player scoring distributions,
+> courses played table, and recent rounds table. Accessible from group detail
+> page via Stats button.
 
 ### 6c. Group Roles & Permissions — FREE ✅
 
@@ -326,8 +336,8 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 
 | #   | Feature                        | Category     |
 | --- | ------------------------------ | ------------ |
-| 1a  | Personal Stats Dashboard       | **FREE**     |
-| 1b  | Head-to-Head Comparisons       | **FREE**     |
+| 1a  | Personal Stats Dashboard       | **FREE** ✅  |
+| 1b  | Head-to-Head Comparisons       | **FREE** ✅  |
 | 1c  | Round Replay / Breakdown       | **FREE** ✅  |
 | 2a  | Recurring Leagues              | **FREE**     |
 | 2b  | League Leaderboard & Awards    | **FREE**     |
@@ -341,7 +351,7 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 | 5a  | Skins Game                     | **FREE**     |
 | 5b  | Nassau / Match Play            | **WON'T DO** |
 | 5c  | Closest to Pin / Longest Drive | **FREE** ✅  |
-| 6b  | Group Stats & History          | **FREE**     |
+| 6b  | Group Stats & History          | **FREE** ✅  |
 | 6c  | Group Roles & Permissions      | **FREE** ✅  |
 | 6d  | Group Chat / Noticeboard       | **WON'T DO** |
 | 7a  | Multiple Scoring Formats       | **FREE**     |
@@ -358,4 +368,4 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 | 10a | Club/Organisation Account      | **WON'T DO** |
 | 10b | Tournament Mode                | **WON'T DO** |
 
-**Totals: 24 FREE (14 shipped), 8 WON'T DO**
+**Totals: 24 FREE (17 shipped), 8 WON'T DO**

@@ -40,6 +40,13 @@ export default function HomePage() {
           <span className="action-sub">View and RSVP to scheduled rounds</span>
         </Link>
         {user && (
+          <Link to="/stats" className="action-tile">
+            <span className="action-icon">📊</span>
+            <span className="action-label">My Stats</span>
+            <span className="action-sub">Performance and trends</span>
+          </Link>
+        )}
+        {user && (
           <Link to="/rounds" className="action-tile">
             <span className="action-icon">📋</span>
             <span className="action-label">My rounds</span>

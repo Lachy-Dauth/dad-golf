@@ -197,7 +197,12 @@ export default function GroupDetailPage() {
     <div className="page">
       <div className="page-header">
         <h1>{group.name}</h1>
-        <span className="badge">{members.length}</span>
+        <div className="row-actions">
+          <Link to={`/groups/${id}/stats`} className="btn">
+            Stats
+          </Link>
+          <span className="badge">{members.length}</span>
+        </div>
       </div>
       {myMember && (
         <p className="muted">Your role: {myMember.role === "admin" ? "Admin" : "Member"}</p>

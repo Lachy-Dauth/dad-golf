@@ -88,10 +88,173 @@ export interface AdminCourseReport {
   reasons: CourseReportReason[];
 }
 
+export interface GroupMemberStats {
+  playerId: string;
+  playerName: string;
+  userId: string | null;
+  roundsPlayed: number;
+  wins: number;
+  totalPoints: number;
+  avgPoints: number;
+  bestPoints: number;
+  bestRoundCode: string | null;
+  totalStrokes: number;
+  avgStrokes: number;
+  bestStrokes: number;
+  bestStrokesRoundCode: string | null;
+  eagles: number;
+  birdies: number;
+  pars: number;
+  bogeys: number;
+  doublePlus: number;
+  strokesUnderPar: number;
+  strokesAtPar: number;
+  strokesOverOne: number;
+  strokesOverTwo: number;
+  strokesOverThreePlus: number;
+}
+
+export interface GroupRecord {
+  type: string;
+  value: number;
+  playerName: string;
+  courseName: string;
+  roomCode: string;
+  date: string;
+}
+
+export interface GroupStats {
+  totalRounds: number;
+  totalHolesPlayed: number;
+  memberStats: GroupMemberStats[];
+  records: GroupRecord[];
+  courseStats: Array<{
+    courseId: string;
+    courseName: string;
+    timesPlayed: number;
+    avgPoints: number;
+    avgStrokes: number;
+  }>;
+  recentRounds: Array<{
+    roomCode: string;
+    courseName: string;
+    completedAt: string;
+    winnerName: string | null;
+    winnerPoints: number | null;
+    playerCount: number;
+    coursePar: number;
+  }>;
+}
+
+export interface Opponent {
+  userId: string;
+  displayName: string;
+  username: string;
+  sharedRounds: number;
+}
+
+export interface H2HPlayerStats {
+  userId: string;
+  displayName: string;
+  wins: number;
+  totalPoints: number;
+  avgPoints: number;
+  bestPoints: number;
+  totalStrokes: number;
+  avgStrokes: number;
+  bestStrokes: number;
+  eagles: number;
+  birdies: number;
+  pars: number;
+  bogeys: number;
+  doublePlus: number;
+  strokesUnderPar: number;
+  strokesAtPar: number;
+  strokesOverOne: number;
+  strokesOverTwo: number;
+  strokesOverThreePlus: number;
+  par3AvgPoints: number | null;
+  par4AvgPoints: number | null;
+  par5AvgPoints: number | null;
+  par3AvgStrokes: number | null;
+  par4AvgStrokes: number | null;
+  par5AvgStrokes: number | null;
+}
+
+export interface HeadToHeadStats {
+  sharedRounds: number;
+  draws: number;
+  player1: H2HPlayerStats;
+  player2: H2HPlayerStats;
+  rounds: Array<{
+    roomCode: string;
+    courseName: string;
+    completedAt: string;
+    coursePar: number;
+    p1Points: number;
+    p1Strokes: number;
+    p2Points: number;
+    p2Strokes: number;
+    winnerId: string | null;
+  }>;
+}
+
 export interface ActivityEvent {
   type: string;
   description: string;
   timestamp: string;
+}
+
+export interface UserStats {
+  totalRounds: number;
+  wins: number;
+  totalHolesPlayed: number;
+  eagles: number;
+  birdies: number;
+  pars: number;
+  bogeys: number;
+  doublePlus: number;
+  strokesUnderPar: number;
+  strokesAtPar: number;
+  strokesOverOne: number;
+  strokesOverTwo: number;
+  strokesOverThreePlus: number;
+  par3AvgPoints: number | null;
+  par4AvgPoints: number | null;
+  par5AvgPoints: number | null;
+  par3AvgStrokes: number | null;
+  par4AvgStrokes: number | null;
+  par5AvgStrokes: number | null;
+  bestRoundPoints: number | null;
+  bestRoundCourse: string | null;
+  bestRoundCode: string | null;
+  bestRoundStrokes: number | null;
+  bestStrokesRoundStrokes: number | null;
+  bestStrokesRoundCourse: string | null;
+  bestStrokesRoundCode: string | null;
+  avgPointsPerRound: number | null;
+  avgStrokesPerRound: number | null;
+  courseStats: Array<{
+    courseId: string;
+    courseName: string;
+    courseLocation: string | null;
+    timesPlayed: number;
+    avgPoints: number;
+    bestPoints: number;
+    avgStrokes: number;
+    bestStrokes: number;
+    coursePar: number;
+  }>;
+  recentRounds: Array<{
+    roomCode: string;
+    courseName: string;
+    completedAt: string;
+    totalPoints: number;
+    totalStrokes: number;
+    position: number;
+    playerCount: number;
+    coursePar: number;
+  }>;
 }
 import { getAuthToken } from "./authStore.js";
 
@@ -694,4 +857,22 @@ export const api = {
     fetch(`/api/users/${encodeURIComponent(username)}/badges`, {
       headers: authHeaders(),
     }).then((r) => json<{ badges: UserBadge[] }>(r)),
+
+  // stats
+  getStats: () =>
+    fetch("/api/stats", { headers: authHeaders() }).then((r) => json<{ stats: UserStats }>(r)),
+  getGroupStats: (groupId: string) =>
+    fetch(`/api/groups/${groupId}/stats`, { headers: authHeaders() }).then((r) =>
+      json<{ stats: GroupStats }>(r),
+    ),
+
+  // head-to-head
+  getOpponents: () =>
+    fetch("/api/stats/h2h/opponents", { headers: authHeaders() }).then((r) =>
+      json<{ opponents: Opponent[] }>(r),
+    ),
+  getHeadToHead: (opponentId: string) =>
+    fetch(`/api/stats/h2h/${opponentId}`, { headers: authHeaders() }).then((r) =>
+      json<{ stats: HeadToHeadStats }>(r),
+    ),
 };

@@ -21,6 +21,9 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 - **Calendar integration** — export scheduled rounds to .ics (Apple Calendar), Google Calendar (web link), or Outlook; optional Google Calendar OAuth sync automatically creates/updates/deletes events when you RSVP; subscribable iCal feed URL for auto-sync in any calendar app (Apple Calendar, Google Calendar, Outlook)
 - **Activity feed** — see recent activity from your groups (round completions, new members, scheduled rounds, competition wins, handicap changes, badges earned); like and comment on events; privacy controls (private / in group)
 - **Achievement badges** — 12 badges across milestones, scoring, social, and competition categories; awarded automatically on round completion; displayed on your profile; user profile page (`/user/:username`) visible to group members
+- **Personal stats** — dedicated stats dashboard with Stableford/Strokes toggle, overview cards, scoring distributions, trend charts, par-type breakdowns, course stats, and recent rounds
+- **Group stats** — group leaderboard, records, member breakdowns with expandable scoring distributions, course stats, and recent rounds
+- **Head to Head** — compare your stats against any opponent; win/loss/draw record, stat comparison, scoring distributions, dual-line trend chart, and round-by-round history
 - **Admin dashboard** — view stats, manage users, and monitor activity
 - **Dark / light mode** — theme toggle that respects your preference
 - **PWA support** — install the app to your home screen for a native feel

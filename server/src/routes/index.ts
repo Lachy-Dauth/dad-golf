@@ -11,6 +11,7 @@ import { registerGoogleCalendarRoutes } from "./googleCalendar.js";
 import { registerCalendarFeedRoutes } from "./calendarFeed.js";
 import { registerActivityRoutes } from "./activity.js";
 import { registerUserRoutes } from "./users.js";
+import { registerStatsRoutes } from "./stats.js";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   app.get("/api/health", async () => ({ ok: true }));
@@ -27,4 +28,5 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await registerCalendarFeedRoutes(app);
   await registerActivityRoutes(app);
   await registerUserRoutes(app);
+  await registerStatsRoutes(app);
 }

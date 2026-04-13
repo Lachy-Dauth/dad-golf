@@ -34,15 +34,15 @@ flowchart TD
     end
 
     subgraph phase4["Phase 4: Wave 1"]
-        P4A["1a. Stats Dashboard\n2-3 weeks"]
+        P4A["1a. Stats Dashboard ✅"]
         P4B["5a. Skins Game\n2 weeks"]
         P4C["4b. Shareable Cards\n2 weeks"]
         P4D["8e. PDF Scorecards\n1.5 weeks"]
-        P4E["6b. Group Stats\n2 weeks"]
+        P4E["6b. Group Stats ✅"]
     end
 
     subgraph phase5["Phase 5: Wave 2"]
-        P5A["1b. Head-to-Head\n2 weeks"]
+        P5A["1b. Head-to-Head ✅"]
         P5B["2a. Recurring Leagues\n4-5 weeks"]
         P5C["7a. Scoring Formats\n3-4 weeks"]
     end
@@ -163,11 +163,11 @@ gantt
 
 | Feature             | Duration  | Depends On | Notes                                   |
 | ------------------- | --------- | ---------- | --------------------------------------- |
-| 1a. Stats Dashboard | 2-3 weeks | 1c         | Charts, API endpoints, history queries  |
+| 1a. Stats Dashboard | 2-3 weeks | 1c         | ✅ Shipped — Stableford/Strokes toggle, overview cards, trend chart, par breakdown, course stats |
 | 5a. Skins Game      | 2 weeks   | —          | Parallel scoring layer on rounds        |
 | 4b. Shareable Cards | 2 weeks   | —          | Server-side image gen (canvas/SVG)      |
 | 8e. PDF Scorecards  | 1.5 weeks | —          | PDF generation (pdfkit or similar)      |
-| 6b. Group Stats     | 2 weeks   | —          | Aggregate queries, all-time leaderboard |
+| 6b. Group Stats     | 2 weeks   | —          | ✅ Shipped — All-time leaderboard, records, member breakdown, course stats |
 
 **Phase total: ~7 weeks** (some can run in parallel)
 
@@ -177,7 +177,7 @@ gantt
 
 | Feature               | Duration  | Depends On | Notes                                |
 | --------------------- | --------- | ---------- | ------------------------------------ |
-| 1b. Head-to-Head      | 2 weeks   | 1a         | Extends stats infra with comparisons |
+| 1b. Head-to-Head      | 2 weeks   | 1a         | ✅ Shipped — Rivalry page with opponent picker, win/loss/draw, stat comparison, distributions, trend chart, round history |
 | 2a. Recurring Leagues | 4-5 weeks | —          | New data models, standings, seasons  |
 | 7a. Scoring Formats   | 3-4 weeks | —          | Stroke, Ambrose, best ball, par comp |
 
@@ -223,11 +223,11 @@ could ship over approximately **5-6 months** at part-time pace.
 
 | Category           | Features                | Est. Weeks      |
 | ------------------ | ----------------------- | --------------- |
-| Shipped            | 14 features ✅          | ~0 weeks        |
-| Remaining          | 10 features             | ~24 weeks       |
-| **Total remaining**| **10 features**         | **~24 weeks**   |
+| Shipped            | 17 features ✅          | ~0 weeks        |
+| Remaining          | 7 features              | ~17 weeks       |
+| **Total remaining**| **7 features**          | **~17 weeks**   |
 
-**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges (plus location autocomplete and course reviews).
+**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges, 1a Stats Dashboard, 6b Group Stats, 1b Head-to-Head (plus location autocomplete and course reviews).
 
 At part-time pace (~15-20 hrs/week), remaining work is roughly **5-6 months** of
 calendar time with some parallelism.

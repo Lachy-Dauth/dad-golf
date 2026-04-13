@@ -1,0 +1,585 @@
+/* ================================================================
+   Stats Dashboard
+   ================================================================ */
+
+/* -- Mode toggle -- */
+.stats-mode-toggle {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.stats-mode-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.stats-mode-btn:first-child {
+  border-right: 1px solid var(--border);
+}
+.stats-mode-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.stats-mode-btn.active {
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+
+/* -- Overview cards -- */
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.stats-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 16px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.stats-card.highlight {
+  border-color: var(--primary-dim);
+  background: rgba(59, 193, 107, 0.04);
+}
+.stats-card-value {
+  font-size: 28px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--text);
+}
+.stats-card.highlight .stats-card-value {
+  color: var(--primary);
+}
+.stats-card-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* -- Scoring distribution bar chart -- */
+.score-dist-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dist-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 36px 40px;
+  gap: 8px;
+  align-items: center;
+}
+.dist-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: right;
+}
+.dist-bar-track {
+  height: 22px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dist-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+}
+.dist-count {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text);
+}
+.dist-pct {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- Trend chart -- */
+.stats-chart {
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
+.stats-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* -- Par type cards -- */
+.par-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.par-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.par-type-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+.par-type-value {
+  font-size: 24px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.par-type-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* -- Stats tables -- */
+.stats-table-wrap {
+  overflow-x: auto;
+}
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.stats-table th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.stats-table th:not(:first-child) {
+  text-align: right;
+}
+.stats-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-dim);
+  vertical-align: top;
+}
+.stats-table td:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+}
+.stats-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.stats-course-link {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+}
+.stats-course-link:hover {
+  color: var(--primary);
+}
+.stats-course-loc {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.3;
+}
+.stats-date {
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+.highlight-val {
+  font-weight: 700;
+  color: var(--text);
+}
+.stats-par-diff {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-left: 4px;
+  font-weight: 400;
+}
+.stats-of {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+/* ================================================================
+   Group Stats
+   ================================================================ */
+
+/* -- Section subtitle -- */
+.section-sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+/* -- Group leaderboard bar chart -- */
+.group-lb-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.group-lb-row {
+  display: grid;
+  grid-template-columns: 28px minmax(60px, auto) 1fr 44px;
+  gap: 8px;
+  align-items: center;
+}
+.group-lb-pos {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-dim);
+  text-align: center;
+}
+.group-lb-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.group-lb-bar-track {
+  height: 24px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.group-lb-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  min-width: 3px;
+}
+.group-lb-val {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* -- Group records -- */
+.group-records {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+.group-record-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.group-record-card:hover {
+  border-color: var(--primary-dim);
+}
+.group-record-type {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+.group-record-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.1;
+}
+.group-record-meta {
+  font-size: 13px;
+  color: var(--text);
+  margin-top: 2px;
+}
+.group-record-date {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* -- Member detail expansion -- */
+.member-row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.member-row:hover {
+  background: var(--surface-hover);
+}
+.member-row.expanded {
+  background: var(--surface-2);
+}
+.member-detail-row td {
+  padding: 0 !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.member-detail {
+  padding: 10px 12px 14px;
+  background: var(--surface);
+}
+.member-detail-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dist-row.compact {
+  grid-template-columns: 52px 1fr 28px 36px;
+  gap: 6px;
+}
+.dist-row.compact .dist-label {
+  font-size: 12px;
+}
+.dist-row.compact .dist-bar-track {
+  height: 16px;
+}
+.dist-row.compact .dist-count {
+  font-size: 12px;
+}
+.dist-row.compact .dist-pct {
+  font-size: 11px;
+}
+
+/* ================================================================
+   Head-to-Head
+   ================================================================ */
+
+/* -- Win/Loss bar -- */
+.h2h-winloss {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.h2h-winloss-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.h2h-winloss-count.h2h-p1 {
+  color: #3bc16b;
+}
+.h2h-winloss-count.h2h-draw {
+  color: var(--text-dim);
+}
+.h2h-winloss-count.h2h-p2 {
+  color: #5b9cf5;
+}
+.h2h-winloss-bar {
+  display: flex;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface-2);
+  gap: 2px;
+}
+.h2h-winloss-seg {
+  transition: width 0.4s ease;
+  min-width: 0;
+}
+.h2h-winloss-seg.h2h-p1 {
+  background: #3bc16b;
+  border-radius: 6px 0 0 6px;
+}
+.h2h-winloss-seg.h2h-draw {
+  background: var(--border);
+}
+.h2h-winloss-seg.h2h-p2 {
+  background: #5b9cf5;
+  border-radius: 0 6px 6px 0;
+}
+.h2h-winloss-names {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* -- Comparison rows -- */
+.h2h-compare-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  padding: 0 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+.h2h-compare-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+.h2h-compare-row:last-child {
+  border-bottom: none;
+}
+.h2h-compare-val {
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.h2h-compare-val:first-child {
+  text-align: left;
+}
+.h2h-compare-val:last-child {
+  text-align: right;
+}
+.h2h-compare-val.winner {
+  color: var(--primary);
+  font-weight: 800;
+}
+.h2h-compare-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* -- Distribution comparison (butterfly chart) -- */
+.h2h-dist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.h2h-dist-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto 1fr 32px;
+  gap: 6px;
+  align-items: center;
+}
+.h2h-dist-val {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.h2h-dist-val:first-child {
+  text-align: right;
+}
+.h2h-dist-val:last-child {
+  text-align: left;
+}
+.h2h-dist-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-align: center;
+  white-space: nowrap;
+}
+.h2h-dist-bar-track {
+  height: 20px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+}
+.h2h-dist-bar-track.right {
+  justify-content: flex-end;
+}
+.h2h-dist-bar-track.left {
+  justify-content: flex-start;
+}
+.h2h-dist-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+}
+
+/* -- Chart legend -- */
+.h2h-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.h2h-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.h2h-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* -- Winner cell in round history -- */
+.h2h-winner-cell {
+  color: var(--primary) !important;
+}
+
+/* -- Opponent picker button -- */
+.h2h-opponent-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  padding: 12px;
+}
+.h2h-opponent-btn:hover {
+  background: var(--surface-hover);
+}
+
+/* -- Responsive -- */
+@media (max-width: 420px) {
+  .stats-overview {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .stats-card-value {
+    font-size: 22px;
+  }
+  .dist-row {
+    grid-template-columns: 60px 1fr 28px 36px;
+    gap: 6px;
+  }
+  .dist-label {
+    font-size: 12px;
+  }
+  .par-type-value {
+    font-size: 20px;
+  }
+}
