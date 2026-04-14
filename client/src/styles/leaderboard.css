@@ -1,0 +1,102 @@
+/* leaderboard */
+.leaderboard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 0;
+}
+.lb-header,
+.lb-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 50px 60px 50px 50px;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+}
+.lb-header {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+}
+.lb-row {
+  border-bottom: 1px solid var(--border-dim);
+}
+.lb-row:last-child {
+  border-bottom: none;
+}
+.lb-row.lead {
+  background: rgba(59, 193, 107, 0.08);
+}
+.lb-pos {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-dim);
+}
+.lb-row.lead .lb-pos {
+  color: var(--accent);
+}
+.lb-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lb-primary {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-secondary {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.lb-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+}
+.lb-points {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* summary */
+.summary .winner-card {
+  background: linear-gradient(135deg, var(--accent), #e6b13d);
+  color: #1a1300;
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.winner-label {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+.winner-name {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 4px 0;
+}
+.winner-points {
+  font-size: 16px;
+}
+
+.stat-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lb-strokes {
+  color: var(--text-dim);
+}

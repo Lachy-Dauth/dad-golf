@@ -31,8 +31,11 @@ import {
 import { buildRoundState } from "../roundState.js";
 import {
   MAX_PLAYERS_PER_ROUND,
+  errorMessage,
+  fireAndForget,
   requireUser,
   validateDurationMinutes,
+  validateNotes,
   validateScheduledDate,
   validateScheduledTime,
 } from "./validation.js";
@@ -164,7 +167,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       const scheduledDate = validateScheduledDate(rawDate);
       const scheduledTime = rawTime ? validateScheduledTime(rawTime) : null;
       const durationMinutes = validateDurationMinutes(rawDuration);
-      const trimmedNotes = typeof notes === "string" ? notes.trim() || null : null;
+      const trimmedNotes = validateNotes(notes);
 
       const scheduledRound = await createScheduledRound(
         group.id,
@@ -175,21 +178,25 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         trimmedNotes,
         user.id,
       );
-      createActivityEvent(
-        "scheduled_round_created",
-        user.id,
-        group.id,
-        null,
-        user.activityVisibility,
-        {
-          courseName: course.name,
-          scheduledDate,
-          scheduledTime,
-        },
-      ).catch(() => {});
+      fireAndForget(
+        createActivityEvent(
+          "scheduled_round_created",
+          user.id,
+          group.id,
+          null,
+          user.activityVisibility,
+          {
+            courseName: course.name,
+            scheduledDate,
+            scheduledTime,
+          },
+        ),
+        req.log,
+        "scheduled_round_created activity event",
+      );
       return reply.code(201).send({ scheduledRound });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -240,7 +247,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         fields.durationMinutes = validateDurationMinutes(durationMinutes);
       }
       if (notes !== undefined) {
-        fields.notes = typeof notes === "string" ? notes.trim() || null : null;
+        fields.notes = validateNotes(notes);
       }
 
       await updateScheduledRound(sr.id, fields);
@@ -250,7 +257,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       const updated = await getScheduledRound(sr.id);
       return { scheduledRound: updated };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -318,7 +325,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       });
       return { rsvp };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -399,7 +406,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         const state = await buildRoundState(round.roomCode, user.id);
         return reply.code(201).send({ state });
       } catch (e) {
-        return reply.code(400).send({ error: (e as Error).message });
+        return reply.code(400).send({ error: errorMessage(e) });
       }
     },
   );

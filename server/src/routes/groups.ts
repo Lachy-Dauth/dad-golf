@@ -24,6 +24,8 @@ import {
 import { evaluateBadges } from "../badgeEvaluator.js";
 import {
   MAX_MEMBERS_PER_GROUP,
+  errorMessage,
+  fireAndForget,
   getViewerUser,
   parsePagination,
   requireUser,
@@ -76,7 +78,7 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
       const members = await listGroupMembers(group.id);
       return reply.code(201).send({ group, members });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -117,7 +119,7 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
       const member = await addGroupMember(group.id, name, handicap);
       return reply.code(201).send({ member });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -144,7 +146,7 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
       await updateGroupMember(req.params.memberId, name, handicap);
       return { ok: true };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
@@ -281,20 +283,28 @@ export async function registerGroupRoutes(app: FastifyInstance): Promise<void> {
       }
       const member = await addGroupMember(group.id, user.displayName, user.handicap, user.id);
       // Fire activity event and evaluate badges
-      createActivityEvent(
-        "member_joined",
-        user.id,
-        group.id,
-        null,
-        user.activityVisibility,
-        { groupName: group.name },
-      ).catch(() => {});
-      evaluateBadges({
-        trigger: "member_joined",
-        userId: user.id,
-        groupId: group.id,
-        visibility: user.activityVisibility,
-      }).catch(() => {});
+      fireAndForget(
+        createActivityEvent(
+          "member_joined",
+          user.id,
+          group.id,
+          null,
+          user.activityVisibility,
+          { groupName: group.name },
+        ),
+        req.log,
+        "member_joined activity event",
+      );
+      fireAndForget(
+        evaluateBadges({
+          trigger: "member_joined",
+          userId: user.id,
+          groupId: group.id,
+          visibility: user.activityVisibility,
+        }),
+        req.log,
+        "member_joined badge evaluation",
+      );
       return reply.code(201).send({ group, member });
     },
   );

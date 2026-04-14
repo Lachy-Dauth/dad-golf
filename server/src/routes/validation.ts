@@ -1,4 +1,4 @@
-import type { FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyBaseLogger, FastifyReply, FastifyRequest } from "fastify";
 import type { CourseReportReason, Hole, Round, User } from "@dad-golf/shared";
 import { normalizeRoomCode } from "@dad-golf/shared";
 import { getRoundByRoomCode, getUserBySession } from "../db/index.js";
@@ -80,8 +80,8 @@ export function validateUsername(name: unknown): string {
 
 export function validatePassword(p: unknown): string {
   if (typeof p !== "string") throw new Error("password must be a string");
-  if (p.length < 6 || p.length > 128) {
-    throw new Error("password must be 6-128 characters");
+  if (p.length < 8 || p.length > 128) {
+    throw new Error("password must be 8-128 characters");
   }
   return p;
 }
@@ -152,6 +152,15 @@ export function validateReviewText(t: unknown): string | null {
   return trimmed;
 }
 
+export function validateNotes(t: unknown): string | null {
+  if (t === undefined || t === null || t === "") return null;
+  if (typeof t !== "string") throw new Error("notes must be a string");
+  const trimmed = t.trim();
+  if (trimmed.length === 0) return null;
+  if (trimmed.length > 500) throw new Error("notes must be 500 characters or fewer");
+  return trimmed;
+}
+
 const VALID_REPORT_REASONS = new Set<CourseReportReason>([
   "incorrect_info",
   "duplicate",
@@ -217,4 +226,19 @@ export function parsePagination(
   const limit = Math.min(Math.max(Number(query.limit) || defaults.limit, 1), defaults.maxLimit);
   const offset = Math.max(Number(query.offset) || 0, 0);
   return { limit, offset };
+}
+
+export function fireAndForget(
+  promise: Promise<unknown>,
+  logger: FastifyBaseLogger,
+  context?: string,
+): void {
+  promise.catch((err) => {
+    logger.error({ err }, context ?? "fire-and-forget operation failed");
+  });
+}
+
+export function errorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  return String(e);
 }

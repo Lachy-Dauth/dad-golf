@@ -1,5 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
+import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
 import fastifyStatic from "@fastify/static";
 import { resolve, dirname } from "node:path";
@@ -7,22 +9,52 @@ import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { registerRoutes } from "./routes/index.js";
 import { registerWebsocket } from "./ws.js";
-import { initDb, closeDb } from "./db/index.js";
+import { initDb, closeDb, deleteExpiredSessions } from "./db/index.js";
 import { seedIfEmpty, bootstrapAdmin } from "./seed.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function main(): Promise<void> {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ logger: true, bodyLimit: 1_048_576 });
 
-  await app.register(cors, { origin: true });
+  await app.register(helmet, {
+    contentSecurityPolicy: false, // needs nonce/hash for inline theme script
+  });
+
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((s) => s.trim())
+    : [];
+  await app.register(cors, {
+    origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+  });
+
+  await app.register(rateLimit, {
+    max: 100,
+    timeWindow: "1 minute",
+  });
+
   await app.register(websocket);
 
   await initDb();
   await seedIfEmpty(app.log);
   await bootstrapAdmin(app.log);
 
+  // Clean up expired sessions every 24 hours
+  const cleanupTimer = setInterval(
+    async () => {
+      try {
+        const count = await deleteExpiredSessions();
+        if (count > 0) app.log.info(`Cleaned up ${count} expired sessions`);
+      } catch (err) {
+        app.log.error({ err }, "Failed to clean up expired sessions");
+      }
+    },
+    24 * 60 * 60 * 1000,
+  );
+  cleanupTimer.unref();
+
   app.addHook("onClose", async () => {
+    clearInterval(cleanupTimer);
     await closeDb();
   });
 

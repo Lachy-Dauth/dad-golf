@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { Hole } from "@dad-golf/shared";
 import {
   createCourse,
@@ -59,7 +60,7 @@ export async function seedIfEmpty(log: Logger): Promise<void> {
 
   let seedUser = await getUserByUsername(SEED_USERNAME);
   if (!seedUser) {
-    await createUser(SEED_USERNAME, "stableford", "Stableford", 18);
+    await createUser(SEED_USERNAME, randomBytes(16).toString("hex"), "Stableford", 18);
     seedUser = await getUserByUsername(SEED_USERNAME);
   }
   if (!seedUser) return;
@@ -85,8 +86,8 @@ export async function bootstrapAdmin(log: Logger): Promise<void> {
     log.info("ADMIN_PASSWORD not set – skipping admin user bootstrap");
     return;
   }
-  if (password.length < 6) {
-    log.warn("ADMIN_PASSWORD is shorter than 6 characters – skipping");
+  if (password.length < 8) {
+    log.warn("ADMIN_PASSWORD is shorter than 8 characters – skipping");
     return;
   }
   await ensureAdminUser(password);

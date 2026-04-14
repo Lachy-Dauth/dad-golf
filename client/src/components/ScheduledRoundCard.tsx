@@ -1,33 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import type { ScheduledRound, ScheduledRoundRsvp } from "@dad-golf/shared";
 import { downloadIcsFile } from "../calendarLinks.js";
+import { formatDate, formatTime, formatDuration } from "../utils/dateFormat.js";
 
 interface Props {
   scheduledRound: ScheduledRound;
   rsvps: ScheduledRoundRsvp[];
   currentUserId: string | null;
   googleCalendarConnected?: boolean;
-}
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
-}
-
-function formatTime(timeStr: string): string {
-  const [h, m] = timeStr.split(":");
-  const hour = parseInt(h, 10);
-  const suffix = hour >= 12 ? "pm" : "am";
-  const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${display}:${m}${suffix}`;
-}
-
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m}min`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
 }
 
 export default function ScheduledRoundCard({

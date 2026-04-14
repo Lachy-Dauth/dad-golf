@@ -1,34 +1,33 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
-import type { Group, GroupMember } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
+import { useAsync } from "../hooks/useAsync.js";
 
 export default function GroupsPage() {
   const { user } = useAuth();
-  const [groups, setGroups] = useState<Array<Group & { members: GroupMember[] }> | null>(null);
+  const {
+    data: groups,
+    error,
+    execute: load,
+  } = useAsync(
+    () => api.listGroups().then((res) => res.groups),
+    [user?.id],
+  );
   const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-
-  const load = () => {
-    api
-      .listGroups()
-      .then((res) => setGroups(res.groups))
-      .catch((e: Error) => setError(e.message));
-  };
-  useEffect(() => load(), [user?.id]);
 
   async function handleCreate() {
     if (!name.trim()) return;
     setCreating(true);
-    setError(null);
+    setActionError(null);
     try {
       await api.createGroup(name.trim());
       setName("");
       load();
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     } finally {
       setCreating(false);
     }
@@ -40,7 +39,7 @@ export default function GroupsPage() {
       await api.deleteGroup(id);
       load();
     } catch (e) {
-      setError((e as Error).message);
+      setActionError((e as Error).message);
     }
   }
 
@@ -73,8 +72,8 @@ export default function GroupsPage() {
         </div>
       )}
 
-      {error && <div className="error">{error}</div>}
-      {!groups && <div className="muted">Loading…</div>}
+      {(error || actionError) && <div className="error">{error || actionError}</div>}
+      {!groups && !error && <div className="muted">Loading…</div>}
       {groups && groups.length === 0 && <div className="muted">No groups yet.</div>}
       {groups && groups.length > 0 && (
         <ul className="list">

@@ -10,6 +10,7 @@ import {
   updateActivityVisibility,
 } from "../db/index.js";
 import {
+  errorMessage,
   getViewerUser,
   requireUser,
   validateHandicap,
@@ -17,6 +18,8 @@ import {
   validatePassword,
   validateUsername,
 } from "./validation.js";
+
+const authRateLimit = { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } };
 
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post<{
@@ -26,7 +29,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       displayName?: string;
       handicap?: number;
     };
-  }>("/api/auth/register", async (req, reply) => {
+  }>("/api/auth/register", authRateLimit, async (req, reply) => {
     try {
       const username = validateUsername(req.body?.username);
       const password = validatePassword(req.body?.password);
@@ -39,12 +42,13 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const token = await createSession(user.id);
       return reply.code(201).send({ user, token });
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 
   app.post<{ Body: { username?: string; password?: string } }>(
     "/api/auth/login",
+    authRateLimit,
     async (req, reply) => {
       try {
         const username = validateUsername(req.body?.username);
@@ -56,7 +60,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
         const token = await createSession(user.id);
         return { user, token };
       } catch (e) {
-        return reply.code(400).send({ error: (e as Error).message });
+        return reply.code(400).send({ error: errorMessage(e) });
       }
     },
   );
@@ -84,16 +88,13 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const handicap = validateHandicap(req.body?.handicap);
       await updateUserProfile(user.id, displayName, handicap);
       let activityVisibility = user.activityVisibility;
-      if (
-        req.body?.activityVisibility &&
-        ["none", "group"].includes(req.body.activityVisibility)
-      ) {
+      if (req.body?.activityVisibility && ["none", "group"].includes(req.body.activityVisibility)) {
         activityVisibility = req.body.activityVisibility as ActivityVisibility;
         await updateActivityVisibility(user.id, activityVisibility);
       }
       return { user: { ...user, displayName, handicap, activityVisibility } };
     } catch (e) {
-      return reply.code(400).send({ error: (e as Error).message });
+      return reply.code(400).send({ error: errorMessage(e) });
     }
   });
 }

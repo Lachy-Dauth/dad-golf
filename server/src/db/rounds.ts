@@ -58,6 +58,10 @@ interface RoundListRow extends RoundRow {
   leader_name: string | null;
 }
 
+const ROUND_SELECT = `SELECT r.*, u.display_name AS leader_name
+       FROM rounds r
+       LEFT JOIN users u ON u.id = r.leader_user_id`;
+
 function rowToRound(row: RoundListRow): Round {
   return {
     id: row.id,
@@ -75,25 +79,13 @@ function rowToRound(row: RoundListRow): Round {
 }
 
 export async function getRoundByRoomCode(roomCode: string): Promise<Round | null> {
-  const { rows } = await pool.query(
-    `SELECT r.*, u.display_name AS leader_name
-       FROM rounds r
-       LEFT JOIN users u ON u.id = r.leader_user_id
-       WHERE r.room_code = $1`,
-    [roomCode],
-  );
+  const { rows } = await pool.query(`${ROUND_SELECT} WHERE r.room_code = $1`, [roomCode]);
   const row = rows[0] as RoundListRow | undefined;
   return row ? rowToRound(row) : null;
 }
 
 export async function getRound(id: string): Promise<Round | null> {
-  const { rows } = await pool.query(
-    `SELECT r.*, u.display_name AS leader_name
-       FROM rounds r
-       LEFT JOIN users u ON u.id = r.leader_user_id
-       WHERE r.id = $1`,
-    [id],
-  );
+  const { rows } = await pool.query(`${ROUND_SELECT} WHERE r.id = $1`, [id]);
   const row = rows[0] as RoundListRow | undefined;
   return row ? rowToRound(row) : null;
 }
@@ -124,13 +116,9 @@ export async function deleteRound(id: string): Promise<void> {
 }
 
 export async function listRecentRounds(limit = 20): Promise<Round[]> {
-  const { rows } = await pool.query(
-    `SELECT r.*, u.display_name AS leader_name
-       FROM rounds r
-       LEFT JOIN users u ON u.id = r.leader_user_id
-       ORDER BY r.created_at DESC LIMIT $1`,
-    [limit],
-  );
+  const { rows } = await pool.query(`${ROUND_SELECT} ORDER BY r.created_at DESC LIMIT $1`, [
+    limit,
+  ]);
   return (rows as RoundListRow[]).map(rowToRound);
 }
 

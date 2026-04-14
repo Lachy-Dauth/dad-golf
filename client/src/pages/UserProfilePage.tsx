@@ -4,14 +4,7 @@ import { api } from "../api.js";
 import { BADGE_DEFINITIONS } from "@dad-golf/shared";
 import type { PublicUserProfile } from "@dad-golf/shared";
 import BadgeIcon from "../components/BadgeIcon.js";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { formatDate } from "../utils/dateFormat.js";
 
 function ordinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];

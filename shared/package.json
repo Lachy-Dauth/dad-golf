@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "node --test --import tsx ./src/stableford.test.ts ./src/handicap.test.ts"
+    "test": "node --test --import tsx ./src/**/*.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.5.4",

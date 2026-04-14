@@ -16,7 +16,7 @@ export interface IcsEventParams {
 }
 
 /** Escape special characters for iCalendar TEXT fields (RFC 5545 §3.3.11). */
-function escapeText(text: string): string {
+export function escapeText(text: string): string {
   return text
     .replace(/\\/g, "\\\\")
     .replace(/;/g, "\\;")
@@ -25,7 +25,7 @@ function escapeText(text: string): string {
 }
 
 /** Escape HTML special characters to prevent injection in X-ALT-DESC. */
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -37,7 +37,7 @@ function escapeHtml(text: string): string {
  * Fold lines longer than 75 octets per RFC 5545 §3.1.
  * Continuation lines start with a single space.
  */
-function foldLine(line: string): string {
+export function foldLine(line: string): string {
   if (line.length <= 75) return line;
   const parts: string[] = [];
   parts.push(line.slice(0, 75));

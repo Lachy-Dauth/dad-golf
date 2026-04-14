@@ -1,21 +1,9 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
 import type { UserScheduledRound } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
-}
-
-function formatTime(timeStr: string): string {
-  const [h, m] = timeStr.split(":");
-  const hour = parseInt(h, 10);
-  const suffix = hour >= 12 ? "pm" : "am";
-  const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${display}:${m}${suffix}`;
-}
+import { useAsync } from "../hooks/useAsync.js";
+import { formatDate, formatTime } from "../utils/dateFormat.js";
 
 function rsvpLabel(status: string): string {
   if (status === "accepted") return "Going";
@@ -25,17 +13,10 @@ function rsvpLabel(status: string): string {
 
 export default function UpcomingRoundsPage() {
   const { user } = useAuth();
-  const [rounds, setRounds] = useState<UserScheduledRound[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      api
-        .myScheduledRounds()
-        .then((res) => setRounds(res.scheduledRounds))
-        .catch((e: Error) => setError(e.message));
-    }
-  }, [user]);
+  const { data: rounds, error } = useAsync<UserScheduledRound[]>(
+    () => (user ? api.myScheduledRounds().then((res) => res.scheduledRounds) : Promise.resolve([])),
+    [user],
+  );
 
   return (
     <div className="page">

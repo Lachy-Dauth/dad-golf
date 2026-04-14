@@ -1,50 +1,39 @@
-# Paid Features Brainstorm
+# Feature Brainstorm
 
-Ideas for future monetisation of Dad Golf. Organised by theme, with each feature
-categorised as:
+Ideas for Dad Golf features. Organised by theme, with each feature categorised as:
 
-- **FREE** — Should be included for free. Improves the core experience or drives adoption.
-- **PRO** — Genuinely good paid feature. Worth building and charging for.
+- **FREE** — Included for free. All features are free — Dad Golf is a free app.
 - **WON'T DO** — Too much effort, too niche, or better served by other apps. Not worth building.
-
----
-
-## Pricing Model Thoughts
-
-A **freemium** model makes the most sense — the core scoring experience stays
-free forever (that's how you get adoption), and paid tiers unlock power-user,
-social, and analytics features. Two tiers probably suffice:
-
-| Tier             | Price (rough)               | Target                            |
-| ---------------- | --------------------------- | --------------------------------- |
-| **Free**         | $0                          | Casual players, first-timers      |
-| **Dad Golf Pro** | ~$5–8/month or ~$40–60/year | Regular golfers, group organisers |
-
-A one-time lifetime purchase (~$30–50) could work well too given the audience
-(dads who hate subscriptions).
 
 ---
 
 ## 1. Stats & Analytics
 
-### 1a. Personal Stats Dashboard — PRO
+### 1a. Personal Stats Dashboard — FREE ✅
 
 - Scoring averages over time (overall, per course, per hole)
 - Stableford points trend graph
 - Best/worst holes, par-3/4/5 breakdowns
-- Handicap trend tracking (unofficial, based on round history)
+- Stableford / raw strokes toggle
 - "Personal bests" badges
 
-> Classic "upgrade for insights" feature. The data already exists from completed
-> rounds — this is mostly frontend charting work and a few new endpoints.
+> Shipped. Dedicated /stats page with Stableford/Strokes toggle, overview
+> cards (rounds, wins, avg, best), scoring distribution bar chart, points/
+> strokes trend line chart, performance by par type (3/4/5), per-course
+> stats table, and recent rounds table. Server-side aggregation endpoint
+> computes all stats from hole-level score data.
 
-### 1b. Head-to-Head Comparisons — PRO
+### 1b. Head-to-Head Comparisons — FREE ✅
 
 - Compare your stats against a mate across all shared rounds
 - Win/loss record between two players
 - "Rivalry" page for regular playing partners
 
-> Fun for competitive groups. Natural upsell from the stats dashboard.
+> Shipped. Dedicated /h2h page with opponent picker showing all shared
+> opponents sorted by rounds played. Rivalry view includes win/loss/draw
+> bar, Stableford/Strokes toggle, stat comparison rows (avg, best, total),
+> par-type comparison, butterfly scoring distribution chart, dual-line trend
+> chart, and full round-by-round history table. Accessible from Stats page.
 
 ### 1c. Round Replay & Hole-by-Hole Breakdown — FREE ✅
 
@@ -59,17 +48,17 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ## 2. Leagues & Seasons
 
-### 2a. Recurring Leagues — PRO
+### 2a. Recurring Leagues — FREE
 
 - Create a league with a set of players and a season (e.g., 10 rounds over 3 months)
 - Automatic standings based on cumulative Stableford points
 - Configurable scoring: best N of M rounds, drop worst round, etc.
 - End-of-season champion
 
-> The killer Pro feature for regular groups. High effort but high reward —
-> this is the thing that keeps people paying month after month.
+> The killer feature for regular groups. High effort but high reward —
+> this is the thing that keeps groups coming back.
 
-### 2b. League Leaderboard & Awards — PRO
+### 2b. League Leaderboard & Awards — FREE
 
 - Weekly/monthly leaderboards within a league
 - Auto-generated awards: "Most Improved", "Most Consistent", "Eagle King", etc.
@@ -134,13 +123,13 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 > in group), and 7 event types (round started, round completed, member joined,
 > scheduled round, competition won, handicap change, badge earned).
 
-### 4b. Shareable Round Cards — PRO
+### 4b. Shareable Round Cards — FREE
 
 - Auto-generated image/card with round results (leaderboard, course, date)
 - Optimised for sharing to iMessage, WhatsApp, Instagram stories
 
-> Great viral growth mechanic. Feels premium. Relatively low effort —
-> server-side image generation with canvas or SVG.
+> Great viral growth mechanic. Relatively low effort — server-side image
+> generation with canvas or SVG.
 
 ### 4c. Achievement Badges — FREE ✅
 
@@ -155,7 +144,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ## 5. Betting & Side Games
 
-### 5a. Skins Game — PRO
+### 5a. Skins Game — FREE
 
 - Automatic skins tracking alongside the Stableford round
 - Configurable stakes (or just points)
@@ -184,14 +173,17 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ## 6. Group Management Upgrades
 
-### 6b. Group Stats & History — PRO
+### 6b. Group Stats & History — FREE ✅
 
 - All-time group leaderboard
 - Round history for the group
 - "Group records" — best individual round, most points on a hole, etc.
 
-> Natural Pro feature. "Who's the all-time best in the group?" is a question
-> every regular group wants answered. Drives competitive engagement.
+> Shipped. Dedicated /groups/:id/stats page with Stableford/Strokes toggle,
+> group records (best points, best strokes, most eagles), all-time leaderboard
+> bar chart, expandable member breakdown with per-player scoring distributions,
+> courses played table, and recent rounds table. Accessible from group detail
+> page via Stats button.
 
 ### 6c. Group Roles & Permissions — FREE ✅
 
@@ -217,7 +209,7 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 ## 7. Advanced Scoring Modes
 
-### 7a. Multiple Scoring Formats — PRO
+### 7a. Multiple Scoring Formats — FREE
 
 - Stroke play (gross & net)
 - Ambrose / Scramble (team format)
@@ -225,10 +217,10 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 - Par competition (win/loss/halve per hole)
 
 > Each format needs its own scoring logic, but they share the same input
-> (strokes per hole). Good Pro value — casual players stick with Stableford,
-> serious groups want variety.
+> (strokes per hole). Casual players stick with Stableford, serious groups
+> want variety.
 
-### 7b. Team Rounds — PRO
+### 7b. Team Rounds — FREE
 
 - Split players into teams
 - Combined team scoring
@@ -279,14 +271,14 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 > Shipped. Service worker, manifest, and install prompt component.
 
-### 8e. Export / PDF Scorecards — PRO
+### 8e. Export / PDF Scorecards — FREE
 
 - Download a formatted scorecard as PDF
 - Print-ready layout
 - Email to the group after a round
 
-> Low effort, feels premium. Nice keepsake for memorable rounds. PDF
-> generation is straightforward server-side.
+> Low effort, nice keepsake for memorable rounds. PDF generation is
+> straightforward server-side.
 
 ---
 
@@ -346,36 +338,36 @@ A one-time lifetime purchase (~$30–50) could work well too given the audience
 
 | #   | Feature                        | Category     |
 | --- | ------------------------------ | ------------ |
-| 1a  | Personal Stats Dashboard       | **PRO**      |
-| 1b  | Head-to-Head Comparisons       | **PRO**      |
+| 1a  | Personal Stats Dashboard       | **FREE** ✅  |
+| 1b  | Head-to-Head Comparisons       | **FREE** ✅  |
 | 1c  | Round Replay / Breakdown       | **FREE** ✅  |
-| 2a  | Recurring Leagues              | **PRO**      |
-| 2b  | League Leaderboard & Awards    | **PRO**      |
+| 2a  | Recurring Leagues              | **FREE**     |
+| 2b  | League Leaderboard & Awards    | **FREE**     |
 | 2c  | Scheduled Rounds               | **FREE** ✅  |
 | 3a  | Community Course Database      | **FREE** ✅  |
 | 3b  | Course GPS & Hole Maps         | **WON'T DO** |
 | 3c  | Course Condition Reports       | **WON'T DO** |
 | 4a  | Activity Feed                  | **FREE** ✅  |
-| 4b  | Shareable Round Cards          | **PRO**      |
+| 4b  | Shareable Round Cards          | **FREE**     |
 | 4c  | Achievement Badges             | **FREE** ✅  |
-| 5a  | Skins Game                     | **PRO**      |
+| 5a  | Skins Game                     | **FREE**     |
 | 5b  | Nassau / Match Play            | **WON'T DO** |
 | 5c  | Closest to Pin / Longest Drive | **FREE** ✅  |
-| 6b  | Group Stats & History          | **PRO**      |
+| 6b  | Group Stats & History          | **FREE** ✅  |
 | 6c  | Group Roles & Permissions      | **FREE** ✅  |
 | 6d  | Group Chat / Noticeboard       | **WON'T DO** |
-| 7a  | Multiple Scoring Formats       | **PRO**      |
-| 7b  | Team Rounds                    | **PRO**      |
+| 7a  | Multiple Scoring Formats       | **FREE**     |
+| 7b  | Team Rounds                    | **FREE**     |
 | 7c  | Handicap Auto-Adjustment       | **FREE** ✅  |
 | 8a  | Offline Mode                   | **WON'T DO** |
 | 8b  | Apple Watch Companion          | **WON'T DO** |
 | 8c  | Dark Mode / Themes             | **FREE** ✅  |
 | 8d  | PWA Install Prompt             | **FREE** ✅  |
-| 8e  | PDF Scorecards                 | **PRO**      |
+| 8e  | PDF Scorecards                 | **FREE**     |
 | 9a  | Calendar Integration           | **FREE** ✅  |
 | 9b  | Weather Integration            | **FREE** ✅  |
 | 9c  | Photo Attachment               | **WON'T DO** |
 | 10a | Club/Organisation Account      | **WON'T DO** |
 | 10b | Tournament Mode                | **WON'T DO** |
 
-**Totals: 14 FREE (14 shipped), 10 PRO, 8 WON'T DO**
+**Totals: 24 FREE (17 shipped), 8 WON'T DO**
