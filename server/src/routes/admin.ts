@@ -20,6 +20,7 @@ import {
   listCourseReports,
   awardBadge,
   createRound,
+  getRoundByRoomCode,
   updateRoundStatus,
   updateRoundCurrentHole,
   addPlayer,
@@ -149,6 +150,13 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       const extra = handicap / 18;
       const noise = (Math.random() + Math.random() + Math.random() - 1.5) * 1.5;
       return Math.max(1, Math.min(par + 5, Math.round(par + extra + noise)));
+    };
+    const uniqueRoomCode = async (): Promise<string> => {
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const code = generateRoomCode();
+        if (!(await getRoundByRoomCode(code))) return code;
+      }
+      throw new Error("could not generate a unique room code after 10 attempts");
     };
 
     const counts = {
@@ -400,18 +408,24 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
       { name: "The Bogey Boys", ownerIdx: 1 },
       { name: "Dad Golf Crew", ownerIdx: 2 },
     ];
-    const groups: Array<{ id: string; name: string }> = [];
+    const groups: Array<{ id: string; name: string; ownerUserId: string }> = [];
 
     for (const gd of groupDefs) {
-      const { rows: existing } = await pool.query(`SELECT id, name FROM groups WHERE name = $1`, [
-        gd.name,
-      ]);
+      const ownerUserId = fakeUsers[gd.ownerIdx].id;
+      const { rows: existing } = await pool.query(
+        `SELECT id, name, owner_user_id FROM groups WHERE name = $1`,
+        [gd.name],
+      );
       if (existing.length > 0) {
-        groups.push({ id: existing[0].id, name: existing[0].name });
+        groups.push({
+          id: existing[0].id,
+          name: existing[0].name,
+          ownerUserId: existing[0].owner_user_id ?? ownerUserId,
+        });
         continue;
       }
-      const g = await createGroup(gd.name, fakeUsers[gd.ownerIdx].id);
-      groups.push({ id: g.id, name: g.name });
+      const g = await createGroup(gd.name, ownerUserId);
+      groups.push({ id: g.id, name: g.name, ownerUserId });
       counts.groups++;
     }
 
@@ -422,7 +436,8 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           [g.id, u.id],
         );
         if (existing.length > 0) continue;
-        await addGroupMember(g.id, u.displayName, u.handicap, u.id, "member");
+        const role = u.id === g.ownerUserId ? "admin" : "member";
+        await addGroupMember(g.id, u.displayName, u.handicap, u.id, role);
         counts.members++;
       }
     }
@@ -491,7 +506,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         const course = courses[cIdx];
         const group = groups[gIdx];
         const players = pIdxs.map((i) => allUsers[i]);
-        const roomCode = generateRoomCode();
+        const roomCode = await uniqueRoomCode();
         const round = await createRound(roomCode, course.id, group.id, players[0].id);
 
         const playerIds: string[] = [];
@@ -535,7 +550,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         const course = courses[0]; // Wembley
         const group = groups[2]; // Dad Golf Crew
         const players = [fakeUsers[1], fakeUsers[3], fakeUsers[7]]; // Steve, Pete, Sam
-        const roomCode = generateRoomCode();
+        const roomCode = await uniqueRoomCode();
         const round = await createRound(roomCode, course.id, group.id, players[0].id);
         const playerIds: string[] = [];
         for (const pu of players) {
@@ -564,7 +579,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         const course = courses[1]; // Royal Melbourne
         const group = groups[0]; // Saturday Hackers
         const players = [fakeUsers[0], allUsers[8]]; // Dave, Admin
-        const roomCode = generateRoomCode();
+        const roomCode = await uniqueRoomCode();
         const round = await createRound(roomCode, course.id, group.id, players[0].id);
         for (const pu of players) {
           await addPlayer(round.id, pu.displayName, pu.handicap, pu.id);
@@ -579,7 +594,7 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
           hole: number;
           type: "ctp" | "longest_drive";
           claims: Array<[number, string]>; // [playerIndexInRound, claim]
-          winnerIdx: number; // playerIndexInRound of winner
+          winnerIdx: number; // index into claims[] identifying the winning claim
         }> = [
           {
             roundIdx: 0,
@@ -926,9 +941,16 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     // member_joined events
     for (let i = 5; i < 8; i++) {
       const g = pick(groups);
-      const eid = await createActivityEvent("member_joined", fakeUsers[i].id, g.id, null, "public", {
-        groupName: g.name,
-      });
+      const eid = await createActivityEvent(
+        "member_joined",
+        fakeUsers[i].id,
+        g.id,
+        null,
+        "public",
+        {
+          groupName: g.name,
+        },
+      );
       await pool.query(`UPDATE activity_events SET created_at = $1 WHERE id = $2`, [
         daysAgo(13 - i),
         eid,
