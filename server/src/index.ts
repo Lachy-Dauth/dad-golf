@@ -15,7 +15,11 @@ import { seedIfEmpty, bootstrapAdmin } from "./seed.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 async function main(): Promise<void> {
-  const app = Fastify({ logger: true, bodyLimit: 1_048_576 });
+  // trustProxy: honor X-Forwarded-* headers so req.protocol / req.host / req.ip
+  // reflect the external scheme, host, and client IP when behind a TLS-
+  // terminating reverse proxy (e.g. Railway). Required for correct absolute
+  // URL generation in calendar feed / ICS links when APP_URL is not set.
+  const app = Fastify({ logger: true, bodyLimit: 1_048_576, trustProxy: true });
 
   await app.register(helmet, {
     contentSecurityPolicy: false, // needs nonce/hash for inline theme script
