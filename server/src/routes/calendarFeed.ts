@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import { buildScheduledRoundEvent, generateIcsFeed } from "../calendar.js";
 import {
   createCalendarFeedToken,
@@ -12,7 +12,7 @@ import {
 } from "../db/index.js";
 import { requireUser } from "./validation.js";
 
-function buildFeedUrl(token: string, req: { protocol: string; host: string }): string {
+function buildFeedUrl(token: string, req: Pick<FastifyRequest, "protocol" | "host">): string {
   const appUrl = process.env.APP_URL || `${req.protocol}://${req.host}`;
   return `${appUrl}/api/calendar-feed/${token}.ics`;
 }
