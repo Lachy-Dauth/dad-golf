@@ -105,13 +105,16 @@ export async function updateUserProfile(
   ]);
 }
 
+const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 export async function createSession(userId: string): Promise<string> {
   const token = randomBytes(32).toString("hex");
-  await pool.query(`INSERT INTO sessions (token, user_id, created_at) VALUES ($1, $2, $3)`, [
-    token,
-    userId,
-    now(),
-  ]);
+  const createdAt = now();
+  const expiresAt = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
+  await pool.query(
+    `INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES ($1, $2, $3, $4)`,
+    [token, userId, createdAt, expiresAt],
+  );
   return token;
 }
 
@@ -119,11 +122,20 @@ export async function getUserBySession(token: string): Promise<User | null> {
   const { rows } = await pool.query(
     `SELECT users.* FROM sessions
      INNER JOIN users ON users.id = sessions.user_id
-     WHERE sessions.token = $1`,
-    [token],
+     WHERE sessions.token = $1
+       AND (sessions.expires_at IS NULL OR sessions.expires_at > $2)`,
+    [token, new Date().toISOString()],
   );
   const row = rows[0] as UserRow | undefined;
   return row ? rowToUser(row) : null;
+}
+
+export async function deleteExpiredSessions(): Promise<number> {
+  const { rowCount } = await pool.query(
+    `DELETE FROM sessions WHERE expires_at IS NOT NULL AND expires_at <= $1`,
+    [new Date().toISOString()],
+  );
+  return rowCount ?? 0;
 }
 
 export async function deleteSession(token: string): Promise<void> {
@@ -148,10 +160,7 @@ export async function updateActivityVisibility(
   userId: string,
   visibility: ActivityVisibility,
 ): Promise<void> {
-  await pool.query(`UPDATE users SET activity_visibility = $1 WHERE id = $2`, [
-    visibility,
-    userId,
-  ]);
+  await pool.query(`UPDATE users SET activity_visibility = $1 WHERE id = $2`, [visibility, userId]);
 }
 
 export async function getUserGroupIds(userId: string): Promise<string[]> {

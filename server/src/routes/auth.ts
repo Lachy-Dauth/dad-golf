@@ -19,6 +19,8 @@ import {
   validateUsername,
 } from "./validation.js";
 
+const authRateLimit = { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } };
+
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post<{
     Body: {
@@ -27,7 +29,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       displayName?: string;
       handicap?: number;
     };
-  }>("/api/auth/register", async (req, reply) => {
+  }>("/api/auth/register", authRateLimit, async (req, reply) => {
     try {
       const username = validateUsername(req.body?.username);
       const password = validatePassword(req.body?.password);
@@ -46,6 +48,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
   app.post<{ Body: { username?: string; password?: string } }>(
     "/api/auth/login",
+    authRateLimit,
     async (req, reply) => {
       try {
         const username = validateUsername(req.body?.username);
