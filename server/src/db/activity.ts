@@ -35,7 +35,9 @@ const ACTIVITY_FEED_FROM = `FROM activity_events ae
      LEFT JOIN groups g ON g.id = ae.group_id
      LEFT JOIN rounds r ON r.id = ae.round_id`;
 
-const ACTIVITY_FEED_WHERE = `WHERE (ae.visibility = 'group' AND ae.group_id = ANY($2))
+const ACTIVITY_FEED_WHERE = `WHERE (ae.visibility = 'public' AND EXISTS (
+          SELECT 1 FROM group_members gm WHERE gm.user_id = ae.user_id AND gm.group_id = ANY($2)
+        ))
         OR ae.user_id = $1`;
 
 export async function getActivityFeedForUser(
@@ -120,13 +122,16 @@ export async function canUserSeeEvent(eventId: string, userId: string): Promise<
   // 'none' visibility: only the author
   if (event.visibility === "none") return false;
 
-  // Check if viewer shares the event's group
-  if (event.visibility === "group" && event.group_id) {
-    const { rows: memberRows } = await pool.query(
-      `SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2`,
-      [event.group_id, userId],
+  // 'public' visibility: visible to anyone who shares a group with the author
+  if (event.visibility === "public") {
+    const { rows: sharedRows } = await pool.query(
+      `SELECT 1 FROM group_members gm1
+       JOIN group_members gm2 ON gm1.group_id = gm2.group_id
+       WHERE gm1.user_id = $1 AND gm2.user_id = $2
+       LIMIT 1`,
+      [event.user_id, userId],
     );
-    return memberRows.length > 0;
+    return sharedRows.length > 0;
   }
 
   return false;

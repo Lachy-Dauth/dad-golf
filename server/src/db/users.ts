@@ -40,7 +40,7 @@ export function rowToUser(row: UserRow): User {
     handicap: Number(row.handicap),
     handicapAutoAdjust: Boolean(row.handicap_auto_adjust),
     googleCalendarConnected: Boolean(row.google_calendar_connected),
-    activityVisibility: (row.activity_visibility || "group") as ActivityVisibility,
+    activityVisibility: (row.activity_visibility || "public") as ActivityVisibility,
     createdAt: row.created_at,
     isAdmin: Boolean(row.is_admin),
   };
@@ -67,7 +67,7 @@ export async function createUser(
     handicap,
     handicapAutoAdjust: false,
     googleCalendarConnected: false,
-    activityVisibility: "group",
+    activityVisibility: "public",
     createdAt,
     isAdmin: false,
   };

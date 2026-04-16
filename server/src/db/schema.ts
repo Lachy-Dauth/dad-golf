@@ -341,6 +341,16 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
   );
   await pool.query(`UPDATE activity_events SET visibility = 'group' WHERE visibility = 'all'`);
 
+  // Migration: rename 'group' visibility to 'public'
+  await pool.query(
+    `UPDATE users SET activity_visibility = 'public' WHERE activity_visibility = 'group'`,
+  );
+  await pool.query(`UPDATE activity_events SET visibility = 'public' WHERE visibility = 'group'`);
+
+  // Migration: update column defaults so fresh inserts use 'public', not the legacy 'group'
+  await pool.query(`ALTER TABLE users ALTER COLUMN activity_visibility SET DEFAULT 'public'`);
+  await pool.query(`ALTER TABLE activity_events ALTER COLUMN visibility SET DEFAULT 'public'`);
+
   // Migration: add session expiry
   await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS expires_at TEXT;`);
 }

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { requireUser } from "./validation.js";
 import { getUserStats, getGroupStats, getOpponents, getHeadToHead } from "../db/stats.js";
-import { getGroup, getUserRoleInGroup } from "../db/index.js";
+import { getGroup, getUserRoleInGroup, getUserGroupIds } from "../db/index.js";
 import { pool } from "../db/pool.js";
 
 export async function registerStatsRoutes(app: FastifyInstance): Promise<void> {
@@ -42,6 +42,14 @@ export async function registerStatsRoutes(app: FastifyInstance): Promise<void> {
     ]);
     if (rows.length === 0) return reply.code(404).send({ error: "user not found" });
     const opponent = rows[0] as { id: string; display_name: string };
+    // Verify the users share at least one group
+    if (user.id !== opponent.id) {
+      const userGroups = await getUserGroupIds(user.id);
+      const opponentGroups = await getUserGroupIds(opponent.id);
+      if (!userGroups.some((g) => opponentGroups.includes(g))) {
+        return reply.code(403).send({ error: "you must share a group with this user" });
+      }
+    }
     const result = await getHeadToHead(
       user.id,
       user.displayName,

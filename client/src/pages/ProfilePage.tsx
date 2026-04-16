@@ -15,7 +15,7 @@ export default function ProfilePage() {
   const nav = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [handicap, setHandicap] = useState("18.0");
-  const [activityVis, setActivityVis] = useState<ActivityVisibility>("group");
+  const [activityVis, setActivityVis] = useState<ActivityVisibility>("public");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -101,20 +101,20 @@ export default function ProfilePage() {
         <label className="field">
           <span>Activity sharing</span>
           <div className="segmented">
-            {(["none", "group"] as ActivityVisibility[]).map((opt) => (
+            {(["none", "public"] as ActivityVisibility[]).map((opt) => (
               <button
                 key={opt}
                 className={activityVis === opt ? "active" : ""}
                 onClick={() => setActivityVis(opt)}
               >
-                {opt === "none" ? "Private" : "In group"}
+                {opt === "none" ? "Private" : "Public"}
               </button>
             ))}
           </div>
           <span className="muted" style={{ fontSize: 12 }}>
             {activityVis === "none" && "Your activity won't appear in anyone's feed."}
-            {activityVis === "group" &&
-              "Activity visible to members of the group it belongs to."}
+            {activityVis === "public" &&
+              "Activity visible to anyone who shares a group with you."}
           </span>
         </label>
         {error && <div className="error">{error}</div>}
