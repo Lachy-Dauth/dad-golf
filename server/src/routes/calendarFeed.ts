@@ -12,8 +12,8 @@ import {
 } from "../db/index.js";
 import { requireUser } from "./validation.js";
 
-function buildFeedUrl(token: string, req: { protocol: string; hostname: string }): string {
-  const appUrl = process.env.APP_URL || `${req.protocol}://${req.hostname}`;
+function buildFeedUrl(token: string, req: { protocol: string; host: string }): string {
+  const appUrl = process.env.APP_URL || `${req.protocol}://${req.host}`;
   return `${appUrl}/api/calendar-feed/${token}.ics`;
 }
 
@@ -56,7 +56,7 @@ export async function registerCalendarFeedRoutes(app: FastifyInstance): Promise<
     }
 
     const rounds = await listScheduledRoundsForFeed(user.id);
-    const appUrl = process.env.APP_URL || `${req.protocol}://${req.hostname}`;
+    const appUrl = process.env.APP_URL || `${req.protocol}://${req.host}`;
 
     const events = await Promise.all(
       rounds.map(async (sr) => {

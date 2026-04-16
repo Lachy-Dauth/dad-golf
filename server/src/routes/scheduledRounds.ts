@@ -104,7 +104,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       const course = await getCourse(sr.courseId, null);
       const rsvps = await listRsvps(sr.id);
 
-      const appUrl = process.env.APP_URL || `${req.protocol}://${req.hostname}`;
+      const appUrl = process.env.APP_URL || `${req.protocol}://${req.host}`;
       const eventParams = buildScheduledRoundEvent({
         scheduledRoundId: sr.id,
         groupId: sr.groupId,
