@@ -189,6 +189,7 @@ async function buildRoundSummaries(
       userId: p.user_id as string | null,
       name: p.name as string,
       handicap: Number(p.handicap),
+      gender: p.gender === "F" ? "F" : "M",
       joinedAt: p.joined_at as string,
       isGuest: p.user_id === null,
     };

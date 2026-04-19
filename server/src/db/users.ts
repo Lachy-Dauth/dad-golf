@@ -1,5 +1,5 @@
 import { scryptSync, randomBytes, timingSafeEqual } from "node:crypto";
-import type { ActivityVisibility, User } from "@dad-golf/shared";
+import type { ActivityVisibility, Gender, User } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 
@@ -25,6 +25,7 @@ export interface UserRow {
   password_hash: string;
   display_name: string;
   handicap: number;
+  gender: string;
   handicap_auto_adjust: number;
   google_calendar_connected: number;
   activity_visibility: string;
@@ -38,6 +39,7 @@ export function rowToUser(row: UserRow): User {
     username: row.username,
     displayName: row.display_name,
     handicap: Number(row.handicap),
+    gender: row.gender === "F" ? "F" : "M",
     handicapAutoAdjust: Boolean(row.handicap_auto_adjust),
     googleCalendarConnected: Boolean(row.google_calendar_connected),
     activityVisibility: (row.activity_visibility || "public") as ActivityVisibility,
@@ -51,20 +53,22 @@ export async function createUser(
   password: string,
   displayName: string,
   handicap: number,
+  gender: Gender = "M",
 ): Promise<User> {
   const id = newId();
   const createdAt = now();
   const passwordHash = hashPassword(password);
   await pool.query(
-    `INSERT INTO users (id, username, password_hash, display_name, handicap, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, username.toLowerCase(), passwordHash, displayName, handicap, createdAt],
+    `INSERT INTO users (id, username, password_hash, display_name, handicap, gender, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [id, username.toLowerCase(), passwordHash, displayName, handicap, gender, createdAt],
   );
   return {
     id,
     username: username.toLowerCase(),
     displayName,
     handicap,
+    gender,
     handicapAutoAdjust: false,
     googleCalendarConnected: false,
     activityVisibility: "public",
@@ -154,6 +158,10 @@ export async function updateUserHandicapAutoAdjust(
 
 export async function updateUserHandicap(userId: string, handicap: number): Promise<void> {
   await pool.query(`UPDATE users SET handicap = $1 WHERE id = $2`, [handicap, userId]);
+}
+
+export async function updateUserGender(userId: string, gender: Gender): Promise<void> {
+  await pool.query(`UPDATE users SET gender = $1 WHERE id = $2`, [gender, userId]);
 }
 
 export async function updateActivityVisibility(

@@ -353,6 +353,29 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
 
   // Migration: add session expiry
   await pool.query(`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS expires_at TEXT;`);
+
+  // Migration: gender on users and players (default 'M'). Used by the
+  // WHS Daily Handicap formula (consistency factor differs M vs F).
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS gender TEXT NOT NULL DEFAULT 'M';
+  `);
+  await pool.query(`
+    DO $$ BEGIN
+      ALTER TABLE users ADD CONSTRAINT users_gender_check
+        CHECK (gender IN ('M', 'F'));
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$;
+  `);
+  await pool.query(`
+    ALTER TABLE players ADD COLUMN IF NOT EXISTS gender TEXT NOT NULL DEFAULT 'M';
+  `);
+  await pool.query(`
+    DO $$ BEGIN
+      ALTER TABLE players ADD CONSTRAINT players_gender_check
+        CHECK (gender IN ('M', 'F'));
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$;
+  `);
 }
 
 export async function closeDb(): Promise<void> {

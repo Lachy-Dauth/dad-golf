@@ -11,6 +11,7 @@ export {
   deleteExpiredSessions,
   updateUserHandicapAutoAdjust,
   updateUserHandicap,
+  updateUserGender,
   updateActivityVisibility,
   getUserGroupIds,
 } from "./users.js";

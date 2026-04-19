@@ -4,6 +4,7 @@ import type {
   ActivityFeedItem,
   ActivityVisibility,
   CompetitionType,
+  Gender,
   Course,
   CourseReportReason,
   CourseReview,
@@ -290,6 +291,7 @@ export const api = {
     password: string;
     displayName: string;
     handicap: number;
+    gender?: Gender;
   }) =>
     fetch("/api/auth/register", {
       method: "POST",
@@ -311,11 +313,16 @@ export const api = {
     fetch("/api/auth/me", {
       headers: authHeaders(),
     }).then((r) => json<{ user: User }>(r)),
-  updateProfile: (displayName: string, handicap: number, activityVisibility?: ActivityVisibility) =>
+  updateProfile: (
+    displayName: string,
+    handicap: number,
+    activityVisibility?: ActivityVisibility,
+    gender?: Gender,
+  ) =>
     fetch("/api/auth/me", {
       method: "PATCH",
       headers: jsonHeaders(),
-      body: JSON.stringify({ displayName, handicap, activityVisibility }),
+      body: JSON.stringify({ displayName, handicap, activityVisibility, gender }),
     }).then((r) => json<{ user: User }>(r)),
 
   // courses

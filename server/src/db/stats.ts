@@ -1,4 +1,4 @@
-import type { Course } from "@dad-golf/shared";
+import type { Course, Gender } from "@dad-golf/shared";
 import { computePlayerHoles } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 
@@ -116,7 +116,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
 
   // Batch-fetch all players and scores
   const { rows: allPlayerRows } = await pool.query(
-    `SELECT id, round_id, user_id, name, handicap FROM players WHERE round_id = ANY($1)`,
+    `SELECT id, round_id, user_id, name, handicap, gender FROM players WHERE round_id = ANY($1)`,
     [roundIds],
   );
   const { rows: allScoreRows } = await pool.query(
@@ -127,7 +127,14 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
   // Index players and scores by round
   const playersByRound = new Map<
     string,
-    Array<{ id: string; roundId: string; userId: string | null; name: string; handicap: number }>
+    Array<{
+      id: string;
+      roundId: string;
+      userId: string | null;
+      name: string;
+      handicap: number;
+      gender: Gender;
+    }>
   >();
   for (const p of allPlayerRows as Record<string, unknown>[]) {
     const roundId = p.round_id as string;
@@ -137,6 +144,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
       userId: p.user_id as string | null,
       name: p.name as string,
       handicap: Number(p.handicap),
+      gender: (p.gender === "F" ? "F" : "M") as Gender,
     };
     const list = playersByRound.get(roundId);
     if (list) list.push(player);
@@ -501,7 +509,7 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
 
   // Batch-fetch all players and scores
   const { rows: allPlayerRows } = await pool.query(
-    `SELECT id, round_id, user_id, name, handicap FROM players WHERE round_id = ANY($1)`,
+    `SELECT id, round_id, user_id, name, handicap, gender FROM players WHERE round_id = ANY($1)`,
     [roundIds],
   );
   const { rows: allScoreRows } = await pool.query(
@@ -512,7 +520,14 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
   // Index by round
   const playersByRound = new Map<
     string,
-    Array<{ id: string; roundId: string; userId: string | null; name: string; handicap: number }>
+    Array<{
+      id: string;
+      roundId: string;
+      userId: string | null;
+      name: string;
+      handicap: number;
+      gender: Gender;
+    }>
   >();
   for (const p of allPlayerRows as Record<string, unknown>[]) {
     const roundId = p.round_id as string;
@@ -522,6 +537,7 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
       userId: p.user_id as string | null,
       name: p.name as string,
       handicap: Number(p.handicap),
+      gender: (p.gender === "F" ? "F" : "M") as Gender,
     };
     const list = playersByRound.get(roundId);
     if (list) list.push(player);
@@ -943,7 +959,7 @@ export async function getHeadToHead(
 
   // Batch-fetch players and scores for shared rounds
   const { rows: allPlayerRows } = await pool.query(
-    `SELECT id, round_id, user_id, name, handicap FROM players WHERE round_id = ANY($1)`,
+    `SELECT id, round_id, user_id, name, handicap, gender FROM players WHERE round_id = ANY($1)`,
     [roundIds],
   );
   const { rows: allScoreRows } = await pool.query(
@@ -954,7 +970,14 @@ export async function getHeadToHead(
   // Index by round
   const playersByRound = new Map<
     string,
-    Array<{ id: string; roundId: string; userId: string | null; name: string; handicap: number }>
+    Array<{
+      id: string;
+      roundId: string;
+      userId: string | null;
+      name: string;
+      handicap: number;
+      gender: Gender;
+    }>
   >();
   for (const p of allPlayerRows as Record<string, unknown>[]) {
     const roundId = p.round_id as string;
@@ -964,6 +987,7 @@ export async function getHeadToHead(
       userId: p.user_id as string | null,
       name: p.name as string,
       handicap: Number(p.handicap),
+      gender: (p.gender === "F" ? "F" : "M") as Gender,
     };
     const list = playersByRound.get(roundId);
     if (list) list.push(player);

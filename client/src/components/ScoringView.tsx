@@ -5,6 +5,7 @@ import {
   stablefordPoints,
   strokesReceived,
   computePlayerHoles,
+  totalPar,
 } from "@dad-golf/shared";
 import { api } from "../api.js";
 import CompetitionPanel from "./CompetitionPanel.js";
@@ -130,7 +131,14 @@ export default function ScoringView({
         <p className="muted">Tap your name to score on this device.</p>
         <ul className="player-grid">
           {state.players.map((p) => {
-            const dh = calculateDailyHandicap(p.handicap, state.course.slope);
+            const dh = calculateDailyHandicap(
+              p.handicap,
+              state.course.slope,
+              state.course.rating,
+              totalPar(state.course),
+              p.gender,
+              state.course.holes.length,
+            );
             return (
               <li key={p.id} className="player-card" onClick={() => onSelectPlayer(p.id)}>
                 <div className="player-name">{p.name}</div>
@@ -149,7 +157,14 @@ export default function ScoringView({
     );
   }
 
-  const dailyHandicap = calculateDailyHandicap(activePlayer.handicap, state.course.slope);
+  const dailyHandicap = calculateDailyHandicap(
+    activePlayer.handicap,
+    state.course.slope,
+    state.course.rating,
+    totalPar(state.course),
+    activePlayer.gender,
+    state.course.holes.length,
+  );
   const holes = computePlayerHoles(state.course, activePlayer, state.scores);
   const holeResult = holes.find((h) => h.holeNumber === currentHole);
   const currentStrokes = holeResult?.strokes ?? null;
