@@ -1,32 +1,39 @@
-import type { Course, Hole } from "@dad-golf/shared";
+import type { Course, Hole, Tee } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 import { getUser } from "./users.js";
 
+function resolveDefault(tees: Tee[], defaultTeeId: string): Tee {
+  return tees.find((t) => t.id === defaultTeeId) ?? tees[0];
+}
+
 export async function createCourse(
   name: string,
   location: string | null,
-  rating: number,
-  slope: number,
   holes: Hole[],
+  tees: Tee[],
+  defaultTeeId: string,
   createdByUserId: string,
   latitude: number | null = null,
   longitude: number | null = null,
 ): Promise<Course> {
   const id = newId();
   const createdAt = now();
+  const defaultTee = resolveDefault(tees, defaultTeeId);
   await pool.query(
-    `INSERT INTO courses (id, name, location, latitude, longitude, rating, slope, holes_json, created_at, created_by_user_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    `INSERT INTO courses (id, name, location, latitude, longitude, rating, slope, holes_json, tees_json, default_tee_id, created_at, created_by_user_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
     [
       id,
       name,
       location,
       latitude,
       longitude,
-      rating,
-      slope,
+      defaultTee.rating,
+      defaultTee.slope,
       JSON.stringify(holes),
+      JSON.stringify(tees),
+      defaultTee.id,
       createdAt,
       createdByUserId,
     ],
@@ -38,9 +45,11 @@ export async function createCourse(
     location,
     latitude,
     longitude,
-    rating,
-    slope,
+    rating: defaultTee.rating,
+    slope: defaultTee.slope,
     holes,
+    tees,
+    defaultTeeId: defaultTee.id,
     createdAt,
     createdByUserId,
     createdByName: creator?.displayName ?? null,
@@ -61,6 +70,8 @@ interface CourseRow {
   rating: number;
   slope: number;
   holes_json: string;
+  tees_json: string | null;
+  default_tee_id: string | null;
   created_at: string;
   created_by_user_id: string | null;
 }
@@ -86,7 +97,26 @@ const COURSE_SELECT = `SELECT c.*,
        FROM courses c
        LEFT JOIN users u ON u.id = c.created_by_user_id`;
 
+function parseTees(row: CourseRow): { tees: Tee[]; defaultTeeId: string } {
+  const legacyTee: Tee = {
+    id: "default",
+    name: "Default",
+    rating: Number(row.rating),
+    slope: Number(row.slope),
+  };
+  if (!row.tees_json) {
+    return { tees: [legacyTee], defaultTeeId: legacyTee.id };
+  }
+  const parsed = JSON.parse(row.tees_json) as Tee[];
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    return { tees: [legacyTee], defaultTeeId: legacyTee.id };
+  }
+  const defaultId = row.default_tee_id ?? parsed[0].id;
+  return { tees: parsed, defaultTeeId: defaultId };
+}
+
 function rowToCourse(row: CourseListRow): Course {
+  const { tees, defaultTeeId } = parseTees(row);
   return {
     id: row.id,
     name: row.name,
@@ -96,6 +126,8 @@ function rowToCourse(row: CourseListRow): Course {
     rating: Number(row.rating),
     slope: Number(row.slope),
     holes: JSON.parse(row.holes_json) as Hole[],
+    tees,
+    defaultTeeId,
     createdAt: row.created_at,
     createdByUserId: row.created_by_user_id,
     createdByName: row.creator_name,
@@ -128,15 +160,31 @@ export async function updateCourse(
   id: string,
   name: string,
   location: string | null,
-  rating: number,
-  slope: number,
   holes: Hole[],
+  tees: Tee[],
+  defaultTeeId: string,
   latitude: number | null = null,
   longitude: number | null = null,
 ): Promise<void> {
+  const defaultTee = resolveDefault(tees, defaultTeeId);
   await pool.query(
-    `UPDATE courses SET name = $1, location = $2, latitude = $3, longitude = $4, rating = $5, slope = $6, holes_json = $7 WHERE id = $8`,
-    [name, location, latitude, longitude, rating, slope, JSON.stringify(holes), id],
+    `UPDATE courses
+        SET name = $1, location = $2, latitude = $3, longitude = $4,
+            rating = $5, slope = $6, holes_json = $7,
+            tees_json = $8, default_tee_id = $9
+      WHERE id = $10`,
+    [
+      name,
+      location,
+      latitude,
+      longitude,
+      defaultTee.rating,
+      defaultTee.slope,
+      JSON.stringify(holes),
+      JSON.stringify(tees),
+      defaultTee.id,
+      id,
+    ],
   );
 }
 

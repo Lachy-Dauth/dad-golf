@@ -22,6 +22,7 @@ import type {
   ScheduledRound,
   ScheduledRoundRsvp,
   Score,
+  Tee,
   User,
   UserBadge,
   UserScheduledRound,
@@ -350,8 +351,8 @@ export const api = {
     location: string | null;
     latitude?: number | null;
     longitude?: number | null;
-    rating: number;
-    slope: number;
+    tees: Tee[];
+    defaultTeeId: string;
     holes: Hole[];
   }) =>
     fetch("/api/courses", {
@@ -366,8 +367,8 @@ export const api = {
       location: string | null;
       latitude?: number | null;
       longitude?: number | null;
-      rating: number;
-      slope: number;
+      tees: Tee[];
+      defaultTeeId: string;
       holes: Hole[];
     },
   ) =>
@@ -580,7 +581,10 @@ export const api = {
     fetch(`/api/rounds/${code}`, { headers: authHeaders() }).then((r) =>
       json<{ state: RoundState }>(r),
     ),
-  joinRound: (code: string, payload: { name?: string; handicap?: number } = {}) =>
+  joinRound: (
+    code: string,
+    payload: { name?: string; handicap?: number; teeId?: string } = {},
+  ) =>
     fetch(`/api/rounds/${code}/players`, {
       method: "POST",
       headers: jsonHeaders(),
@@ -591,6 +595,12 @@ export const api = {
       method: "PATCH",
       headers: jsonHeaders(),
       body: JSON.stringify({ name, handicap }),
+    }).then((r) => json<{ ok: boolean; state: RoundState }>(r)),
+  setPlayerTee: (code: string, playerId: string, teeId: string) =>
+    fetch(`/api/rounds/${code}/players/${playerId}/tee`, {
+      method: "PATCH",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ teeId }),
     }).then((r) => json<{ ok: boolean; state: RoundState }>(r)),
   removeRoundPlayer: (code: string, playerId: string) =>
     fetch(`/api/rounds/${code}/players/${playerId}`, {

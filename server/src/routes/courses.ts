@@ -17,49 +17,49 @@ import {
   upsertCourseReview,
 } from "../db/index.js";
 import type { FastifyReply } from "fastify";
-import type { Hole } from "@dad-golf/shared";
+import type { Hole, Tee } from "@dad-golf/shared";
 import {
   errorMessage,
   getViewerUser,
   parsePagination,
   requireUser,
-  validateCourseRating,
-  validateCourseSlope,
   validateHoles,
   validateName,
   validateReportReason,
   validateReviewText,
   validateStarRating,
+  validateTees,
 } from "./validation.js";
 import { fetchWeather, geocodeLocation, searchLocations } from "../weather.js";
 
 interface CourseInput {
   name: string;
   location: string | null;
-  rating: number;
-  slope: number;
   holes: Hole[];
+  tees: Tee[];
+  defaultTeeId: string;
   latitude: number | null;
   longitude: number | null;
 }
 
+interface CourseBody {
+  name?: string;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
+  holes?: unknown;
+  tees?: unknown;
+  defaultTeeId?: unknown;
+}
+
 async function validateAndGeocodeCourseInput(
-  body: {
-    name?: string;
-    location?: string;
-    latitude?: number;
-    longitude?: number;
-    rating?: number;
-    slope?: number;
-    holes?: unknown;
-  },
+  body: CourseBody,
   reply: FastifyReply,
 ): Promise<CourseInput | null> {
   const name = validateName(body?.name, "course name");
   const location = typeof body?.location === "string" ? body.location.trim() || null : null;
-  const rating = validateCourseRating(body?.rating);
-  const slope = validateCourseSlope(body?.slope);
   const holes = validateHoles(body?.holes);
+  const { tees, defaultTeeId } = validateTees(body?.tees, body?.defaultTeeId);
   let latitude: number | null = null;
   let longitude: number | null = null;
   const bodyLat = body?.latitude;
@@ -95,7 +95,7 @@ async function validateAndGeocodeCourseInput(
     latitude = geo.latitude;
     longitude = geo.longitude;
   }
-  return { name, location, rating, slope, holes, latitude, longitude };
+  return { name, location, holes, tees, defaultTeeId, latitude, longitude };
 }
 
 export async function registerCourseRoutes(app: FastifyInstance): Promise<void> {
@@ -130,17 +130,7 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     }
   });
 
-  app.post<{
-    Body: {
-      name?: string;
-      location?: string;
-      latitude?: number;
-      longitude?: number;
-      rating?: number;
-      slope?: number;
-      holes?: unknown;
-    };
-  }>("/api/courses", async (req, reply) => {
+  app.post<{ Body: CourseBody }>("/api/courses", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
     try {
@@ -149,9 +139,9 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
       const course = await createCourse(
         input.name,
         input.location,
-        input.rating,
-        input.slope,
         input.holes,
+        input.tees,
+        input.defaultTeeId,
         user.id,
         input.latitude,
         input.longitude,
@@ -162,44 +152,36 @@ export async function registerCourseRoutes(app: FastifyInstance): Promise<void> 
     }
   });
 
-  app.patch<{
-    Params: { id: string };
-    Body: {
-      name?: string;
-      location?: string;
-      latitude?: number;
-      longitude?: number;
-      rating?: number;
-      slope?: number;
-      holes?: unknown;
-    };
-  }>("/api/courses/:id", async (req, reply) => {
-    const user = await requireUser(req, reply);
-    if (!user) return;
-    const course = await getCourse(req.params.id, user.id);
-    if (!course) return reply.code(404).send({ error: "course not found" });
-    if (course.createdByUserId !== user.id && !user.isAdmin) {
-      return reply.code(403).send({ error: "only the course creator can edit this course" });
-    }
-    try {
-      const input = await validateAndGeocodeCourseInput(req.body ?? {}, reply);
-      if (!input) return;
-      await updateCourse(
-        course.id,
-        input.name,
-        input.location,
-        input.rating,
-        input.slope,
-        input.holes,
-        input.latitude,
-        input.longitude,
-      );
-      const updated = await getCourse(course.id, user.id);
-      return { course: updated };
-    } catch (e) {
-      return reply.code(400).send({ error: errorMessage(e) });
-    }
-  });
+  app.patch<{ Params: { id: string }; Body: CourseBody }>(
+    "/api/courses/:id",
+    async (req, reply) => {
+      const user = await requireUser(req, reply);
+      if (!user) return;
+      const course = await getCourse(req.params.id, user.id);
+      if (!course) return reply.code(404).send({ error: "course not found" });
+      if (course.createdByUserId !== user.id && !user.isAdmin) {
+        return reply.code(403).send({ error: "only the course creator can edit this course" });
+      }
+      try {
+        const input = await validateAndGeocodeCourseInput(req.body ?? {}, reply);
+        if (!input) return;
+        await updateCourse(
+          course.id,
+          input.name,
+          input.location,
+          input.holes,
+          input.tees,
+          input.defaultTeeId,
+          input.latitude,
+          input.longitude,
+        );
+        const updated = await getCourse(course.id, user.id);
+        return { course: updated };
+      } catch (e) {
+        return reply.code(400).send({ error: errorMessage(e) });
+      }
+    },
+  );
 
   app.delete<{ Params: { id: string } }>("/api/courses/:id", async (req, reply) => {
     const user = await requireUser(req, reply);

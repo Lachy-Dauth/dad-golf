@@ -9,6 +9,7 @@ interface PlayerRow {
   name: string;
   handicap: number;
   gender: string;
+  tee_id: string | null;
   joined_at: string;
 }
 
@@ -20,6 +21,7 @@ function rowToPlayer(row: PlayerRow): Player {
     name: row.name,
     handicap: Number(row.handicap),
     gender: row.gender === "F" ? "F" : "M",
+    teeId: row.tee_id ?? "",
     joinedAt: row.joined_at,
     isGuest: row.user_id === null,
   };
@@ -31,19 +33,56 @@ async function resolveGender(userId: string | null): Promise<Gender> {
   return rows[0]?.gender === "F" ? "F" : "M";
 }
 
+async function defaultTeeIdForRound(roundId: string): Promise<string> {
+  const { rows } = await pool.query(
+    `SELECT c.default_tee_id AS tid
+       FROM rounds r
+       JOIN courses c ON c.id = r.course_id
+      WHERE r.id = $1`,
+    [roundId],
+  );
+  const tid = rows[0]?.tid as string | null | undefined;
+  if (!tid) throw new Error("round's course has no default tee configured");
+  return tid;
+}
+
+async function teeExistsOnRoundsCourse(roundId: string, teeId: string): Promise<boolean> {
+  const { rows } = await pool.query(
+    `SELECT c.tees_json AS tj
+       FROM rounds r
+       JOIN courses c ON c.id = r.course_id
+      WHERE r.id = $1`,
+    [roundId],
+  );
+  const tj = rows[0]?.tj as string | null | undefined;
+  if (!tj) return false;
+  const tees = JSON.parse(tj) as Array<{ id: string }>;
+  return Array.isArray(tees) && tees.some((t) => t.id === teeId);
+}
+
 export async function addPlayer(
   roundId: string,
   name: string,
   handicap: number,
   userId: string | null = null,
+  teeId: string | null = null,
 ): Promise<Player> {
   const id = newId();
   const joinedAt = now();
   const gender = await resolveGender(userId);
+  let resolvedTeeId: string;
+  if (teeId) {
+    if (!(await teeExistsOnRoundsCourse(roundId, teeId))) {
+      throw new Error("tee does not belong to this round's course");
+    }
+    resolvedTeeId = teeId;
+  } else {
+    resolvedTeeId = await defaultTeeIdForRound(roundId);
+  }
   await pool.query(
-    `INSERT INTO players (id, round_id, user_id, name, handicap, gender, joined_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [id, roundId, userId, name, handicap, gender, joinedAt],
+    `INSERT INTO players (id, round_id, user_id, name, handicap, gender, tee_id, joined_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [id, roundId, userId, name, handicap, gender, resolvedTeeId, joinedAt],
   );
   return {
     id,
@@ -52,9 +91,20 @@ export async function addPlayer(
     name,
     handicap,
     gender,
+    teeId: resolvedTeeId,
     joinedAt,
     isGuest: userId === null,
   };
+}
+
+export async function updatePlayerTee(playerId: string, teeId: string): Promise<void> {
+  const { rows } = await pool.query(`SELECT round_id FROM players WHERE id = $1`, [playerId]);
+  const roundId = rows[0]?.round_id as string | undefined;
+  if (!roundId) throw new Error("player not found");
+  if (!(await teeExistsOnRoundsCourse(roundId, teeId))) {
+    throw new Error("tee does not belong to this round's course");
+  }
+  await pool.query(`UPDATE players SET tee_id = $1 WHERE id = $2`, [teeId, playerId]);
 }
 
 export async function findPlayerByName(roundId: string, name: string): Promise<Player | null> {

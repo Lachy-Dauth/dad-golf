@@ -6,11 +6,31 @@ import type {
   Player,
   Score,
   Course,
+  Tee,
 } from "@dad-golf/shared";
 import { computeLeaderboard } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 import { getUser } from "./users.js";
+
+function parseTeesJson(
+  teesJson: string | null,
+  rating: number,
+  slope: number,
+  defaultTeeId: string | null,
+): { tees: Tee[]; defaultTeeId: string } {
+  const legacy: Tee = { id: "default", name: "Default", rating, slope };
+  if (!teesJson) return { tees: [legacy], defaultTeeId: legacy.id };
+  try {
+    const parsed = JSON.parse(teesJson) as Tee[];
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return { tees: [legacy], defaultTeeId: legacy.id };
+    }
+    return { tees: parsed, defaultTeeId: defaultTeeId ?? parsed[0].id };
+  } catch {
+    return { tees: [legacy], defaultTeeId: legacy.id };
+  }
+}
 
 export async function createRound(
   roomCode: string,
@@ -164,6 +184,8 @@ interface RoundHistoryRow extends RoundRow {
   course_rating: number;
   course_slope: number;
   holes_json: string;
+  tees_json: string | null;
+  default_tee_id: string | null;
   player_count: number;
 }
 
@@ -190,6 +212,7 @@ async function buildRoundSummaries(
       name: p.name as string,
       handicap: Number(p.handicap),
       gender: p.gender === "F" ? "F" : "M",
+      teeId: (p.tee_id as string | null) ?? "",
       joinedAt: p.joined_at as string,
       isGuest: p.user_id === null,
     };
@@ -226,11 +249,19 @@ async function buildRoundSummaries(
       par: number;
       strokeIndex: number;
     }[];
+    const { tees, defaultTeeId } = parseTeesJson(
+      row.tees_json,
+      Number(row.course_rating),
+      Number(row.course_slope),
+      row.default_tee_id,
+    );
     const course = {
       holes,
       slope: Number(row.course_slope),
       rating: Number(row.course_rating),
-    } as Pick<Course, "holes" | "slope" | "rating"> as Course;
+      tees,
+      defaultTeeId,
+    } as Pick<Course, "holes" | "slope" | "rating" | "tees" | "defaultTeeId"> as Course;
 
     const players = playersByRound.get(round.id) ?? [];
     const scores = scoresByRound.get(round.id) ?? [];
@@ -284,6 +315,7 @@ export async function listUserCompletedRounds(
     `SELECT r.*, u.display_name AS leader_name,
             c.name AS course_name, c.location AS course_location,
             c.rating AS course_rating, c.slope AS course_slope, c.holes_json,
+            c.tees_json, c.default_tee_id,
             (SELECT COUNT(*)::int FROM players p2 WHERE p2.round_id = r.id) AS player_count
      FROM rounds r
      LEFT JOIN users u ON u.id = r.leader_user_id
@@ -315,6 +347,7 @@ export async function listGroupCompletedRounds(
     `SELECT r.*, u.display_name AS leader_name,
             c.name AS course_name, c.location AS course_location,
             c.rating AS course_rating, c.slope AS course_slope, c.holes_json,
+            c.tees_json, c.default_tee_id,
             (SELECT COUNT(*)::int FROM players p2 WHERE p2.round_id = r.id) AS player_count
      FROM rounds r
      LEFT JOIN users u ON u.id = r.leader_user_id

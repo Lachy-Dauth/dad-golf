@@ -1,4 +1,12 @@
-import type { Course, Player, Score, LeaderboardRow, Gender } from "./types.js";
+import type { Course, Player, Score, LeaderboardRow, Gender, Tee } from "./types.js";
+
+export function resolvePlayerTee(course: Course, player: Player): Tee {
+  const byId = course.tees.find((t) => t.id === player.teeId);
+  if (byId) return byId;
+  const byDefault = course.tees.find((t) => t.id === course.defaultTeeId);
+  if (byDefault) return byDefault;
+  return course.tees[0];
+}
 
 export const CONSISTENCY_FACTOR_MALE = 0.9986;
 export const CONSISTENCY_FACTOR_FEMALE = 1.0483;
@@ -104,10 +112,11 @@ export function computePlayerHoles(
       byHole.set(s.holeNumber, s);
     }
   }
+  const tee = resolvePlayerTee(course, player);
   const dailyHandicap = calculateDailyHandicap(
     player.handicap,
-    course.slope,
-    course.rating,
+    tee.slope,
+    tee.rating,
     totalPar(course),
     player.gender,
     course.holes.length,
@@ -138,6 +147,7 @@ export function computeLeaderboard(
 ): LeaderboardRow[] {
   const coursePar = totalPar(course);
   const rows = players.map((p) => {
+    const tee = resolvePlayerTee(course, p);
     const holes = computePlayerHoles(course, p, scores);
     const played = holes.filter((h) => h.strokes != null);
     const totalPoints = played.reduce((sum, h) => sum + h.points, 0);
@@ -149,8 +159,8 @@ export function computeLeaderboard(
       handicap: p.handicap,
       dailyHandicap: calculateDailyHandicap(
         p.handicap,
-        course.slope,
-        course.rating,
+        tee.slope,
+        tee.rating,
         coursePar,
         p.gender,
         course.holes.length,

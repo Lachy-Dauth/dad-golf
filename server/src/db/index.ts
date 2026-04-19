@@ -68,6 +68,7 @@ export {
   getPlayer,
   listPlayers,
   updatePlayer,
+  updatePlayerTee,
   removePlayer,
 } from "./players.js";
 export { upsertScore, deleteScore, listScores } from "./scores.js";

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { pool } from "./pool.js";
 
 export async function initDb(): Promise<void> {
@@ -376,6 +377,39 @@ CREATE INDEX IF NOT EXISTS idx_handicap_rounds_user ON handicap_rounds(user_id);
     EXCEPTION WHEN duplicate_object THEN NULL;
     END $$;
   `);
+
+  // Migration: multiple tees per course. `tees_json` holds `[{id, name, rating, slope}]`;
+  // `default_tee_id` names the tee whose rating/slope the legacy columns mirror.
+  // Existing courses are backfilled with a single "Default" tee cloned from
+  // their current rating/slope.
+  await pool.query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS tees_json TEXT;`);
+  await pool.query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS default_tee_id TEXT;`);
+  const { rows: coursesNeedingTees } = await pool.query(
+    `SELECT id, rating, slope FROM courses WHERE tees_json IS NULL OR default_tee_id IS NULL`,
+  );
+  for (const row of coursesNeedingTees as Array<{ id: string; rating: number; slope: number }>) {
+    const teeId = randomUUID();
+    const tees = [
+      { id: teeId, name: "Default", rating: Number(row.rating), slope: Number(row.slope) },
+    ];
+    await pool.query(
+      `UPDATE courses SET tees_json = $1, default_tee_id = $2 WHERE id = $3`,
+      [JSON.stringify(tees), teeId, row.id],
+    );
+  }
+
+  // Migration: each player picks a tee. Backfill existing players with
+  // their round's course's default tee.
+  await pool.query(`ALTER TABLE players ADD COLUMN IF NOT EXISTS tee_id TEXT;`);
+  await pool.query(
+    `UPDATE players p
+        SET tee_id = c.default_tee_id
+       FROM rounds r, courses c
+      WHERE p.round_id = r.id
+        AND r.course_id = c.id
+        AND p.tee_id IS NULL
+        AND c.default_tee_id IS NOT NULL`,
+  );
 }
 
 export async function closeDb(): Promise<void> {

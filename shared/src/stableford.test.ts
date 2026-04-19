@@ -79,15 +79,18 @@ function makeCourse(slope = 113, rating?: number): Course {
     strokeIndex: i + 1,
   }));
   const par = holes.reduce((sum, h) => sum + h.par, 0);
+  const defaultRating = rating ?? par;
   return {
     id: "c1",
     name: "Test",
     location: null,
     latitude: null,
     longitude: null,
-    rating: rating ?? par,
+    rating: defaultRating,
     slope,
     holes,
+    tees: [{ id: "default", name: "Default", rating: defaultRating, slope }],
+    defaultTeeId: "default",
     createdAt: new Date().toISOString(),
     createdByUserId: null,
     createdByName: null,
@@ -157,6 +160,7 @@ test("leaderboard sort - higher points first, tie-break by net strokes", () => {
       gender: "M",
       joinedAt: "",
       userId: null,
+      teeId: "default",
       isGuest: true,
     },
     {
@@ -167,6 +171,7 @@ test("leaderboard sort - higher points first, tie-break by net strokes", () => {
       gender: "M",
       joinedAt: "",
       userId: null,
+      teeId: "default",
       isGuest: true,
     },
   ];
@@ -219,6 +224,7 @@ test("computePlayerHoles returns correct results for each hole", () => {
     gender: "M",
     joinedAt: "",
     userId: null,
+    teeId: "default",
     isGuest: true,
   };
   const scores: Score[] = [
@@ -251,6 +257,7 @@ test("computePlayerHoles filters scores for the correct player", () => {
     gender: "M",
     joinedAt: "",
     userId: null,
+    teeId: "default",
     isGuest: true,
   };
   const scores: Score[] = [
@@ -272,6 +279,7 @@ test("computePlayerHoles with handicap receives strokes", () => {
     gender: "M",
     joinedAt: "",
     userId: null,
+    teeId: "default",
     isGuest: true,
   };
   const scores: Score[] = [
@@ -303,6 +311,8 @@ test("totalPar for a par-72 course", () => {
     rating: 72,
     slope: 113,
     holes,
+    tees: [{ id: "default", name: "Default", rating: 72, slope: 113 }],
+    defaultTeeId: "default",
     createdAt: "",
     createdByUserId: null,
     createdByName: null,
@@ -332,6 +342,7 @@ test("leaderboard position with gaps", () => {
       gender: "M",
       joinedAt: "",
       userId: null,
+      teeId: "default",
       isGuest: true,
     },
     {
@@ -342,6 +353,7 @@ test("leaderboard position with gaps", () => {
       gender: "M",
       joinedAt: "",
       userId: null,
+      teeId: "default",
       isGuest: true,
     },
     {
@@ -352,6 +364,7 @@ test("leaderboard position with gaps", () => {
       gender: "M",
       joinedAt: "",
       userId: null,
+      teeId: "default",
       isGuest: true,
     },
   ];
@@ -394,4 +407,65 @@ test("leaderboard position with gaps", () => {
   assert.equal(lb[2].name, "Carol");
   assert.equal(lb[2].position, 3);
   assert.equal(lb[2].pointsBack, 3);
+});
+
+test("leaderboard respects per-player tee selection", () => {
+  const course = makeCourse();
+  course.tees = [
+    { id: "blue", name: "Blue", rating: 72, slope: 128 },
+    { id: "red", name: "Red", rating: 70, slope: 113 },
+  ];
+  course.defaultTeeId = "blue";
+  const players: Player[] = [
+    {
+      id: "p1",
+      roundId: "r1",
+      name: "Blue player",
+      handicap: 18,
+      gender: "M",
+      joinedAt: "",
+      userId: null,
+      teeId: "blue",
+      isGuest: true,
+    },
+    {
+      id: "p2",
+      roundId: "r1",
+      name: "Red player",
+      handicap: 18,
+      gender: "M",
+      joinedAt: "",
+      userId: null,
+      teeId: "red",
+      isGuest: true,
+    },
+  ];
+  const lb = computeLeaderboard(course, players, []);
+  const blueRow = lb.find((r) => r.playerId === "p1");
+  const redRow = lb.find((r) => r.playerId === "p2");
+  assert.ok(blueRow && redRow);
+  // Blue tee slope 128 > Red tee slope 113 → blue DH strictly greater than red DH
+  assert.ok(
+    blueRow.dailyHandicap > redRow.dailyHandicap,
+    `expected blue DH (${blueRow.dailyHandicap}) > red DH (${redRow.dailyHandicap})`,
+  );
+});
+
+test("resolvePlayerTee falls back to course default for unknown teeId", () => {
+  const course = makeCourse();
+  const player: Player = {
+    id: "p1",
+    roundId: "r1",
+    name: "Mystery",
+    handicap: 12,
+    gender: "M",
+    joinedAt: "",
+    userId: null,
+    teeId: "missing-tee",
+    isGuest: true,
+  };
+  // Should not throw; should compute a valid DH using the default tee
+  const lb = computeLeaderboard(course, [player], []);
+  assert.equal(lb.length, 1);
+  assert.equal(typeof lb[0].dailyHandicap, "number");
 });

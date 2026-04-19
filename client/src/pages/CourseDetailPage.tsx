@@ -194,15 +194,34 @@ export default function CourseDetailPage() {
             <span className="course-meta-label">Par</span>
             <span className="course-meta-value">{totalPar(course)}</span>
           </div>
-          <div className="course-meta-item">
-            <span className="course-meta-label">Rating</span>
-            <span className="course-meta-value">{course.rating.toFixed(1)}</span>
-          </div>
-          <div className="course-meta-item">
-            <span className="course-meta-label">Slope</span>
-            <span className="course-meta-value">{course.slope}</span>
-          </div>
         </div>
+        {course.tees.length > 0 && (
+          <div className="course-tees-wrap">
+            <table className="course-tees-table">
+              <thead>
+                <tr>
+                  <th>Tee</th>
+                  <th>Rating</th>
+                  <th>Slope</th>
+                </tr>
+              </thead>
+              <tbody>
+                {course.tees.map((tee) => (
+                  <tr key={tee.id}>
+                    <td>
+                      {tee.name}
+                      {tee.id === course.defaultTeeId && (
+                        <span className="tee-default-badge"> (default)</span>
+                      )}
+                    </td>
+                    <td>{tee.rating.toFixed(1)}</td>
+                    <td>{tee.slope}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         <div className="course-meta-sub">
           {course.createdByName && <span>Added by {course.createdByName}</span>}
           {course.roundCount > 0 && (
