@@ -1,6 +1,25 @@
-import type { Course, Gender } from "@dad-golf/shared";
+import type { Course, Gender, Tee } from "@dad-golf/shared";
 import { computePlayerHoles } from "@dad-golf/shared";
 import { pool } from "./pool.js";
+
+function parseTeesJson(
+  teesJson: string | null,
+  rating: number,
+  slope: number,
+  defaultTeeId: string | null,
+): { tees: Tee[]; defaultTeeId: string } {
+  const legacy: Tee = { id: "default", name: "Default", rating, slope };
+  if (!teesJson) return { tees: [legacy], defaultTeeId: legacy.id };
+  try {
+    const parsed = JSON.parse(teesJson) as Tee[];
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return { tees: [legacy], defaultTeeId: legacy.id };
+    }
+    return { tees: parsed, defaultTeeId: defaultTeeId ?? parsed[0].id };
+  } catch {
+    return { tees: [legacy], defaultTeeId: legacy.id };
+  }
+}
 
 export interface UserStatsResult {
   totalRounds: number;
@@ -67,6 +86,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
     `SELECT r.id AS round_id, r.room_code, r.course_id,
             c.name AS course_name, c.location AS course_location,
             c.rating AS course_rating, c.slope AS course_slope, c.holes_json,
+            c.tees_json, c.default_tee_id,
             r.completed_at,
             (SELECT COUNT(*)::int FROM players p2 WHERE p2.round_id = r.id) AS player_count
      FROM rounds r
@@ -116,7 +136,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
 
   // Batch-fetch all players and scores
   const { rows: allPlayerRows } = await pool.query(
-    `SELECT id, round_id, user_id, name, handicap, gender FROM players WHERE round_id = ANY($1)`,
+    `SELECT id, round_id, user_id, name, handicap, gender, tee_id FROM players WHERE round_id = ANY($1)`,
     [roundIds],
   );
   const { rows: allScoreRows } = await pool.query(
@@ -134,6 +154,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
       name: string;
       handicap: number;
       gender: Gender;
+      teeId: string;
     }>
   >();
   for (const p of allPlayerRows as Record<string, unknown>[]) {
@@ -145,6 +166,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
       name: p.name as string,
       handicap: Number(p.handicap),
       gender: (p.gender === "F" ? "F" : "M") as Gender,
+      teeId: (p.tee_id as string | null) ?? "",
     };
     const list = playersByRound.get(roundId);
     if (list) list.push(player);
@@ -236,10 +258,18 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
       par: number;
       strokeIndex: number;
     }>;
+    const { tees, defaultTeeId } = parseTeesJson(
+      (row.tees_json as string | null) ?? null,
+      Number(row.course_rating),
+      Number(row.course_slope),
+      (row.default_tee_id as string | null) ?? null,
+    );
     const course = {
       holes,
       slope: Number(row.course_slope),
       rating: Number(row.course_rating),
+      tees,
+      defaultTeeId,
     } as Course;
 
     const players = playersByRound.get(roundId) ?? [];
@@ -485,6 +515,7 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
     `SELECT r.id AS round_id, r.room_code,
             c.name AS course_name, c.id AS course_id,
             c.rating AS course_rating, c.slope AS course_slope, c.holes_json,
+            c.tees_json, c.default_tee_id,
             r.completed_at,
             (SELECT COUNT(*)::int FROM players p2 WHERE p2.round_id = r.id) AS player_count
      FROM rounds r
@@ -509,7 +540,7 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
 
   // Batch-fetch all players and scores
   const { rows: allPlayerRows } = await pool.query(
-    `SELECT id, round_id, user_id, name, handicap, gender FROM players WHERE round_id = ANY($1)`,
+    `SELECT id, round_id, user_id, name, handicap, gender, tee_id FROM players WHERE round_id = ANY($1)`,
     [roundIds],
   );
   const { rows: allScoreRows } = await pool.query(
@@ -527,6 +558,7 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
       name: string;
       handicap: number;
       gender: Gender;
+      teeId: string;
     }>
   >();
   for (const p of allPlayerRows as Record<string, unknown>[]) {
@@ -538,6 +570,7 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
       name: p.name as string,
       handicap: Number(p.handicap),
       gender: (p.gender === "F" ? "F" : "M") as Gender,
+      teeId: (p.tee_id as string | null) ?? "",
     };
     const list = playersByRound.get(roundId);
     if (list) list.push(player);
@@ -651,10 +684,18 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
       par: number;
       strokeIndex: number;
     }>;
+    const { tees, defaultTeeId } = parseTeesJson(
+      (row.tees_json as string | null) ?? null,
+      Number(row.course_rating),
+      Number(row.course_slope),
+      (row.default_tee_id as string | null) ?? null,
+    );
     const course = {
       holes,
       slope: Number(row.course_slope),
       rating: Number(row.course_rating),
+      tees,
+      defaultTeeId,
     } as Course;
     const coursePar = holes.reduce((sum, h) => sum + h.par, 0);
 
@@ -907,6 +948,7 @@ export async function getHeadToHead(
     `SELECT r.id AS round_id, r.room_code,
             c.name AS course_name, c.id AS course_id,
             c.rating AS course_rating, c.slope AS course_slope, c.holes_json,
+            c.tees_json, c.default_tee_id,
             r.completed_at
      FROM rounds r
      JOIN courses c ON c.id = r.course_id
@@ -959,7 +1001,7 @@ export async function getHeadToHead(
 
   // Batch-fetch players and scores for shared rounds
   const { rows: allPlayerRows } = await pool.query(
-    `SELECT id, round_id, user_id, name, handicap, gender FROM players WHERE round_id = ANY($1)`,
+    `SELECT id, round_id, user_id, name, handicap, gender, tee_id FROM players WHERE round_id = ANY($1)`,
     [roundIds],
   );
   const { rows: allScoreRows } = await pool.query(
@@ -977,6 +1019,7 @@ export async function getHeadToHead(
       name: string;
       handicap: number;
       gender: Gender;
+      teeId: string;
     }>
   >();
   for (const p of allPlayerRows as Record<string, unknown>[]) {
@@ -988,6 +1031,7 @@ export async function getHeadToHead(
       name: p.name as string,
       handicap: Number(p.handicap),
       gender: (p.gender === "F" ? "F" : "M") as Gender,
+      teeId: (p.tee_id as string | null) ?? "",
     };
     const list = playersByRound.get(roundId);
     if (list) list.push(player);
@@ -1056,10 +1100,18 @@ export async function getHeadToHead(
       par: number;
       strokeIndex: number;
     }>;
+    const { tees, defaultTeeId } = parseTeesJson(
+      (row.tees_json as string | null) ?? null,
+      Number(row.course_rating),
+      Number(row.course_slope),
+      (row.default_tee_id as string | null) ?? null,
+    );
     const course = {
       holes,
       slope: Number(row.course_slope),
       rating: Number(row.course_rating),
+      tees,
+      defaultTeeId,
     } as Course;
     const coursePar = holes.reduce((sum, h) => sum + h.par, 0);
 

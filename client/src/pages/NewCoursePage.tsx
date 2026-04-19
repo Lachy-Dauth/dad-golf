@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api.js";
-import type { Course, Hole } from "@dad-golf/shared";
+import type { Course, Hole, Tee } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
 
 function defaultHoles(count: 9 | 18): Hole[] {
@@ -10,6 +10,26 @@ function defaultHoles(count: 9 | 18): Hole[] {
     par: 4,
     strokeIndex: i + 1,
   }));
+}
+
+interface TeeDraft {
+  id: string;
+  name: string;
+  rating: string;
+  slope: string;
+}
+
+function makeTeeDraft(partial?: Partial<TeeDraft>): TeeDraft {
+  return {
+    id:
+      partial?.id ??
+      (typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `tee-${Math.random().toString(36).slice(2, 10)}`),
+    name: partial?.name ?? "",
+    rating: partial?.rating ?? "72.0",
+    slope: partial?.slope ?? "113",
+  };
 }
 
 interface LocationSuggestion {
@@ -35,8 +55,10 @@ export default function NewCoursePage() {
   const [locationLoading, setLocationLoading] = useState(false);
   const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locationWrapperRef = useRef<HTMLDivElement>(null);
-  const [rating, setRating] = useState<string>("72.0");
-  const [slope, setSlope] = useState<string>("113");
+  const [tees, setTees] = useState<TeeDraft[]>(() => [
+    makeTeeDraft({ name: "Default", rating: "72.0", slope: "113" }),
+  ]);
+  const [defaultTeeId, setDefaultTeeId] = useState<string>(() => "");
   const [holeCount, setHoleCount] = useState<9 | 18>(18);
   const [holes, setHoles] = useState<Hole[]>(defaultHoles(18));
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +67,12 @@ export default function NewCoursePage() {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load all courses for duplicate detection (only on create, not edit)
+  useEffect(() => {
+    if (!defaultTeeId && tees.length > 0) {
+      setDefaultTeeId(tees[0].id);
+    }
+  }, [tees, defaultTeeId]);
+
   useEffect(() => {
     if (!isEdit) {
       api
@@ -64,7 +91,6 @@ export default function NewCoursePage() {
     };
   }, [name]);
 
-  // Location autocomplete: debounce search
   useEffect(() => {
     if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current);
     if (selectedCoords || location.trim().length < 2) {
@@ -92,7 +118,6 @@ export default function NewCoursePage() {
     };
   }, [location, selectedCoords]);
 
-  // Close dropdown on click outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (locationWrapperRef.current && !locationWrapperRef.current.contains(e.target as Node)) {
@@ -132,8 +157,6 @@ export default function NewCoursePage() {
     setError(null);
     setName("");
     setLocation("");
-    setRating("72.0");
-    setSlope("113");
     setHoleCount(18);
     setHoles(defaultHoles(18));
 
@@ -145,8 +168,24 @@ export default function NewCoursePage() {
         if (course.latitude != null && course.longitude != null) {
           setSelectedCoords({ latitude: course.latitude, longitude: course.longitude });
         }
-        setRating(course.rating.toFixed(1));
-        setSlope(String(course.slope));
+        const teeDrafts: TeeDraft[] = (course.tees ?? []).map((t) => ({
+          id: t.id,
+          name: t.name,
+          rating: t.rating.toFixed(1),
+          slope: String(t.slope),
+        }));
+        if (teeDrafts.length > 0) {
+          setTees(teeDrafts);
+          setDefaultTeeId(course.defaultTeeId || teeDrafts[0].id);
+        } else {
+          const fallback = makeTeeDraft({
+            name: "Default",
+            rating: course.rating.toFixed(1),
+            slope: String(course.slope),
+          });
+          setTees([fallback]);
+          setDefaultTeeId(fallback.id);
+        }
         setHoleCount(course.holes.length as 9 | 18);
         setHoles(course.holes);
       })
@@ -163,22 +202,72 @@ export default function NewCoursePage() {
     setHoles((prev) => prev.map((h, idx) => (idx === i ? { ...h, ...patch } : h)));
   }
 
+  function updateTee(idx: number, patch: Partial<TeeDraft>) {
+    setTees((prev) => prev.map((t, i) => (i === idx ? { ...t, ...patch } : t)));
+  }
+
+  function addTee() {
+    const t = makeTeeDraft({
+      name: "",
+      rating: "72.0",
+      slope: "113",
+    });
+    setTees((prev) => [...prev, t]);
+  }
+
+  function removeTee(idx: number) {
+    setTees((prev) => {
+      const next = prev.filter((_, i) => i !== idx);
+      if (next.length > 0 && !next.some((t) => t.id === defaultTeeId)) {
+        setDefaultTeeId(next[0].id);
+      }
+      return next;
+    });
+  }
+
   async function handleSave() {
     setError(null);
     if (!name.trim()) {
       setError("Course name is required");
       return;
     }
-    const ratingNum = Number(rating);
-    if (!Number.isFinite(ratingNum) || ratingNum < 10 || ratingNum > 100) {
-      setError("Course rating must be a number between 10 and 100");
+    if (tees.length === 0) {
+      setError("At least one tee is required");
       return;
     }
-    const slopeNum = Number(slope);
-    if (!Number.isInteger(slopeNum) || slopeNum < 55 || slopeNum > 155) {
-      setError("Slope rating must be a whole number between 55 and 155");
-      return;
+    const teesClean: Tee[] = [];
+    const nameSet = new Set<string>();
+    for (const [i, t] of tees.entries()) {
+      const nm = t.name.trim();
+      if (!nm) {
+        setError(`Tee ${i + 1} needs a name`);
+        return;
+      }
+      if (nameSet.has(nm.toLowerCase())) {
+        setError(`Duplicate tee name "${nm}"`);
+        return;
+      }
+      nameSet.add(nm.toLowerCase());
+      const r = Number(t.rating);
+      if (!Number.isFinite(r) || r < 10 || r > 100) {
+        setError(`Tee "${nm}" rating must be between 10 and 100`);
+        return;
+      }
+      const s = Number(t.slope);
+      if (!Number.isInteger(s) || s < 55 || s > 155) {
+        setError(`Tee "${nm}" slope must be an integer 55–155`);
+        return;
+      }
+      teesClean.push({
+        id: t.id,
+        name: nm,
+        rating: Math.round(r * 10) / 10,
+        slope: s,
+      });
     }
+    const resolvedDefault = teesClean.some((t) => t.id === defaultTeeId)
+      ? defaultTeeId
+      : teesClean[0].id;
     const siSet = new Set(holes.map((h) => h.strokeIndex));
     if (siSet.size !== holes.length) {
       setError("Stroke indexes must all be unique (1–" + holes.length + ")");
@@ -191,8 +280,8 @@ export default function NewCoursePage() {
         location: location.trim() || null,
         latitude: selectedCoords?.latitude ?? null,
         longitude: selectedCoords?.longitude ?? null,
-        rating: ratingNum,
-        slope: slopeNum,
+        tees: teesClean,
+        defaultTeeId: resolvedDefault,
         holes,
       };
       if (isEdit && id) {
@@ -286,33 +375,66 @@ export default function NewCoursePage() {
             )}
           </div>
         </div>
-        <div className="field-row">
-          <label className="field">
-            <span>Course rating</span>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              min={50}
-              max={90}
-              value={rating}
-              onChange={(e) => setRating(e.target.value)}
-              placeholder="e.g. 72.4"
-            />
-          </label>
-          <label className="field">
-            <span>Slope rating</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              step="1"
-              min={55}
-              max={155}
-              value={slope}
-              onChange={(e) => setSlope(e.target.value)}
-              placeholder="e.g. 130"
-            />
-          </label>
+        <div className="field">
+          <span>Tees</span>
+          <p className="muted" style={{ margin: "0 0 8px" }}>
+            Add each tee box with its own course rating and slope. Pick one as the default.
+          </p>
+          <div className="tee-editor">
+            {tees.map((t, i) => (
+              <div className="tee-editor-row" key={t.id}>
+                <label className="tee-default-label" title="Default tee">
+                  <input
+                    type="radio"
+                    name="default-tee"
+                    checked={defaultTeeId === t.id}
+                    onChange={() => setDefaultTeeId(t.id)}
+                  />
+                  <span className="visually-hidden">Default</span>
+                </label>
+                <input
+                  className="tee-name-input"
+                  placeholder={`Tee ${i + 1}`}
+                  value={t.name}
+                  onChange={(e) => updateTee(i, { name: e.target.value })}
+                />
+                <input
+                  className="tee-rating-input"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.1"
+                  min={10}
+                  max={100}
+                  value={t.rating}
+                  onChange={(e) => updateTee(i, { rating: e.target.value })}
+                  placeholder="Rating"
+                />
+                <input
+                  className="tee-slope-input"
+                  type="number"
+                  inputMode="numeric"
+                  step="1"
+                  min={55}
+                  max={155}
+                  value={t.slope}
+                  onChange={(e) => updateTee(i, { slope: e.target.value })}
+                  placeholder="Slope"
+                />
+                <button
+                  type="button"
+                  className="btn-icon"
+                  aria-label="Remove tee"
+                  disabled={tees.length <= 1}
+                  onClick={() => removeTee(i)}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button type="button" className="btn btn-small" onClick={addTee} disabled={tees.length >= 8}>
+              + Add tee
+            </button>
+          </div>
         </div>
         <div className="field">
           <span>Holes</span>

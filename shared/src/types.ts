@@ -4,6 +4,13 @@ export interface Hole {
   strokeIndex: number;
 }
 
+export interface Tee {
+  id: string;
+  name: string;
+  rating: number;
+  slope: number;
+}
+
 export type ActivityVisibility = "none" | "public";
 
 export type Gender = "M" | "F";
@@ -51,6 +58,8 @@ export interface Course {
   rating: number;
   slope: number;
   holes: Hole[];
+  tees: Tee[];
+  defaultTeeId: string;
   createdAt: string;
   createdByUserId: string | null;
   createdByName: string | null;
@@ -107,6 +116,7 @@ export interface Player {
   name: string;
   handicap: number;
   gender: Gender;
+  teeId: string;
   joinedAt: string;
   isGuest: boolean;
 }

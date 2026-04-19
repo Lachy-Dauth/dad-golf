@@ -104,16 +104,16 @@ export default function RoundPage() {
     if (roomCode) setActivePlayerId(roomCode, id);
   }
 
-  async function handleJoinAsUser() {
+  async function handleJoinAsUser(teeId?: string) {
     if (!roomCode) return;
-    const res = await api.joinRound(roomCode);
+    const res = await api.joinRound(roomCode, teeId ? { teeId } : undefined);
     setState(res.state);
     handleActivePlayer(res.player.id);
   }
 
-  async function handleJoinAsGuest(name: string, handicap: number) {
+  async function handleJoinAsGuest(name: string, handicap: number, teeId?: string) {
     if (!roomCode) return;
-    const res = await api.joinRound(roomCode, { name, handicap });
+    const res = await api.joinRound(roomCode, { name, handicap, teeId });
     setState(res.state);
     handleActivePlayer(res.player.id);
   }
@@ -207,6 +207,7 @@ export default function RoundPage() {
           onJoinAsGuest={handleJoinAsGuest}
           onStart={handleStart}
           onRemovePlayer={handleRemovePlayer}
+          onStateUpdate={setState}
         />
       )}
 

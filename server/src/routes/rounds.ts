@@ -23,6 +23,7 @@ import {
   removePlayer,
   setClaimWinner,
   updatePlayer,
+  updatePlayerTee,
   updateRoundCurrentHole,
   updateRoundStatus,
   upsertClaim,
@@ -139,7 +140,7 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
 
   app.post<{
     Params: { code: string };
-    Body: { name?: string; handicap?: number };
+    Body: { name?: string; handicap?: number; teeId?: string };
   }>("/api/rounds/:code/players", async (req, reply) => {
     try {
       const viewer = await getViewerUser(req);
@@ -180,10 +181,43 @@ export async function registerRoundRoutes(app: FastifyInstance): Promise<void> {
       if (players.length >= MAX_PLAYERS_PER_ROUND) {
         return reply.code(400).send({ error: `round is full (${MAX_PLAYERS_PER_ROUND} max)` });
       }
-      const player = await addPlayer(round.id, name, handicap, viewer?.id ?? null);
+      const teeId = typeof req.body?.teeId === "string" ? req.body.teeId.trim() || null : null;
+      const player = await addPlayer(round.id, name, handicap, viewer?.id ?? null, teeId);
       const state = await buildRoundState(code, viewer?.id ?? null);
       if (state) broadcast(code, { type: "player_joined", player, state });
       return reply.code(201).send({ player, state });
+    } catch (e) {
+      return reply.code(400).send({ error: errorMessage(e) });
+    }
+  });
+
+  app.patch<{
+    Params: { code: string; playerId: string };
+    Body: { teeId?: string };
+  }>("/api/rounds/:code/players/:playerId/tee", async (req, reply) => {
+    try {
+      const viewer = await getViewerUser(req);
+      const result = await requireRound(req, reply);
+      if (!result) return;
+      const { code, round } = result;
+      if (round.status !== "waiting") {
+        return reply.code(400).send({ error: "tee can only be changed before the round starts" });
+      }
+      const player = await getPlayer(req.params.playerId);
+      if (!player || player.roundId !== round.id) {
+        return reply.code(404).send({ error: "player not found" });
+      }
+      const isLeader = viewer?.id === round.leaderUserId;
+      const isSelf = viewer && player.userId === viewer.id;
+      if (!isLeader && !isSelf) {
+        return reply.code(403).send({ error: "not allowed" });
+      }
+      const teeId = typeof req.body?.teeId === "string" ? req.body.teeId.trim() : "";
+      if (!teeId) return reply.code(400).send({ error: "teeId is required" });
+      await updatePlayerTee(req.params.playerId, teeId);
+      const state = await buildRoundState(code, viewer?.id ?? null);
+      if (state) broadcast(code, { type: "state", state });
+      return { ok: true, state };
     } catch (e) {
       return reply.code(400).send({ error: errorMessage(e) });
     }

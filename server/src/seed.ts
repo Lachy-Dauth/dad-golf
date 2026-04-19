@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import type { Hole } from "@dad-golf/shared";
 import {
   createCourse,
@@ -66,12 +66,13 @@ export async function seedIfEmpty(log: Logger): Promise<void> {
   if (!seedUser) return;
 
   for (const c of SEED_COURSES) {
+    const teeId = randomUUID();
     await createCourse(
       c.name,
       c.location,
-      c.rating,
-      c.slope,
       c.holes,
+      [{ id: teeId, name: "Default", rating: c.rating, slope: c.slope }],
+      teeId,
       seedUser.id,
       c.latitude,
       c.longitude,

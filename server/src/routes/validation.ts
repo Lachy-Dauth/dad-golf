@@ -1,5 +1,6 @@
+import { randomUUID } from "node:crypto";
 import type { FastifyBaseLogger, FastifyReply, FastifyRequest } from "fastify";
-import type { CourseReportReason, Hole, Round, User } from "@dad-golf/shared";
+import type { CourseReportReason, Hole, Round, Tee, User } from "@dad-golf/shared";
 import { normalizeRoomCode } from "@dad-golf/shared";
 import { getRoundByRoomCode, getUserBySession } from "../db/index.js";
 
@@ -59,6 +60,44 @@ export function validateCourseSlope(s: unknown): number {
     throw new Error("slope rating must be an integer between 55 and 155");
   }
   return n;
+}
+
+export function validateTees(
+  rawTees: unknown,
+  rawDefaultTeeId: unknown,
+): { tees: Tee[]; defaultTeeId: string } {
+  if (!Array.isArray(rawTees) || rawTees.length === 0) {
+    throw new Error("course must have at least one tee");
+  }
+  if (rawTees.length > 8) {
+    throw new Error("course can have at most 8 tees");
+  }
+  const ids = new Set<string>();
+  const names = new Set<string>();
+  const tees: Tee[] = rawTees.map((raw, i) => {
+    const obj = raw as Record<string, unknown>;
+    const rawId = typeof obj.id === "string" ? obj.id.trim() : "";
+    const id = rawId || randomUUID();
+    if (ids.has(id)) throw new Error(`duplicate tee id at index ${i}`);
+    ids.add(id);
+    const name = validateName(obj.name, `tee ${i + 1} name`);
+    const nameKey = name.toLowerCase();
+    if (names.has(nameKey)) throw new Error(`duplicate tee name "${name}"`);
+    names.add(nameKey);
+    const rating = validateCourseRating(obj.rating);
+    const slope = validateCourseSlope(obj.slope);
+    return { id, name, rating, slope };
+  });
+  let defaultTeeId: string;
+  if (typeof rawDefaultTeeId === "string" && rawDefaultTeeId.trim()) {
+    defaultTeeId = rawDefaultTeeId.trim();
+    if (!tees.some((t) => t.id === defaultTeeId)) {
+      throw new Error("defaultTeeId must match one of the tees");
+    }
+  } else {
+    defaultTeeId = tees[0].id;
+  }
+  return { tees, defaultTeeId };
 }
 
 export function validateName(name: unknown, field = "name"): string {

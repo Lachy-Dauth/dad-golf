@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import type { Hole } from "@dad-golf/shared";
 import { generateRoomCode, calculateScoreDifferential } from "@dad-golf/shared";
@@ -382,12 +383,13 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
         });
         continue;
       }
+      const teeId = randomUUID();
       const c = await createCourse(
         sc.name,
         sc.location,
-        sc.rating,
-        sc.slope,
         sc.holes,
+        [{ id: teeId, name: "Default", rating: sc.rating, slope: sc.slope }],
+        teeId,
         fakeUsers[0].id,
         sc.lat,
         sc.lng,

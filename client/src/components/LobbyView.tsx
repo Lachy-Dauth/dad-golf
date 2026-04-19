@@ -1,6 +1,7 @@
 import { useState } from "react";
-import type { RoundState, User } from "@dad-golf/shared";
-import { calculateDailyHandicap, totalPar } from "@dad-golf/shared";
+import type { RoundState, Tee, User } from "@dad-golf/shared";
+import { calculateDailyHandicap, resolvePlayerTee, totalPar } from "@dad-golf/shared";
+import { api } from "../api.js";
 
 interface Props {
   state: RoundState;
@@ -8,10 +9,11 @@ interface Props {
   viewer: User | null;
   isLeader: boolean;
   onSetActivePlayer: (id: string) => void;
-  onJoinAsUser: () => Promise<void>;
-  onJoinAsGuest: (name: string, handicap: number) => Promise<void>;
+  onJoinAsUser: (teeId?: string) => Promise<void>;
+  onJoinAsGuest: (name: string, handicap: number, teeId?: string) => Promise<void>;
   onStart: () => Promise<void>;
   onRemovePlayer: (id: string) => Promise<void>;
+  onStateUpdate: (state: RoundState) => void;
 }
 
 export default function LobbyView({
@@ -24,14 +26,18 @@ export default function LobbyView({
   onJoinAsGuest,
   onStart,
   onRemovePlayer,
+  onStateUpdate,
 }: Props) {
   const [name, setName] = useState("");
   const [handicap, setHandicap] = useState<string>("18.0");
+  const [joinTeeId, setJoinTeeId] = useState<string>(state.course.defaultTeeId);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const players = state.players;
   const alreadyJoined = !!viewer && players.some((p) => p.userId === viewer.id);
+  const tees = state.course.tees;
+  const hasMultipleTees = tees.length > 1;
 
   async function handleJoinGuest() {
     if (!name.trim()) return;
@@ -43,7 +49,7 @@ export default function LobbyView({
     setJoining(true);
     setError(null);
     try {
-      await onJoinAsGuest(name.trim(), Math.round(n * 10) / 10);
+      await onJoinAsGuest(name.trim(), Math.round(n * 10) / 10, joinTeeId);
       setName("");
     } catch (e) {
       setError((e as Error).message);
@@ -56,11 +62,21 @@ export default function LobbyView({
     setJoining(true);
     setError(null);
     try {
-      await onJoinAsUser();
+      await onJoinAsUser(joinTeeId);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setJoining(false);
+    }
+  }
+
+  async function handleChangeTee(playerId: string, teeId: string) {
+    setError(null);
+    try {
+      const res = await api.setPlayerTee(state.round.roomCode, playerId, teeId);
+      onStateUpdate(res.state);
+    } catch (e) {
+      setError((e as Error).message);
     }
   }
 
@@ -77,6 +93,9 @@ export default function LobbyView({
                 Joining as <strong>{viewer.displayName}</strong> (GA HCP{" "}
                 {viewer.handicap.toFixed(1)})
               </div>
+              {hasMultipleTees && (
+                <TeeSelect tees={tees} value={joinTeeId} onChange={setJoinTeeId} />
+              )}
               <button className="btn btn-primary" onClick={handleJoinUser} disabled={joining}>
                 Join
               </button>
@@ -104,6 +123,9 @@ export default function LobbyView({
                 placeholder="GA HCP"
                 style={{ width: 96 }}
               />
+              {hasMultipleTees && (
+                <TeeSelect tees={tees} value={joinTeeId} onChange={setJoinTeeId} />
+              )}
               <button
                 className="btn btn-primary"
                 onClick={handleJoinGuest}
@@ -139,11 +161,13 @@ export default function LobbyView({
           <ul className="player-grid">
             {players.map((p) => {
               const canRemove = isLeader || (viewer != null && p.userId === viewer.id);
+              const canChangeTee = isLeader || (viewer != null && p.userId === viewer.id);
               const isLeaderPlayer = p.userId != null && p.userId === state.round.leaderUserId;
+              const tee = resolvePlayerTee(state.course, p);
               const dh = calculateDailyHandicap(
                 p.handicap,
-                state.course.slope,
-                state.course.rating,
+                tee.slope,
+                tee.rating,
                 totalPar(state.course),
                 p.gender,
                 state.course.holes.length,
@@ -161,7 +185,37 @@ export default function LobbyView({
                   </div>
                   <div className="player-hcp">
                     GA {p.handicap.toFixed(1)} · DH {dh}
+                    {hasMultipleTees && <span className="muted"> · {tee.name}</span>}
                   </div>
+                  {hasMultipleTees && canChangeTee && (
+                    <div className="player-tee-picker" onClick={(e) => e.stopPropagation()}>
+                      {tees.length <= 3 ? (
+                        <div className="segmented">
+                          {tees.map((t) => (
+                            <button
+                              key={t.id}
+                              type="button"
+                              className={`segmented-btn ${p.teeId === t.id ? "active" : ""}`}
+                              onClick={() => handleChangeTee(p.id, t.id)}
+                            >
+                              {t.name}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <select
+                          value={p.teeId}
+                          onChange={(e) => handleChangeTee(p.id, e.target.value)}
+                        >
+                          {tees.map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  )}
                   {activePlayerId === p.id && <div className="player-me-badge">you</div>}
                   {canRemove && (
                     <button
@@ -182,5 +236,25 @@ export default function LobbyView({
         )}
       </section>
     </div>
+  );
+}
+
+function TeeSelect({
+  tees,
+  value,
+  onChange,
+}: {
+  tees: Tee[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)}>
+      {tees.map((t) => (
+        <option key={t.id} value={t.id}>
+          {t.name} ({t.rating.toFixed(1)}/{t.slope})
+        </option>
+      ))}
+    </select>
   );
 }
