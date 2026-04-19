@@ -35,6 +35,14 @@ export default tseslint.config(
     },
   },
 
+  // Service worker globals
+  {
+    files: ["client/public/sw.js"],
+    languageOptions: {
+      globals: { self: "readonly", caches: "readonly", fetch: "readonly", clients: "readonly" },
+    },
+  },
+
   // Prettier compat — must be last to turn off conflicting rules
   prettier,
 );

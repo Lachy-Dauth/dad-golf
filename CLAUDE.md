@@ -41,11 +41,11 @@ After `npm install`, the shared package is automatically built via `postinstall`
 
 ### Shared (`@dad-golf/shared`)
 
-Exports types, Stableford scoring logic, handicap calculation (GA/WHS), and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
+Exports types, Stableford scoring logic, handicap calculation (GA/WHS), badge definitions, and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
 
 ### Server (`@dad-golf/server`)
 
-Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Each domain has a `db/*.ts` module (query functions) and a `routes/*.ts` module (HTTP endpoints).
+Fastify 5 + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Each domain has a `db/*.ts` module (query functions) and a `routes/*.ts` module (HTTP endpoints). Security middleware: `@fastify/helmet`, `@fastify/rate-limit` (100/min), `@fastify/cors`.
 
 **Route registration pattern**: each file exports `registerXxxRoutes(app: FastifyInstance)`, all called from `routes/index.ts`. Routes use Fastify generics for typing: `app.post<{ Body: {...}; Params: {...} }>("/path", handler)`.
 
@@ -54,6 +54,10 @@ Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Ea
 **Real-time updates**: WebSocket pub/sub via `hub.ts` (`Map<roomCode, Set<WebSocket>>`). Clients connect to `/ws/:code?token=...`. After any mutation (score, join, start), the route rebuilds full `RoundState` via `roundState.ts` and broadcasts to all sockets in the room. Client uses `useRoundSocket.ts` hook which auto-reconnects and updates React state.
 
 **Calendar integration**: `calendar.ts` generates RFC 5545 `.ics` files, `calendarSync.ts` syncs RSVPs to Google Calendar (fire-and-forget), and `googleCalendar.ts` wraps the Google Calendar API. Calendar feed routes serve a subscribable iCal URL per user.
+
+**Stats**: `routes/stats.ts` serves personal stats, group stats, and head-to-head comparisons. Heavy aggregation queries live in `db/stats.ts`. Shared SQL helpers in `db/helpers.ts`.
+
+**Round completion**: `roundCompletion.ts` orchestrates post-round side effects — badge evaluation via `badgeEvaluator.ts`, activity event logging, and handicap auto-adjustment.
 
 **Location & weather**: `weather.ts` provides Open-Meteo weather lookups and Nominatim (OpenStreetMap) geocoding for course locations. Courses store optional `latitude`, `longitude`, and `location` fields.
 
@@ -88,7 +92,7 @@ Raw parameterized SQL (`pool.query(sql, [params])`). Schema auto-created via `in
 
 ## Maintenance
 
-When adding or removing features, update `README.md` to reflect the change. Keep `docs/roadmap.md` in sync with shipped status.
+When adding or removing features, update `README.md` to reflect the change. Keep `docs/roadmap.md` and `docs/features-brainstorm.md` in sync with shipped status.
 
 ## Deployment
 

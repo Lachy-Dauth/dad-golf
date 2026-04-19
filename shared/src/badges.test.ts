@@ -11,12 +11,18 @@ test("BADGE_DEFINITIONS is non-empty", () => {
 test("every badge has required fields", () => {
   for (const badge of BADGE_DEFINITIONS) {
     assert.ok(typeof badge.id === "string" && badge.id.length > 0, `missing id`);
-    assert.ok(typeof badge.name === "string" && badge.name.length > 0, `missing name on ${badge.id}`);
+    assert.ok(
+      typeof badge.name === "string" && badge.name.length > 0,
+      `missing name on ${badge.id}`,
+    );
     assert.ok(
       typeof badge.description === "string" && badge.description.length > 0,
       `missing description on ${badge.id}`,
     );
-    assert.ok(typeof badge.icon === "string" && badge.icon.length > 0, `missing icon on ${badge.id}`);
+    assert.ok(
+      typeof badge.icon === "string" && badge.icon.length > 0,
+      `missing icon on ${badge.id}`,
+    );
     assert.ok(typeof badge.category === "string", `missing category on ${badge.id}`);
   }
 });
@@ -28,7 +34,10 @@ test("all badge IDs are unique", () => {
 
 test("all categories are valid", () => {
   for (const badge of BADGE_DEFINITIONS) {
-    assert.ok(VALID_CATEGORIES.has(badge.category), `invalid category '${badge.category}' on ${badge.id}`);
+    assert.ok(
+      VALID_CATEGORIES.has(badge.category),
+      `invalid category '${badge.category}' on ${badge.id}`,
+    );
   }
 });
 
