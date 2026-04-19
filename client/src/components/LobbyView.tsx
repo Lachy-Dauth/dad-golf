@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { RoundState, User } from "@dad-golf/shared";
-import { calculateDailyHandicap } from "@dad-golf/shared";
+import { calculateDailyHandicap, totalPar } from "@dad-golf/shared";
 
 interface Props {
   state: RoundState;
@@ -140,7 +140,14 @@ export default function LobbyView({
             {players.map((p) => {
               const canRemove = isLeader || (viewer != null && p.userId === viewer.id);
               const isLeaderPlayer = p.userId != null && p.userId === state.round.leaderUserId;
-              const dh = calculateDailyHandicap(p.handicap, state.course.slope);
+              const dh = calculateDailyHandicap(
+                p.handicap,
+                state.course.slope,
+                state.course.rating,
+                totalPar(state.course),
+                p.gender,
+                state.course.holes.length,
+              );
               return (
                 <li
                   key={p.id}

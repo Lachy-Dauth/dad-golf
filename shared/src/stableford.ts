@@ -1,20 +1,47 @@
-import type { Course, Player, Score, LeaderboardRow } from "./types.js";
+import type { Course, Player, Score, LeaderboardRow, Gender } from "./types.js";
+
+export const CONSISTENCY_FACTOR_MALE = 0.9986;
+export const CONSISTENCY_FACTOR_FEMALE = 1.0483;
+
+export function consistencyFactor(gender: Gender): number {
+  return gender === "F" ? CONSISTENCY_FACTOR_FEMALE : CONSISTENCY_FACTOR_MALE;
+}
 
 /**
- * Convert a Golf Australia handicap (one decimal place) into the integer
- * Daily Handicap used for Stableford on a given course.
+ * Convert a Golf Australia handicap into the integer Daily Handicap used
+ * for Stableford on a given course. Implements the Golf Australia WHS
+ * Daily Handicap formula.
  *
- *   Daily Handicap = round(GA Handicap × Slope Rating ÷ 113)
+ * 18-hole:
+ *   ((GA × Slope ÷ 113) + (Scratch − Par)) × 0.93 × ConsistencyFactor
  *
- * The slope of a "neutral" course is 113, so playing a tougher course
- * (higher slope) gives you more strokes and an easier course gives fewer.
+ * 9-hole:
+ *   (((GA ÷ 2) × Slope9 ÷ 113) + (Scratch9 − Par9)) × 0.93 × ConsistencyFactor
+ *
+ * Consistency Factor: Men/Boys = 0.9986, Women/Girls = 1.0483.
  * Source: https://www.golf.org.au/handicapping
  */
-export function calculateDailyHandicap(gaHandicap: number, slope: number): number {
-  if (!Number.isFinite(gaHandicap) || !Number.isFinite(slope) || slope <= 0) {
+export function calculateDailyHandicap(
+  gaHandicap: number,
+  slope: number,
+  scratchRating: number,
+  par: number,
+  gender: Gender,
+  holeCount: number = 18,
+): number {
+  if (
+    !Number.isFinite(gaHandicap) ||
+    !Number.isFinite(slope) ||
+    !Number.isFinite(scratchRating) ||
+    !Number.isFinite(par) ||
+    slope <= 0
+  ) {
     return 0;
   }
-  return Math.round((gaHandicap * slope) / 113);
+  const effectiveGa = holeCount === 9 ? gaHandicap / 2 : gaHandicap;
+  const raw =
+    ((effectiveGa * slope) / 113 + (scratchRating - par)) * 0.93 * consistencyFactor(gender);
+  return Math.round(raw);
 }
 
 /**
@@ -77,7 +104,14 @@ export function computePlayerHoles(
       byHole.set(s.holeNumber, s);
     }
   }
-  const dailyHandicap = calculateDailyHandicap(player.handicap, course.slope);
+  const dailyHandicap = calculateDailyHandicap(
+    player.handicap,
+    course.slope,
+    course.rating,
+    totalPar(course),
+    player.gender,
+    course.holes.length,
+  );
   return holes.map((h) => {
     const score = byHole.get(h.number);
     const strokes = score ? score.strokes : null;
@@ -102,6 +136,7 @@ export function computeLeaderboard(
   players: Player[],
   scores: Score[],
 ): LeaderboardRow[] {
+  const coursePar = totalPar(course);
   const rows = players.map((p) => {
     const holes = computePlayerHoles(course, p, scores);
     const played = holes.filter((h) => h.strokes != null);
@@ -112,7 +147,14 @@ export function computeLeaderboard(
       playerId: p.id,
       name: p.name,
       handicap: p.handicap,
-      dailyHandicap: calculateDailyHandicap(p.handicap, course.slope),
+      dailyHandicap: calculateDailyHandicap(
+        p.handicap,
+        course.slope,
+        course.rating,
+        coursePar,
+        p.gender,
+        course.holes.length,
+      ),
       holesPlayed: played.length,
       totalPoints,
       totalStrokes,

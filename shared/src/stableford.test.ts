@@ -72,17 +72,20 @@ test("strokesReceived negative handicap returns 0", () => {
   assert.equal(strokesReceived(-5, 1), 0);
 });
 
-function makeCourse(slope = 113): Course {
+function makeCourse(slope = 113, rating?: number): Course {
   const holes = Array.from({ length: 18 }, (_, i) => ({
     number: i + 1,
     par: i % 3 === 0 ? 5 : i % 3 === 1 ? 4 : 3,
     strokeIndex: i + 1,
   }));
+  const par = holes.reduce((sum, h) => sum + h.par, 0);
   return {
     id: "c1",
     name: "Test",
     location: null,
-    rating: 72.0,
+    latitude: null,
+    longitude: null,
+    rating: rating ?? par,
     slope,
     holes,
     createdAt: new Date().toISOString(),
@@ -90,26 +93,57 @@ function makeCourse(slope = 113): Course {
     createdByName: null,
     favoriteCount: 0,
     isFavorite: false,
+    avgRating: null,
+    ratingCount: 0,
+    roundCount: 0,
   };
 }
 
-test("calculateDailyHandicap - neutral slope 113 returns rounded GA handicap", () => {
-  assert.equal(calculateDailyHandicap(12.3, 113), 12);
-  assert.equal(calculateDailyHandicap(12.5, 113), 13);
-  assert.equal(calculateDailyHandicap(0, 113), 0);
-  assert.equal(calculateDailyHandicap(18.0, 113), 18);
+test("calculateDailyHandicap - men, neutral course (scratch=par, slope=113)", () => {
+  // (GA × 1) × 0.93 × 0.9986 = GA × 0.9287
+  // 12.3 → 11.423 → 11
+  assert.equal(calculateDailyHandicap(12.3, 113, 72, 72, "M"), 11);
+  // 0 → 0
+  assert.equal(calculateDailyHandicap(0, 113, 72, 72, "M"), 0);
+  // 18.0 → 16.716 → 17
+  assert.equal(calculateDailyHandicap(18.0, 113, 72, 72, "M"), 17);
+});
+
+test("calculateDailyHandicap - women get a slightly higher handicap (consistency factor)", () => {
+  // 18.0 × 0.93 × 1.0483 = 17.548 → 18
+  assert.equal(calculateDailyHandicap(18.0, 113, 72, 72, "F"), 18);
+  // 12.3 × 0.93 × 1.0483 = 11.991 → 12
+  assert.equal(calculateDailyHandicap(12.3, 113, 72, 72, "F"), 12);
 });
 
 test("calculateDailyHandicap - higher slope adds strokes", () => {
-  // 12.3 * 130 / 113 = 14.149… → 14
-  assert.equal(calculateDailyHandicap(12.3, 130), 14);
-  // 18.0 * 140 / 113 = 22.30… → 22
-  assert.equal(calculateDailyHandicap(18.0, 140), 22);
+  // 12.3 × 130/113 × 0.93 × 0.9986 = 14.150 × 0.9287 = 13.144 → 13
+  assert.equal(calculateDailyHandicap(12.3, 130, 72, 72, "M"), 13);
+  // 18.0 × 140/113 × 0.9287 = 22.301 × 0.9287 = 20.714 → 21
+  assert.equal(calculateDailyHandicap(18.0, 140, 72, 72, "M"), 21);
 });
 
 test("calculateDailyHandicap - lower slope removes strokes", () => {
-  // 18.0 * 100 / 113 = 15.929… → 16
-  assert.equal(calculateDailyHandicap(18.0, 100), 16);
+  // 18.0 × 100/113 × 0.9287 = 15.929 × 0.9287 = 14.793 → 15
+  assert.equal(calculateDailyHandicap(18.0, 100, 72, 72, "M"), 15);
+});
+
+test("calculateDailyHandicap - scratch rating above par adds strokes", () => {
+  // ((18 × 113/113) + (73 − 72)) × 0.9287 = 19 × 0.9287 = 17.645 → 18
+  assert.equal(calculateDailyHandicap(18.0, 113, 73, 72, "M"), 18);
+});
+
+test("calculateDailyHandicap - scratch rating below par removes strokes", () => {
+  // ((18 + (71 − 72)) × 0.9287 = 17 × 0.9287 = 15.788 → 16
+  assert.equal(calculateDailyHandicap(18.0, 113, 71, 72, "M"), 16);
+});
+
+test("calculateDailyHandicap - 9-hole variant halves the GA handicap", () => {
+  // 9-hole with GA=18, slope=113, scratch9=36, par9=36, M
+  // (9 × 1 + 0) × 0.9287 = 8.358 → 8
+  assert.equal(calculateDailyHandicap(18.0, 113, 36, 36, "M", 9), 8);
+  // women factor: 9 × 0.93 × 1.0483 = 8.774 → 9
+  assert.equal(calculateDailyHandicap(18.0, 113, 36, 36, "F", 9), 9);
 });
 
 test("leaderboard sort - higher points first, tie-break by net strokes", () => {
@@ -120,14 +154,20 @@ test("leaderboard sort - higher points first, tie-break by net strokes", () => {
       roundId: "r1",
       name: "Alice",
       handicap: 0,
+      gender: "M",
       joinedAt: "",
+      userId: null,
+      isGuest: true,
     },
     {
       id: "p2",
       roundId: "r1",
       name: "Bob",
       handicap: 18,
+      gender: "M",
       joinedAt: "",
+      userId: null,
+      isGuest: true,
     },
   ];
   const scores: Score[] = [];
@@ -161,15 +201,26 @@ test("leaderboard sort - higher points first, tie-break by net strokes", () => {
 });
 
 test("calculateDailyHandicap - invalid inputs return 0", () => {
-  assert.equal(calculateDailyHandicap(NaN, 113), 0);
-  assert.equal(calculateDailyHandicap(18, NaN), 0);
-  assert.equal(calculateDailyHandicap(18, 0), 0);
-  assert.equal(calculateDailyHandicap(18, -1), 0);
+  assert.equal(calculateDailyHandicap(NaN, 113, 72, 72, "M"), 0);
+  assert.equal(calculateDailyHandicap(18, NaN, 72, 72, "M"), 0);
+  assert.equal(calculateDailyHandicap(18, 0, 72, 72, "M"), 0);
+  assert.equal(calculateDailyHandicap(18, -1, 72, 72, "M"), 0);
+  assert.equal(calculateDailyHandicap(18, 113, NaN, 72, "M"), 0);
+  assert.equal(calculateDailyHandicap(18, 113, 72, NaN, "M"), 0);
 });
 
 test("computePlayerHoles returns correct results for each hole", () => {
   const course = makeCourse();
-  const player: Player = { id: "p1", roundId: "r1", name: "Alice", handicap: 0, joinedAt: "" };
+  const player: Player = {
+    id: "p1",
+    roundId: "r1",
+    name: "Alice",
+    handicap: 0,
+    gender: "M",
+    joinedAt: "",
+    userId: null,
+    isGuest: true,
+  };
   const scores: Score[] = [
     { id: "s1", roundId: "r1", playerId: "p1", holeNumber: 1, strokes: 5, createdAt: "" },
     { id: "s2", roundId: "r1", playerId: "p1", holeNumber: 2, strokes: 4, createdAt: "" },
@@ -192,7 +243,16 @@ test("computePlayerHoles returns correct results for each hole", () => {
 
 test("computePlayerHoles filters scores for the correct player", () => {
   const course = makeCourse();
-  const player: Player = { id: "p1", roundId: "r1", name: "Alice", handicap: 0, joinedAt: "" };
+  const player: Player = {
+    id: "p1",
+    roundId: "r1",
+    name: "Alice",
+    handicap: 0,
+    gender: "M",
+    joinedAt: "",
+    userId: null,
+    isGuest: true,
+  };
   const scores: Score[] = [
     { id: "s1", roundId: "r1", playerId: "p1", holeNumber: 1, strokes: 5, createdAt: "" },
     { id: "s2", roundId: "r1", playerId: "p2", holeNumber: 1, strokes: 3, createdAt: "" },
@@ -204,7 +264,16 @@ test("computePlayerHoles filters scores for the correct player", () => {
 test("computePlayerHoles with handicap receives strokes", () => {
   const course = makeCourse();
   // handicap 18 on slope 113 → daily handicap 18 → 1 stroke received per hole
-  const player: Player = { id: "p1", roundId: "r1", name: "Bob", handicap: 18, joinedAt: "" };
+  const player: Player = {
+    id: "p1",
+    roundId: "r1",
+    name: "Bob",
+    handicap: 18,
+    gender: "M",
+    joinedAt: "",
+    userId: null,
+    isGuest: true,
+  };
   const scores: Score[] = [
     { id: "s1", roundId: "r1", playerId: "p1", holeNumber: 1, strokes: 6, createdAt: "" },
   ];
@@ -229,6 +298,8 @@ test("totalPar for a par-72 course", () => {
     id: "c1",
     name: "Flat",
     location: null,
+    latitude: null,
+    longitude: null,
     rating: 72,
     slope: 113,
     holes,
@@ -237,6 +308,9 @@ test("totalPar for a par-72 course", () => {
     createdByName: null,
     favoriteCount: 0,
     isFavorite: false,
+    avgRating: null,
+    ratingCount: 0,
+    roundCount: 0,
   };
   assert.equal(totalPar(course), 72);
 });
@@ -250,9 +324,36 @@ test("leaderboard with empty players list", () => {
 test("leaderboard position with gaps", () => {
   const course = makeCourse();
   const players: Player[] = [
-    { id: "p1", roundId: "r1", name: "Alice", handicap: 0, joinedAt: "" },
-    { id: "p2", roundId: "r1", name: "Bob", handicap: 0, joinedAt: "" },
-    { id: "p3", roundId: "r1", name: "Carol", handicap: 0, joinedAt: "" },
+    {
+      id: "p1",
+      roundId: "r1",
+      name: "Alice",
+      handicap: 0,
+      gender: "M",
+      joinedAt: "",
+      userId: null,
+      isGuest: true,
+    },
+    {
+      id: "p2",
+      roundId: "r1",
+      name: "Bob",
+      handicap: 0,
+      gender: "M",
+      joinedAt: "",
+      userId: null,
+      isGuest: true,
+    },
+    {
+      id: "p3",
+      roundId: "r1",
+      name: "Carol",
+      handicap: 0,
+      gender: "M",
+      joinedAt: "",
+      userId: null,
+      isGuest: true,
+    },
   ];
   const scores: Score[] = [
     // Alice: par (2pts)

@@ -116,9 +116,7 @@ export async function deleteRound(id: string): Promise<void> {
 }
 
 export async function listRecentRounds(limit = 20): Promise<Round[]> {
-  const { rows } = await pool.query(`${ROUND_SELECT} ORDER BY r.created_at DESC LIMIT $1`, [
-    limit,
-  ]);
+  const { rows } = await pool.query(`${ROUND_SELECT} ORDER BY r.created_at DESC LIMIT $1`, [limit]);
   return (rows as RoundListRow[]).map(rowToRound);
 }
 
@@ -185,6 +183,7 @@ async function buildRoundSummaries(
       userId: p.user_id as string | null,
       name: p.name as string,
       handicap: Number(p.handicap),
+      gender: p.gender === "F" ? "F" : "M",
       joinedAt: p.joined_at as string,
       isGuest: p.user_id === null,
     };

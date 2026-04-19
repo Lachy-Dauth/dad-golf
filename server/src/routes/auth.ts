@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import type { ActivityVisibility } from "@dad-golf/shared";
+import type { ActivityVisibility, Gender } from "@dad-golf/shared";
 import {
   authenticateUser,
   createSession,
@@ -8,6 +8,7 @@ import {
   getUserByUsername,
   updateUserProfile,
   updateActivityVisibility,
+  updateUserGender,
 } from "../db/index.js";
 import {
   errorMessage,
@@ -26,6 +27,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       password?: string;
       displayName?: string;
       handicap?: number;
+      gender?: string;
     };
   }>("/api/auth/register", async (req, reply) => {
     try {
@@ -33,10 +35,11 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const password = validatePassword(req.body?.password);
       const displayName = validateName(req.body?.displayName ?? username, "display name");
       const handicap = validateHandicap(req.body?.handicap ?? 18);
+      const gender: Gender = req.body?.gender === "F" ? "F" : "M";
       if (await getUserByUsername(username)) {
         return reply.code(400).send({ error: "username already taken" });
       }
-      const user = await createUser(username, password, displayName, handicap);
+      const user = await createUser(username, password, displayName, handicap, gender);
       const token = await createSession(user.id);
       return reply.code(201).send({ user, token });
     } catch (e) {
@@ -76,7 +79,12 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.patch<{
-    Body: { displayName?: string; handicap?: number; activityVisibility?: string };
+    Body: {
+      displayName?: string;
+      handicap?: number;
+      activityVisibility?: string;
+      gender?: string;
+    };
   }>("/api/auth/me", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
@@ -85,14 +93,16 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const handicap = validateHandicap(req.body?.handicap);
       await updateUserProfile(user.id, displayName, handicap);
       let activityVisibility = user.activityVisibility;
-      if (
-        req.body?.activityVisibility &&
-        ["none", "group"].includes(req.body.activityVisibility)
-      ) {
+      if (req.body?.activityVisibility && ["none", "group"].includes(req.body.activityVisibility)) {
         activityVisibility = req.body.activityVisibility as ActivityVisibility;
         await updateActivityVisibility(user.id, activityVisibility);
       }
-      return { user: { ...user, displayName, handicap, activityVisibility } };
+      let gender = user.gender;
+      if (req.body?.gender === "M" || req.body?.gender === "F") {
+        gender = req.body.gender;
+        await updateUserGender(user.id, gender);
+      }
+      return { user: { ...user, displayName, handicap, activityVisibility, gender } };
     } catch (e) {
       return reply.code(400).send({ error: errorMessage(e) });
     }

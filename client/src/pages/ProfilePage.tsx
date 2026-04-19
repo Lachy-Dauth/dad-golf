@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext.js";
 import { useTheme } from "../ThemeContext.js";
 import type { ThemePref } from "../localStore.js";
-import type { ActivityVisibility, UserBadge } from "@dad-golf/shared";
+import type { ActivityVisibility, Gender, UserBadge } from "@dad-golf/shared";
 import { BADGE_DEFINITIONS } from "@dad-golf/shared";
 import { api } from "../api.js";
 import BadgeIcon from "../components/BadgeIcon.js";
@@ -16,6 +16,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [handicap, setHandicap] = useState("18.0");
   const [activityVis, setActivityVis] = useState<ActivityVisibility>("group");
+  const [gender, setGender] = useState<Gender>("M");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,11 @@ export default function ProfilePage() {
       setDisplayName(user.displayName);
       setHandicap(user.handicap.toFixed(1));
       setActivityVis(user.activityVisibility);
-      api.getUserBadges(user.username).then((res) => setBadges(res.badges)).catch(() => {});
+      setGender(user.gender);
+      api
+        .getUserBadges(user.username)
+        .then((res) => setBadges(res.badges))
+        .catch(() => {});
     }
   }, [user]);
 
@@ -51,7 +56,12 @@ export default function ProfilePage() {
       if (!Number.isFinite(handicapNum) || handicapNum < 0 || handicapNum > 54) {
         throw new Error("Handicap must be a number between 0.0 and 54.0");
       }
-      await updateProfile(displayName.trim(), Math.round(handicapNum * 10) / 10, activityVis);
+      await updateProfile(
+        displayName.trim(),
+        Math.round(handicapNum * 10) / 10,
+        activityVis,
+        gender,
+      );
       setMsg("Saved.");
     } catch (e) {
       setError((e as Error).message);
@@ -99,6 +109,23 @@ export default function ProfilePage() {
           </div>
         )}
         <label className="field">
+          <span>Gender</span>
+          <div className="segmented">
+            {(["M", "F"] as Gender[]).map((opt) => (
+              <button
+                key={opt}
+                className={gender === opt ? "active" : ""}
+                onClick={() => setGender(opt)}
+              >
+                {opt === "M" ? "Male" : "Female"}
+              </button>
+            ))}
+          </div>
+          <span className="muted" style={{ fontSize: 12 }}>
+            Used by the WHS Daily Handicap formula (consistency factor).
+          </span>
+        </label>
+        <label className="field">
           <span>Activity sharing</span>
           <div className="segmented">
             {(["none", "group"] as ActivityVisibility[]).map((opt) => (
@@ -113,8 +140,7 @@ export default function ProfilePage() {
           </div>
           <span className="muted" style={{ fontSize: 12 }}>
             {activityVis === "none" && "Your activity won't appear in anyone's feed."}
-            {activityVis === "group" &&
-              "Activity visible to members of the group it belongs to."}
+            {activityVis === "group" && "Activity visible to members of the group it belongs to."}
           </span>
         </label>
         {error && <div className="error">{error}</div>}

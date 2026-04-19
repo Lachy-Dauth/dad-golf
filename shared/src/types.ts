@@ -6,11 +6,14 @@ export interface Hole {
 
 export type ActivityVisibility = "none" | "group";
 
+export type Gender = "M" | "F";
+
 export interface User {
   id: string;
   username: string;
   displayName: string;
   handicap: number;
+  gender: Gender;
   handicapAutoAdjust: boolean;
   googleCalendarConnected: boolean;
   activityVisibility: ActivityVisibility;
@@ -103,6 +106,7 @@ export interface Player {
   userId: string | null;
   name: string;
   handicap: number;
+  gender: Gender;
   joinedAt: string;
   isGuest: boolean;
 }

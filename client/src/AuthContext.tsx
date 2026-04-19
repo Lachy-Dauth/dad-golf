@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { ActivityVisibility, User } from "@dad-golf/shared";
+import type { ActivityVisibility, Gender, User } from "@dad-golf/shared";
 import { api } from "./api.js";
 import { getAuthToken, setAuthToken } from "./authStore.js";
 
@@ -12,6 +12,7 @@ interface AuthState {
     password: string;
     displayName: string;
     handicap: number;
+    gender?: Gender;
   }) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -19,6 +20,7 @@ interface AuthState {
     displayName: string,
     handicap: number,
     activityVisibility?: ActivityVisibility,
+    gender?: Gender,
   ) => Promise<void>;
 }
 
@@ -55,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string;
     displayName: string;
     handicap: number;
+    gender?: Gender;
   }) {
     const res = await api.register(payload);
     setAuthToken(res.token);
@@ -85,8 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     displayName: string,
     handicap: number,
     activityVisibility?: ActivityVisibility,
+    gender?: Gender,
   ) {
-    const res = await api.updateProfile(displayName, handicap, activityVisibility);
+    const res = await api.updateProfile(displayName, handicap, activityVisibility, gender);
     setUser(res.user);
   }
 
