@@ -16,6 +16,7 @@ import {
   validateStarRating,
   validateReviewText,
   validateReportReason,
+  validateNotes,
   parsePagination,
   errorMessage,
 } from "./validation.js";
@@ -229,16 +230,16 @@ test("validateUsername rejects non-string", () => {
 // --- validatePassword ---
 
 test("validatePassword accepts valid lengths", () => {
-  assert.equal(validatePassword("123456"), "123456");
+  assert.equal(validatePassword("12345678"), "12345678");
   assert.equal(validatePassword("x".repeat(128)), "x".repeat(128));
 });
 
 test("validatePassword rejects too short", () => {
-  assert.throws(() => validatePassword("12345"), /6-128 characters/);
+  assert.throws(() => validatePassword("1234567"), /8-128 characters/);
 });
 
 test("validatePassword rejects too long", () => {
-  assert.throws(() => validatePassword("x".repeat(129)), /6-128 characters/);
+  assert.throws(() => validatePassword("x".repeat(129)), /8-128 characters/);
 });
 
 test("validatePassword rejects non-string", () => {
@@ -400,6 +401,31 @@ test("validateReportReason rejects invalid reason", () => {
 
 test("validateReportReason rejects non-string", () => {
   assert.throws(() => validateReportReason(123), /must be one of/);
+});
+
+// --- validateNotes ---
+
+test("validateNotes accepts valid text", () => {
+  assert.equal(validateNotes("Bring sunscreen"), "Bring sunscreen");
+});
+
+test("validateNotes trims whitespace", () => {
+  assert.equal(validateNotes("  Note  "), "Note");
+});
+
+test("validateNotes returns null for empty values", () => {
+  assert.equal(validateNotes(null), null);
+  assert.equal(validateNotes(undefined), null);
+  assert.equal(validateNotes(""), null);
+  assert.equal(validateNotes("   "), null);
+});
+
+test("validateNotes rejects over 500 chars", () => {
+  assert.throws(() => validateNotes("x".repeat(501)), /500 characters/);
+});
+
+test("validateNotes rejects non-string truthy values", () => {
+  assert.throws(() => validateNotes(123), /must be a string/);
 });
 
 // --- parsePagination ---

@@ -33,6 +33,9 @@ export async function registerActivityRoutes(app: FastifyInstance): Promise<void
   app.delete<{ Params: { id: string } }>("/api/activity/:id/like", async (req, reply) => {
     const user = await requireUser(req, reply);
     if (!user) return;
+    if (!(await canUserSeeEvent(req.params.id, user.id))) {
+      return reply.code(404).send({ error: "event not found" });
+    }
     await unlikeActivityEvent(req.params.id, user.id);
     return { ok: true };
   });

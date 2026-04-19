@@ -35,6 +35,7 @@ import {
   fireAndForget,
   requireUser,
   validateDurationMinutes,
+  validateNotes,
   validateScheduledDate,
   validateScheduledTime,
 } from "./validation.js";
@@ -103,7 +104,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       const course = await getCourse(sr.courseId, null);
       const rsvps = await listRsvps(sr.id);
 
-      const appUrl = process.env.APP_URL || `${req.protocol}://${req.hostname}`;
+      const appUrl = process.env.APP_URL || `${req.protocol}://${req.host}`;
       const eventParams = buildScheduledRoundEvent({
         scheduledRoundId: sr.id,
         groupId: sr.groupId,
@@ -166,7 +167,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
       const scheduledDate = validateScheduledDate(rawDate);
       const scheduledTime = rawTime ? validateScheduledTime(rawTime) : null;
       const durationMinutes = validateDurationMinutes(rawDuration);
-      const trimmedNotes = typeof notes === "string" ? notes.trim() || null : null;
+      const trimmedNotes = validateNotes(notes);
 
       const scheduledRound = await createScheduledRound(
         group.id,
@@ -246,7 +247,7 @@ export async function registerScheduledRoundRoutes(app: FastifyInstance): Promis
         fields.durationMinutes = validateDurationMinutes(durationMinutes);
       }
       if (notes !== undefined) {
-        fields.notes = typeof notes === "string" ? notes.trim() || null : null;
+        fields.notes = validateNotes(notes);
       }
 
       await updateScheduledRound(sr.id, fields);

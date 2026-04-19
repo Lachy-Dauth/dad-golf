@@ -20,6 +20,8 @@ import {
   validateUsername,
 } from "./validation.js";
 
+const authRateLimit = { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } };
+
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post<{
     Body: {
@@ -29,7 +31,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       handicap?: number;
       gender?: string;
     };
-  }>("/api/auth/register", async (req, reply) => {
+  }>("/api/auth/register", authRateLimit, async (req, reply) => {
     try {
       const username = validateUsername(req.body?.username);
       const password = validatePassword(req.body?.password);
@@ -49,6 +51,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
   app.post<{ Body: { username?: string; password?: string } }>(
     "/api/auth/login",
+    authRateLimit,
     async (req, reply) => {
       try {
         const username = validateUsername(req.body?.username);
@@ -93,7 +96,10 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       const handicap = validateHandicap(req.body?.handicap);
       await updateUserProfile(user.id, displayName, handicap);
       let activityVisibility = user.activityVisibility;
-      if (req.body?.activityVisibility && ["none", "group"].includes(req.body.activityVisibility)) {
+      if (
+        req.body?.activityVisibility &&
+        ["none", "public"].includes(req.body.activityVisibility)
+      ) {
         activityVisibility = req.body.activityVisibility as ActivityVisibility;
         await updateActivityVisibility(user.id, activityVisibility);
       }

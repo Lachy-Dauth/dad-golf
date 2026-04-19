@@ -8,6 +8,7 @@ export {
   createSession,
   getUserBySession,
   deleteSession,
+  deleteExpiredSessions,
   updateUserHandicapAutoAdjust,
   updateUserHandicap,
   updateUserGender,

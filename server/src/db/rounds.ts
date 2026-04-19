@@ -115,8 +115,14 @@ export async function deleteRound(id: string): Promise<void> {
   await pool.query(`DELETE FROM rounds WHERE id = $1`, [id]);
 }
 
-export async function listRecentRounds(limit = 20): Promise<Round[]> {
-  const { rows } = await pool.query(`${ROUND_SELECT} ORDER BY r.created_at DESC LIMIT $1`, [limit]);
+export async function listRecentRounds(userId: string, limit = 20): Promise<Round[]> {
+  const { rows } = await pool.query(
+    `${ROUND_SELECT}
+     WHERE EXISTS (SELECT 1 FROM players p WHERE p.round_id = r.id AND p.user_id = $1)
+        OR EXISTS (SELECT 1 FROM group_members gm WHERE gm.group_id = r.group_id AND gm.user_id = $1)
+     ORDER BY r.created_at DESC LIMIT $2`,
+    [userId, limit],
+  );
   return (rows as RoundListRow[]).map(rowToRound);
 }
 

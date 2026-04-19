@@ -4,7 +4,7 @@ export interface Hole {
   strokeIndex: number;
 }
 
-export type ActivityVisibility = "none" | "group";
+export type ActivityVisibility = "none" | "public";
 
 export type Gender = "M" | "F";
 

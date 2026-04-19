@@ -80,8 +80,8 @@ export function validateUsername(name: unknown): string {
 
 export function validatePassword(p: unknown): string {
   if (typeof p !== "string") throw new Error("password must be a string");
-  if (p.length < 6 || p.length > 128) {
-    throw new Error("password must be 6-128 characters");
+  if (p.length < 8 || p.length > 128) {
+    throw new Error("password must be 8-128 characters");
   }
   return p;
 }
@@ -159,6 +159,15 @@ export function validateReviewText(t: unknown): string | null {
   const trimmed = t.trim();
   if (trimmed.length === 0) return null;
   if (trimmed.length > 500) throw new Error("review text must be 500 characters or fewer");
+  return trimmed;
+}
+
+export function validateNotes(t: unknown): string | null {
+  if (t === undefined || t === null || t === "") return null;
+  if (typeof t !== "string") throw new Error("notes must be a string");
+  const trimmed = t.trim();
+  if (trimmed.length === 0) return null;
+  if (trimmed.length > 500) throw new Error("notes must be 500 characters or fewer");
   return trimmed;
 }
 

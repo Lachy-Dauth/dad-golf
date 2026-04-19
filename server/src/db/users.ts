@@ -42,7 +42,7 @@ export function rowToUser(row: UserRow): User {
     gender: row.gender === "F" ? "F" : "M",
     handicapAutoAdjust: Boolean(row.handicap_auto_adjust),
     googleCalendarConnected: Boolean(row.google_calendar_connected),
-    activityVisibility: (row.activity_visibility || "group") as ActivityVisibility,
+    activityVisibility: (row.activity_visibility || "public") as ActivityVisibility,
     createdAt: row.created_at,
     isAdmin: Boolean(row.is_admin),
   };
@@ -71,7 +71,7 @@ export async function createUser(
     gender,
     handicapAutoAdjust: false,
     googleCalendarConnected: false,
-    activityVisibility: "group",
+    activityVisibility: "public",
     createdAt,
     isAdmin: false,
   };
@@ -109,13 +109,16 @@ export async function updateUserProfile(
   ]);
 }
 
+const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 export async function createSession(userId: string): Promise<string> {
   const token = randomBytes(32).toString("hex");
-  await pool.query(`INSERT INTO sessions (token, user_id, created_at) VALUES ($1, $2, $3)`, [
-    token,
-    userId,
-    now(),
-  ]);
+  const createdAt = now();
+  const expiresAt = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
+  await pool.query(
+    `INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES ($1, $2, $3, $4)`,
+    [token, userId, createdAt, expiresAt],
+  );
   return token;
 }
 
@@ -123,11 +126,20 @@ export async function getUserBySession(token: string): Promise<User | null> {
   const { rows } = await pool.query(
     `SELECT users.* FROM sessions
      INNER JOIN users ON users.id = sessions.user_id
-     WHERE sessions.token = $1`,
-    [token],
+     WHERE sessions.token = $1
+       AND (sessions.expires_at IS NULL OR sessions.expires_at > $2)`,
+    [token, new Date().toISOString()],
   );
   const row = rows[0] as UserRow | undefined;
   return row ? rowToUser(row) : null;
+}
+
+export async function deleteExpiredSessions(): Promise<number> {
+  const { rowCount } = await pool.query(
+    `DELETE FROM sessions WHERE expires_at IS NOT NULL AND expires_at <= $1`,
+    [new Date().toISOString()],
+  );
+  return rowCount ?? 0;
 }
 
 export async function deleteSession(token: string): Promise<void> {
