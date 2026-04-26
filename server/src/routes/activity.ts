@@ -6,7 +6,7 @@ import {
   getActivityComments,
   addActivityComment,
   canUserSeeEvent,
-} from "../db/activity.js";
+} from "../db/index.js";
 import { requireUser, parsePagination } from "./validation.js";
 
 export async function registerActivityRoutes(app: FastifyInstance): Promise<void> {

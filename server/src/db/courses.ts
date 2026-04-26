@@ -108,10 +108,9 @@ function rowToCourse(row: CourseListRow): Course {
 }
 
 export async function listCourses(viewerUserId: string | null): Promise<Course[]> {
-  const { rows } = await pool.query(
-    `${COURSE_SELECT} ORDER BY favorite_count DESC, c.name ASC`,
-    [viewerUserId],
-  );
+  const { rows } = await pool.query(`${COURSE_SELECT} ORDER BY favorite_count DESC, c.name ASC`, [
+    viewerUserId,
+  ]);
   return (rows as CourseListRow[]).map(rowToCourse);
 }
 

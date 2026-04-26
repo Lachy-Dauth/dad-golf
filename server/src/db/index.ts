@@ -169,3 +169,5 @@ export {
   canUserSeeEvent,
 } from "./activity.js";
 export { awardBadge, listUserBadges } from "./badges.js";
+export type { UserStatsResult, GroupStatsResult, HeadToHeadResult } from "./stats.js";
+export { getUserStats, getGroupStats, getHeadToHead, getOpponents } from "./stats.js";

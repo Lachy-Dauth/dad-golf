@@ -86,19 +86,21 @@ export function validatePassword(p: unknown): string {
   return p;
 }
 
-export function validateScheduledDate(date: unknown): string {
-  if (typeof date !== "string") throw new Error("scheduledDate must be a string");
-  const trimmed = date.trim();
+export function validateDate(d: unknown): string {
+  if (typeof d !== "string") throw new Error("date must be a string");
+  const trimmed = d.trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    throw new Error("scheduledDate must be in YYYY-MM-DD format");
+    throw new Error("date must be in YYYY-MM-DD format");
   }
   const [y, m, day] = trimmed.split("-").map(Number);
   const parsed = new Date(y, m - 1, day);
   if (parsed.getFullYear() !== y || parsed.getMonth() !== m - 1 || parsed.getDate() !== day) {
-    throw new Error("scheduledDate is not a valid calendar date");
+    throw new Error("date is not a valid calendar date");
   }
   return trimmed;
 }
+
+export const validateScheduledDate = validateDate;
 
 export function validateScheduledTime(time: unknown): string {
   if (typeof time !== "string") throw new Error("scheduledTime must be a string");
@@ -130,21 +132,6 @@ export function validateAdjustedGrossScore(s: unknown): number {
   return n;
 }
 
-export function validateDate(d: unknown): string {
-  if (typeof d !== "string") throw new Error("date must be a string");
-  const trimmed = d.trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    throw new Error("date must be in YYYY-MM-DD format");
-  }
-  // Parse and reconstruct to catch invalid calendar dates (e.g. Feb 31)
-  const [y, m, day] = trimmed.split("-").map(Number);
-  const parsed = new Date(y, m - 1, day);
-  if (parsed.getFullYear() !== y || parsed.getMonth() !== m - 1 || parsed.getDate() !== day) {
-    throw new Error("date is not a valid calendar date");
-  }
-  return trimmed;
-}
-
 export function validateStarRating(r: unknown): number {
   const n = Number(r);
   if (!Number.isInteger(n) || n < 1 || n > 5) {
@@ -153,22 +140,22 @@ export function validateStarRating(r: unknown): number {
   return n;
 }
 
-export function validateReviewText(t: unknown): string | null {
+function validateOptionalText(t: unknown, field: string, maxLength = 500): string | null {
   if (t === undefined || t === null || t === "") return null;
-  if (typeof t !== "string") throw new Error("reviewText must be a string");
+  if (typeof t !== "string") throw new Error(`${field} must be a string`);
   const trimmed = t.trim();
   if (trimmed.length === 0) return null;
-  if (trimmed.length > 500) throw new Error("review text must be 500 characters or fewer");
+  if (trimmed.length > maxLength)
+    throw new Error(`${field} must be ${maxLength} characters or fewer`);
   return trimmed;
 }
 
+export function validateReviewText(t: unknown): string | null {
+  return validateOptionalText(t, "review text");
+}
+
 export function validateNotes(t: unknown): string | null {
-  if (t === undefined || t === null || t === "") return null;
-  if (typeof t !== "string") throw new Error("notes must be a string");
-  const trimmed = t.trim();
-  if (trimmed.length === 0) return null;
-  if (trimmed.length > 500) throw new Error("notes must be 500 characters or fewer");
-  return trimmed;
+  return validateOptionalText(t, "notes");
 }
 
 const VALID_REPORT_REASONS = new Set<CourseReportReason>([

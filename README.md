@@ -81,6 +81,7 @@ dad-golf/
 │       │   ├── calendarFeed.ts # Calendar feed token management
 │       │   ├── activity.ts  # Activity feed events, likes, comments
 │       │   ├── badges.ts    # User badge storage
+│       │   ├── stats.ts     # Stats aggregation (personal, group, head-to-head)
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
@@ -94,6 +95,7 @@ dad-golf/
 │       │   ├── calendarFeed.ts # /api/calendar-feed/* (iCal feed subscription)
 │       │   ├── activity.ts  # /api/activity/* (feed, likes, comments)
 │       │   ├── users.ts     # /api/users/:username/* (public profiles, badges)
+│       │   ├── stats.ts     # /api/stats/* (personal, group, head-to-head)
 │       │   └── admin.ts     # /api/admin/*
 │       ├── badgeEvaluator.ts # Server-side badge evaluation engine
 │       ├── calendar.ts      # iCalendar (.ics) generation

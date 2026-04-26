@@ -1,7 +1,14 @@
 import type { FastifyInstance } from "fastify";
 import { requireUser } from "./validation.js";
-import { getUserStats, getGroupStats, getOpponents, getHeadToHead } from "../db/stats.js";
-import { getGroup, getUserRoleInGroup, getUserGroupIds } from "../db/index.js";
+import {
+  getUserStats,
+  getGroupStats,
+  getOpponents,
+  getHeadToHead,
+  getGroup,
+  getUserRoleInGroup,
+  getUserGroupIds,
+} from "../db/index.js";
 import { pool } from "../db/pool.js";
 
 export async function registerStatsRoutes(app: FastifyInstance): Promise<void> {

@@ -242,7 +242,7 @@ export default function GroupStatsPage() {
     ])
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [id, user?.id]);
+  }, [id, user]);
 
   if (authLoading || loading) {
     return (
