@@ -59,13 +59,22 @@ A player with handicap _H_ receives strokes on the hardest holes first (by strok
 dad-golf/
 ├── client/                  # React + Vite frontend
 │   └── src/
-│       ├── pages/           # Route pages (Home, Round, Courses, Groups, Admin, …)
+│       ├── pages/           # Route pages (Home, Round, Courses, Groups, Stats, Admin, …)
+│       │   └── admin/       # Admin sub-tabs (Dashboard, Users, Rounds, Courses, Groups, Reports, Activity)
 │       ├── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Replay, Scorecard, Weather, Calendar)
+│       ├── hooks/           # useRoundSocket (WebSocket), useAsync
+│       ├── styles/          # CSS modules (base, components, pages, scoring, leaderboard, stats, admin, activity)
+│       ├── utils/           # dateFormat helpers
+│       ├── api.ts           # API client (all fetch calls)
 │       ├── AuthContext.tsx   # Session & user state
 │       └── ThemeContext.tsx  # Dark / light mode
 ├── server/                  # Fastify backend
 │   └── src/
 │       ├── db/              # Database layer (pool, schema, per-domain modules)
+│       │   ├── index.ts     # Barrel re-exports
+│       │   ├── pool.ts      # PostgreSQL connection pool
+│       │   ├── schema.ts    # DDL (CREATE IF NOT EXISTS) + migrations
+│       │   ├── helpers.ts   # now(), newId() utilities
 │       │   ├── users.ts     # User CRUD, auth, sessions
 │       │   ├── courses.ts   # Course CRUD + favourites
 │       │   ├── courseReviews.ts # Course star ratings + review text
@@ -81,8 +90,11 @@ dad-golf/
 │       │   ├── calendarFeed.ts # Calendar feed token management
 │       │   ├── activity.ts  # Activity feed events, likes, comments
 │       │   ├── badges.ts    # User badge storage
+│       │   ├── stats.ts     # Personal, group, and head-to-head stats aggregation
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
+│       │   ├── index.ts     # Route registration (all modules wired here)
+│       │   ├── validation.ts # Auth helpers + request validation utilities
 │       │   ├── auth.ts      # /api/auth/*
 │       │   ├── courses.ts   # /api/courses/* (includes reviews + reports)
 │       │   ├── groups.ts    # /api/groups/*
@@ -94,16 +106,19 @@ dad-golf/
 │       │   ├── calendarFeed.ts # /api/calendar-feed/* (iCal feed subscription)
 │       │   ├── activity.ts  # /api/activity/* (feed, likes, comments)
 │       │   ├── users.ts     # /api/users/:username/* (public profiles, badges)
+│       │   ├── stats.ts     # /api/stats/* (personal, group, head-to-head)
 │       │   └── admin.ts     # /api/admin/*
 │       ├── badgeEvaluator.ts # Server-side badge evaluation engine
 │       ├── calendar.ts      # iCalendar (.ics) generation
 │       ├── calendarSync.ts  # Google Calendar sync logic (fire-and-forget)
 │       ├── googleCalendar.ts # Google Calendar API client (raw fetch)
+│       ├── roundCompletion.ts # Post-round side effects (handicap, activity, badges)
+│       ├── roundState.ts    # Build full RoundState for WebSocket broadcast
 │       ├── weather.ts       # Open-Meteo weather + Nominatim geocoding
 │       ├── hub.ts           # WebSocket pub/sub hub
 │       ├── ws.ts            # WebSocket handler for live round updates
 │       └── seed.ts          # Sample data seeding
-├── shared/                  # Shared types, scoring logic, room codes
+├── shared/                  # Shared types, scoring logic, handicap calc, room codes
 ├── tsconfig.base.json       # Shared TypeScript config (strict, noUnused*)
 ├── eslint.config.mjs        # ESLint 9 flat config
 └── prettier.config.mjs      # Prettier config

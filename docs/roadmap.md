@@ -34,6 +34,7 @@ flowchart TD
     end
 
     subgraph phase4["Phase 4: Wave 1"]
+        direction LR
         P4A["1a. Stats Dashboard ✅"]
         P4B["5a. Skins Game\n2 weeks"]
         P4C["4b. Shareable Cards\n2 weeks"]
@@ -42,6 +43,7 @@ flowchart TD
     end
 
     subgraph phase5["Phase 5: Wave 2"]
+        direction LR
         P5A["1b. Head-to-Head ✅"]
         P5B["2a. Recurring Leagues\n4-5 weeks"]
         P5C["7a. Scoring Formats\n3-4 weeks"]
@@ -100,14 +102,14 @@ gantt
     Achievement Badges (4c)         :done, p3e, after p2a, 8d
 
     section Phase 4: Wave 1
-    Stats Dashboard (1a)            :p4a, 2026-07-13, 15d
+    Stats Dashboard (1a)            :done, p4a, 2026-07-13, 15d
     Skins Game (5a)                 :p4b, 2026-07-13, 10d
     Shareable Cards (4b)            :p4c, after p4b, 10d
     PDF Scorecards (8e)             :p4d, after p4c, 8d
-    Group Stats (6b)                :p4e, after p4b, 10d
+    Group Stats (6b)                :done, p4e, after p4b, 10d
 
     section Phase 5: Wave 2
-    Head-to-Head (1b)               :p5a, after p4a, 10d
+    Head-to-Head (1b)               :done, p5a, after p4a, 10d
     Recurring Leagues (2a)          :p5b, after p4e, 25d
     Scoring Formats (7a)            :p5c, after p5a, 20d
 
@@ -148,12 +150,12 @@ gantt
 
 ### Phase 3: Features with Dependencies ✅
 
-| Feature                  | Duration  | Depends On | Notes                                                                 |
-| ------------------------ | --------- | ---------- | --------------------------------------------------------------------- |
-| 2c. Scheduled Rounds     | 2 weeks   | 6c         | ✅ Shipped — date/time/course, RSVP, auto-start with accepted players |
-| 9a. Calendar Integration | 1 week    | 2c         | ✅ Shipped — .ics export, Google Calendar OAuth sync, iCal feed URL   |
+| Feature                  | Duration  | Depends On | Notes                                                                                 |
+| ------------------------ | --------- | ---------- | ------------------------------------------------------------------------------------- |
+| 2c. Scheduled Rounds     | 2 weeks   | 6c         | ✅ Shipped — date/time/course, RSVP, auto-start with accepted players                 |
+| 9a. Calendar Integration | 1 week    | 2c         | ✅ Shipped — .ics export, Google Calendar OAuth sync, iCal feed URL                   |
 | 4a. Activity Feed        | 2 weeks   | 1c         | ✅ Shipped — Group activity feed with likes/comments, privacy controls, 7 event types |
-| 4c. Achievement Badges   | 1.5 weeks | 1c         | ✅ Shipped — 12 badges across 4 categories, public user profiles, auto-evaluation      |
+| 4c. Achievement Badges   | 1.5 weeks | 1c         | ✅ Shipped — 12 badges across 4 categories, public user profiles, auto-evaluation     |
 
 **All shipped!**
 
@@ -161,27 +163,27 @@ gantt
 
 ### Phase 4: Wave 1
 
-| Feature             | Duration  | Depends On | Notes                                   |
-| ------------------- | --------- | ---------- | --------------------------------------- |
+| Feature             | Duration  | Depends On | Notes                                                                                            |
+| ------------------- | --------- | ---------- | ------------------------------------------------------------------------------------------------ |
 | 1a. Stats Dashboard | 2-3 weeks | 1c         | ✅ Shipped — Stableford/Strokes toggle, overview cards, trend chart, par breakdown, course stats |
-| 5a. Skins Game      | 2 weeks   | —          | Parallel scoring layer on rounds        |
-| 4b. Shareable Cards | 2 weeks   | —          | Server-side image gen (canvas/SVG)      |
-| 8e. PDF Scorecards  | 1.5 weeks | —          | PDF generation (pdfkit or similar)      |
-| 6b. Group Stats     | 2 weeks   | —          | ✅ Shipped — All-time leaderboard, records, member breakdown, course stats |
+| 5a. Skins Game      | 2 weeks   | —          | Parallel scoring layer on rounds                                                                 |
+| 4b. Shareable Cards | 2 weeks   | —          | Server-side image gen (canvas/SVG)                                                               |
+| 8e. PDF Scorecards  | 1.5 weeks | —          | PDF generation (pdfkit or similar)                                                               |
+| 6b. Group Stats     | 2 weeks   | —          | ✅ Shipped — All-time leaderboard, records, member breakdown, course stats                       |
 
-**Phase total: ~7 weeks** (some can run in parallel)
+**Remaining: ~5.5 weeks** (Skins Game, Shareable Cards, PDF Scorecards). Some can run in parallel.
 
 ---
 
 ### Phase 5: Wave 2
 
-| Feature               | Duration  | Depends On | Notes                                |
-| --------------------- | --------- | ---------- | ------------------------------------ |
+| Feature               | Duration  | Depends On | Notes                                                                                                                     |
+| --------------------- | --------- | ---------- | ------------------------------------------------------------------------------------------------------------------------- |
 | 1b. Head-to-Head      | 2 weeks   | 1a         | ✅ Shipped — Rivalry page with opponent picker, win/loss/draw, stat comparison, distributions, trend chart, round history |
-| 2a. Recurring Leagues | 4-5 weeks | —          | New data models, standings, seasons  |
-| 7a. Scoring Formats   | 3-4 weeks | —          | Stroke, Ambrose, best ball, par comp |
+| 2a. Recurring Leagues | 4-5 weeks | —          | New data models, standings, seasons                                                                                       |
+| 7a. Scoring Formats   | 3-4 weeks | —          | Stroke, Ambrose, best ball, par comp                                                                                      |
 
-**Phase total: ~9 weeks** (parallel tracks possible)
+**Remaining: ~8 weeks** (Recurring Leagues, Scoring Formats). Parallel tracks possible.
 
 The big features. Leagues (2a) is the highest-effort item on the entire
 roadmap but also the stickiest feature.
@@ -221,13 +223,15 @@ could ship over approximately **5-6 months** at part-time pace.
 
 ## Estimated Total Effort
 
-| Category           | Features                | Est. Weeks      |
-| ------------------ | ----------------------- | --------------- |
-| Shipped            | 17 features ✅          | ~0 weeks        |
-| Remaining          | 7 features              | ~17 weeks       |
-| **Total remaining**| **7 features**          | **~17 weeks**   |
+| Category            | Features       | Est. Weeks    |
+| ------------------- | -------------- | ------------- |
+| Shipped             | 17 features ✅ | —             |
+| Remaining           | 7 features     | ~17 weeks     |
+| **Total remaining** | **7 features** | **~17 weeks** |
 
-**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges, 1a Stats Dashboard, 6b Group Stats, 1b Head-to-Head (plus location autocomplete and course reviews).
+**Shipped (17):** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges, 1a Stats Dashboard, 6b Group Stats, 1b Head-to-Head (plus location autocomplete and course reviews).
 
-At part-time pace (~15-20 hrs/week), remaining work is roughly **5-6 months** of
+**Remaining (7):** 5a Skins Game, 4b Shareable Cards, 8e PDF Scorecards, 2a Recurring Leagues, 7a Scoring Formats, 2b League Awards, 7b Team Rounds.
+
+At part-time pace (~15-20 hrs/week), remaining work is roughly **4-5 months** of
 calendar time with some parallelism.

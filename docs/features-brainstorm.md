@@ -114,13 +114,15 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 
 ## 4. Social & Sharing
 
-### 4a. Activity Feed — FREE
+### 4a. Activity Feed — FREE ✅
 
 - See recent rounds from your groups
 - Like/comment on rounds
 
-> Basic social features help engagement and make the app feel alive. Keep it
-> simple — just rounds from your groups, no algorithmic feed.
+> Shipped. Group activity feed showing 7 event types (round completed, new
+> member, scheduled round, competition win, handicap change, badge earned,
+> member joined). Likes and comments on events. Privacy controls (public /
+> private per-user). Accessible from the Activity page and group detail pages.
 
 ### 4b. Shareable Round Cards — FREE
 
@@ -368,4 +370,4 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 | 10a | Club/Organisation Account      | **WON'T DO** |
 | 10b | Tournament Mode                | **WON'T DO** |
 
-**Totals: 24 FREE (17 shipped), 8 WON'T DO**
+**Totals: 24 FREE (17 shipped, 7 remaining), 8 WON'T DO**

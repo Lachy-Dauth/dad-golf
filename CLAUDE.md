@@ -53,9 +53,15 @@ Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Ea
 
 **Real-time updates**: WebSocket pub/sub via `hub.ts` (`Map<roomCode, Set<WebSocket>>`). Clients connect to `/ws/:code?token=...`. After any mutation (score, join, start), the route rebuilds full `RoundState` via `roundState.ts` and broadcasts to all sockets in the room. Client uses `useRoundSocket.ts` hook which auto-reconnects and updates React state.
 
+**Round completion**: `roundCompletion.ts` orchestrates post-round side effects — emits `round_completed` activity events, auto-adds handicap rounds for opted-in players, and triggers badge evaluation for all participants.
+
+**Stats**: `db/stats.ts` provides three aggregation functions: `getUserStats` (personal dashboard), `getGroupStats` (group leaderboard/records), and `getHeadToHead` (rivalry comparison). Exposed via `routes/stats.ts` at `/api/stats`, `/api/groups/:id/stats`, `/api/stats/h2h/*`.
+
 **Calendar integration**: `calendar.ts` generates RFC 5545 `.ics` files, `calendarSync.ts` syncs RSVPs to Google Calendar (fire-and-forget), and `googleCalendar.ts` wraps the Google Calendar API. Calendar feed routes serve a subscribable iCal URL per user.
 
 **Location & weather**: `weather.ts` provides Open-Meteo weather lookups and Nominatim (OpenStreetMap) geocoding for course locations. Courses store optional `latitude`, `longitude`, and `location` fields.
+
+**Security**: `@fastify/helmet` (CSP disabled for inline theme script), `@fastify/rate-limit` (100 req/min global), `@fastify/cors` (configurable via `ALLOWED_ORIGINS` env). Session tokens expire and a 24-hour cleanup job prunes stale sessions. OAuth CSRF protection via `oauth_nonces` table. Body limit 1 MB, `trustProxy` enabled for reverse proxy headers.
 
 **Production serving**: if `client/dist/` exists, Fastify serves it as static files with SPA fallback (non-API 404s → `index.html`).
 

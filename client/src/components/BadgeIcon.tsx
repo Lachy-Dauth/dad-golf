@@ -8,7 +8,10 @@ interface BadgeIconProps {
 
 export default function BadgeIcon({ badge, earned, earnedAt }: BadgeIconProps) {
   return (
-    <div className="badge-item" title={earned ? `${badge.name}: ${badge.description}` : badge.description}>
+    <div
+      className="badge-item"
+      title={earned ? `${badge.name}: ${badge.description}` : badge.description}
+    >
       <div className={`badge-icon ${earned ? "earned" : "locked"}`}>
         {earned ? badge.icon : "?"}
       </div>
