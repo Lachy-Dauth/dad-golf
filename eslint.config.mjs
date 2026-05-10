@@ -7,6 +7,14 @@ import prettier from "eslint-config-prettier";
 export default tseslint.config(
   { ignores: ["**/dist/", "**/node_modules/"] },
 
+  // Service worker globals
+  {
+    files: ["client/public/sw.js"],
+    languageOptions: {
+      globals: { self: "readonly", caches: "readonly", fetch: "readonly" },
+    },
+  },
+
   // Base: JS recommended + TS recommended for all TS files
   js.configs.recommended,
   ...tseslint.configs.recommended,

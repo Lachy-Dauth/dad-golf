@@ -100,14 +100,14 @@ gantt
     Achievement Badges (4c)         :done, p3e, after p2a, 8d
 
     section Phase 4: Wave 1
-    Stats Dashboard (1a)            :p4a, 2026-07-13, 15d
+    Stats Dashboard (1a)            :done, p4a, 2026-07-13, 15d
     Skins Game (5a)                 :p4b, 2026-07-13, 10d
     Shareable Cards (4b)            :p4c, after p4b, 10d
     PDF Scorecards (8e)             :p4d, after p4c, 8d
-    Group Stats (6b)                :p4e, after p4b, 10d
+    Group Stats (6b)                :done, p4e, after p4b, 10d
 
     section Phase 5: Wave 2
-    Head-to-Head (1b)               :p5a, after p4a, 10d
+    Head-to-Head (1b)               :done, p5a, after p4a, 10d
     Recurring Leagues (2a)          :p5b, after p4e, 25d
     Scoring Formats (7a)            :p5c, after p5a, 20d
 
@@ -207,15 +207,15 @@ are stable.
 The longest dependency chain determines the earliest possible completion:
 
 ```
-Stats Dashboard (3w) → Head-to-Head (2w)
+Stats Dashboard (3w) → Head-to-Head (2w)       ✅ complete
 Recurring Leagues (5w) → League Awards (2w)    ← longest
 Scoring Formats (4w) → Team Rounds (3w)
 ```
 
 **Longest chain: Leagues → Awards = ~7 weeks**
 
-Including shipped features (Phases 1-3), the remaining features (Phases 4-6)
-could ship over approximately **5-6 months** at part-time pace.
+Remaining features (4 items across Phases 4-6) could ship over approximately
+**3-4 months** at part-time pace with some parallelism.
 
 ---
 
@@ -229,5 +229,5 @@ could ship over approximately **5-6 months** at part-time pace.
 
 **Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges, 1a Stats Dashboard, 6b Group Stats, 1b Head-to-Head (plus location autocomplete and course reviews).
 
-At part-time pace (~15-20 hrs/week), remaining work is roughly **5-6 months** of
+At part-time pace (~15-20 hrs/week), remaining work is roughly **3-4 months** of
 calendar time with some parallelism.

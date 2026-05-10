@@ -81,6 +81,9 @@ dad-golf/
 │       │   ├── calendarFeed.ts # Calendar feed token management
 │       │   ├── activity.ts  # Activity feed events, likes, comments
 │       │   ├── badges.ts    # User badge storage
+│       │   ├── stats.ts     # Stats aggregation (personal, group, H2H)
+│       │   ├── helpers.ts   # Shared utilities (newId, now)
+│       │   ├── pool.ts      # PostgreSQL connection pool
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
@@ -93,9 +96,11 @@ dad-golf/
 │       │   ├── googleCalendar.ts # /api/google-calendar/* (OAuth + sync settings)
 │       │   ├── calendarFeed.ts # /api/calendar-feed/* (iCal feed subscription)
 │       │   ├── activity.ts  # /api/activity/* (feed, likes, comments)
+│       │   ├── stats.ts     # /api/stats/* (personal, group, head-to-head)
 │       │   ├── users.ts     # /api/users/:username/* (public profiles, badges)
 │       │   └── admin.ts     # /api/admin/*
 │       ├── badgeEvaluator.ts # Server-side badge evaluation engine
+│       ├── roundCompletion.ts # Post-round processing (handicap update, badges, activity)
 │       ├── calendar.ts      # iCalendar (.ics) generation
 │       ├── calendarSync.ts  # Google Calendar sync logic (fire-and-forget)
 │       ├── googleCalendar.ts # Google Calendar API client (raw fetch)
@@ -135,6 +140,7 @@ can create a round immediately.
 | `HOST`                 | `0.0.0.0` | Server bind address                                       |
 | `DATABASE_URL`         | —         | PostgreSQL connection string                              |
 | `ADMIN_PASSWORD`       | —         | Password for the bootstrapped `admin` user (min 6 chars)  |
+| `ALLOWED_ORIGINS`      | —         | Comma-separated CORS origins (disabled if unset)          |
 | `GOOGLE_CLIENT_ID`     | —         | Google OAuth client ID (enables Google Calendar sync)     |
 | `GOOGLE_CLIENT_SECRET` | —         | Google OAuth client secret                                |
 | `APP_URL`              | —         | Base URL of the app (for OAuth redirect + calendar links) |

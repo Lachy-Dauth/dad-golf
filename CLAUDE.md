@@ -49,9 +49,15 @@ Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Ea
 
 **Route registration pattern**: each file exports `registerXxxRoutes(app: FastifyInstance)`, all called from `routes/index.ts`. Routes use Fastify generics for typing: `app.post<{ Body: {...}; Params: {...} }>("/path", handler)`.
 
+**Security**: Helmet (CSP disabled), CORS (opt-in via `ALLOWED_ORIGINS`), rate limiting (100 req/min). Session tokens expire and are cleaned up by a 24-hour background timer.
+
 **Auth**: scrypt password hashing, random hex session tokens stored in `sessions` table. Bearer token in `Authorization` header. Helpers in `routes/validation.ts`: `getViewerUser(req)` (optional), `requireUser(req, reply)`, `requireAdmin(req, reply)`.
 
 **Real-time updates**: WebSocket pub/sub via `hub.ts` (`Map<roomCode, Set<WebSocket>>`). Clients connect to `/ws/:code?token=...`. After any mutation (score, join, start), the route rebuilds full `RoundState` via `roundState.ts` and broadcasts to all sockets in the room. Client uses `useRoundSocket.ts` hook which auto-reconnects and updates React state.
+
+**Round completion**: `roundCompletion.ts` runs post-round processing — updates handicaps (WHS differential calculation), evaluates achievement badges, and emits activity feed events.
+
+**Stats**: `db/stats.ts` computes personal stats, group stats, and head-to-head comparisons by aggregating hole-level scoring data with `computePlayerHoles` from shared. Exposed via `routes/stats.ts`.
 
 **Calendar integration**: `calendar.ts` generates RFC 5545 `.ics` files, `calendarSync.ts` syncs RSVPs to Google Calendar (fire-and-forget), and `googleCalendar.ts` wraps the Google Calendar API. Calendar feed routes serve a subscribable iCal URL per user.
 
@@ -94,7 +100,7 @@ When adding or removing features, update `README.md` to reflect the change. Keep
 
 Railway with Nixpacks (Node.js 22). Health check at `GET /api/health`. Config in `railway.json` and `nixpacks.toml`.
 
-**Required env**: `DATABASE_URL` (PostgreSQL connection string). Optional: `PORT` (default 3001), `HOST` (default 0.0.0.0), `ADMIN_PASSWORD` (bootstraps admin user on startup if set).
+**Required env**: `DATABASE_URL` (PostgreSQL connection string). Optional: `PORT` (default 3001), `HOST` (default 0.0.0.0), `ADMIN_PASSWORD` (bootstraps admin user on startup if set), `ALLOWED_ORIGINS` (comma-separated CORS origins; CORS disabled if unset).
 
 **Optional env** for Google Calendar sync:
 
