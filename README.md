@@ -15,7 +15,7 @@ A real-time, multi-player Stableford scoring app for casual golf rounds. Up to 1
 - **Hole competitions** — closest-to-pin and longest drive contests on selected holes
 - **Community courses** — shared course database with search, star ratings, reviews, and reporting; location autocomplete via Nominatim (OpenStreetMap)
 - **Weather** — live weather conditions displayed for the course location
-- **Handicap tracker** — track your last 20 rounds and auto-calculate your GA Handicap Index using Australia's World Handicap System; optionally auto-updates when you complete rounds
+- **Handicap tracker** — track your last 20 rounds and auto-calculate your GA Handicap Index using the World Handicap System (with gender-based consistency factor); optionally auto-updates when you complete rounds
 - **Groups** — create groups, invite members, assign admin/member roles, and track rounds together
 - **Schedule rounds** — group admins schedule upcoming rounds (date, time, course); members RSVP (going/maybe/can't); admins start the round and accepted players are added automatically; dedicated Upcoming Rounds page shows all scheduled rounds across groups
 - **Calendar integration** — export scheduled rounds to .ics (Apple Calendar), Google Calendar (web link), or Outlook; optional Google Calendar OAuth sync automatically creates/updates/deletes events when you RSVP; subscribable iCal feed URL for auto-sync in any calendar app (Apple Calendar, Google Calendar, Outlook)
@@ -47,9 +47,9 @@ A player with handicap _H_ receives strokes on the hardest holes first (by strok
 ## Tech stack
 
 - **Frontend:** React 18 + Vite + TypeScript, mobile-first responsive layout
-- **Backend:** Node.js + Fastify + WebSocket (`@fastify/websocket`)
+- **Backend:** Node.js + Fastify + WebSocket (`@fastify/websocket`), with helmet, CORS, and rate limiting
 - **Database:** PostgreSQL (requires `DATABASE_URL`)
-- **Shared:** `@dad-golf/shared` package with types, Stableford scoring logic, and room code generation
+- **Shared:** `@dad-golf/shared` package with types, Stableford scoring logic, handicap calculation, badge definitions, and room code generation
 - **Tooling:** ESLint 9 (flat config) + Prettier + strict TypeScript
 - **Hosting:** Railway
 
@@ -81,6 +81,7 @@ dad-golf/
 │       │   ├── calendarFeed.ts # Calendar feed token management
 │       │   ├── activity.ts  # Activity feed events, likes, comments
 │       │   ├── badges.ts    # User badge storage
+│       │   ├── stats.ts    # Stats aggregation (user, group, head-to-head)
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
@@ -94,8 +95,10 @@ dad-golf/
 │       │   ├── calendarFeed.ts # /api/calendar-feed/* (iCal feed subscription)
 │       │   ├── activity.ts  # /api/activity/* (feed, likes, comments)
 │       │   ├── users.ts     # /api/users/:username/* (public profiles, badges)
+│       │   ├── stats.ts     # /api/stats/* (user stats, group stats, head-to-head)
 │       │   └── admin.ts     # /api/admin/*
 │       ├── badgeEvaluator.ts # Server-side badge evaluation engine
+│       ├── roundCompletion.ts # Post-round processing (handicap, badges, activity)
 │       ├── calendar.ts      # iCalendar (.ics) generation
 │       ├── calendarSync.ts  # Google Calendar sync logic (fire-and-forget)
 │       ├── googleCalendar.ts # Google Calendar API client (raw fetch)
@@ -135,6 +138,7 @@ can create a round immediately.
 | `HOST`                 | `0.0.0.0` | Server bind address                                       |
 | `DATABASE_URL`         | —         | PostgreSQL connection string                              |
 | `ADMIN_PASSWORD`       | —         | Password for the bootstrapped `admin` user (min 6 chars)  |
+| `ALLOWED_ORIGINS`      | —         | Comma-separated CORS origins (disabled if unset)          |
 | `GOOGLE_CLIENT_ID`     | —         | Google OAuth client ID (enables Google Calendar sync)     |
 | `GOOGLE_CLIENT_SECRET` | —         | Google OAuth client secret                                |
 | `APP_URL`              | —         | Base URL of the app (for OAuth redirect + calendar links) |

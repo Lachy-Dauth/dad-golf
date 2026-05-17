@@ -140,8 +140,7 @@ export default function ProfilePage() {
           </div>
           <span className="muted" style={{ fontSize: 12 }}>
             {activityVis === "none" && "Your activity won't appear in anyone's feed."}
-            {activityVis === "public" &&
-              "Activity visible to anyone who shares a group with you."}
+            {activityVis === "public" && "Activity visible to anyone who shares a group with you."}
           </span>
         </label>
         {error && <div className="error">{error}</div>}

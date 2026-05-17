@@ -242,6 +242,7 @@ export default function GroupStatsPage() {
     ])
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user?.id]);
 
   if (authLoading || loading) {

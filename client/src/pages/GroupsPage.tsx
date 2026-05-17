@@ -10,10 +10,7 @@ export default function GroupsPage() {
     data: groups,
     error,
     execute: load,
-  } = useAsync(
-    () => api.listGroups().then((res) => res.groups),
-    [user?.id],
-  );
+  } = useAsync(() => api.listGroups().then((res) => res.groups), [user?.id]);
   const [name, setName] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
