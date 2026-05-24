@@ -53,9 +53,13 @@ Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Ea
 
 **Real-time updates**: WebSocket pub/sub via `hub.ts` (`Map<roomCode, Set<WebSocket>>`). Clients connect to `/ws/:code?token=...`. After any mutation (score, join, start), the route rebuilds full `RoundState` via `roundState.ts` and broadcasts to all sockets in the room. Client uses `useRoundSocket.ts` hook which auto-reconnects and updates React state.
 
+**Stats**: `db/stats.ts` computes user stats, group stats, head-to-head comparisons, and opponent lists. Shared helpers in `db/statsHelpers.ts` handle player/score indexing by round, scoring distribution accumulation, and par-type averaging.
+
 **Calendar integration**: `calendar.ts` generates RFC 5545 `.ics` files, `calendarSync.ts` syncs RSVPs to Google Calendar (fire-and-forget), and `googleCalendar.ts` wraps the Google Calendar API. Calendar feed routes serve a subscribable iCal URL per user.
 
 **Location & weather**: `weather.ts` provides Open-Meteo weather lookups and Nominatim (OpenStreetMap) geocoding for course locations. Courses store optional `latitude`, `longitude`, and `location` fields.
+
+**Seed data**: `routes/adminSeed.ts` contains the demo data seeding logic (users, courses, groups, rounds, scores, competitions, badges, activity events). Called from the admin seed endpoint.
 
 **Production serving**: if `client/dist/` exists, Fastify serves it as static files with SPA fallback (non-API 404s → `index.html`).
 

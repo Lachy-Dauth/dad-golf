@@ -99,15 +99,15 @@ gantt
     Activity Feed (4a)              :done, p3d, after p2a, 10d
     Achievement Badges (4c)         :done, p3e, after p2a, 8d
 
-    section Phase 4: Wave 1
-    Stats Dashboard (1a)            :p4a, 2026-07-13, 15d
-    Skins Game (5a)                 :p4b, 2026-07-13, 10d
+    section Phase 4: Wave 1 (partial ✅)
+    Stats Dashboard (1a)            :done, p4a, 2026-07-13, 15d
+    Group Stats (6b)                :done, p4e, 2026-07-13, 10d
+    Skins Game (5a)                 :p4b, after p4e, 10d
     Shareable Cards (4b)            :p4c, after p4b, 10d
     PDF Scorecards (8e)             :p4d, after p4c, 8d
-    Group Stats (6b)                :p4e, after p4b, 10d
 
-    section Phase 5: Wave 2
-    Head-to-Head (1b)               :p5a, after p4a, 10d
+    section Phase 5: Wave 2 (partial ✅)
+    Head-to-Head (1b)               :done, p5a, after p4a, 10d
     Recurring Leagues (2a)          :p5b, after p4e, 25d
     Scoring Formats (7a)            :p5c, after p5a, 20d
 
@@ -223,11 +223,13 @@ could ship over approximately **5-6 months** at part-time pace.
 
 | Category           | Features                | Est. Weeks      |
 | ------------------ | ----------------------- | --------------- |
-| Shipped            | 17 features ✅          | ~0 weeks        |
+| Shipped            | 17 features ✅          | —               |
 | Remaining          | 7 features              | ~17 weeks       |
 | **Total remaining**| **7 features**          | **~17 weeks**   |
 
-**Shipped so far:** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges, 1a Stats Dashboard, 6b Group Stats, 1b Head-to-Head (plus location autocomplete and course reviews).
+**Shipped so far (17):** 8c Dark Mode, 8d PWA Install, 9b Weather, 5c CTP/Longest Drive, 6c Group Roles, 7c Handicap Auto-Adj, 1c Round Replay, 3a Community Courses, 2c Scheduled Rounds, 9a Calendar Integration, 4a Activity Feed, 4c Achievement Badges, 1a Stats Dashboard, 6b Group Stats, 1b Head-to-Head. Plus: location autocomplete, course reviews, session expiry, security hardening (helmet, rate limiting, CORS), WHS daily handicap with gender factor.
+
+**Remaining (7):** 5a Skins Game, 4b Shareable Cards, 8e PDF Scorecards, 2a Recurring Leagues, 7a Scoring Formats, 2b League Awards, 7b Team Rounds.
 
 At part-time pace (~15-20 hrs/week), remaining work is roughly **5-6 months** of
 calendar time with some parallelism.

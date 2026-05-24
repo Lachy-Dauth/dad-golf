@@ -81,6 +81,7 @@ dad-golf/
 │       │   ├── calendarFeed.ts # Calendar feed token management
 │       │   ├── activity.ts  # Activity feed events, likes, comments
 │       │   ├── badges.ts    # User badge storage
+│       │   ├── stats.ts     # User, group, and head-to-head stats aggregation
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
@@ -94,11 +95,14 @@ dad-golf/
 │       │   ├── calendarFeed.ts # /api/calendar-feed/* (iCal feed subscription)
 │       │   ├── activity.ts  # /api/activity/* (feed, likes, comments)
 │       │   ├── users.ts     # /api/users/:username/* (public profiles, badges)
+│       │   ├── stats.ts     # /api/stats/* (user stats, head-to-head, opponents)
 │       │   └── admin.ts     # /api/admin/*
 │       ├── badgeEvaluator.ts # Server-side badge evaluation engine
 │       ├── calendar.ts      # iCalendar (.ics) generation
 │       ├── calendarSync.ts  # Google Calendar sync logic (fire-and-forget)
 │       ├── googleCalendar.ts # Google Calendar API client (raw fetch)
+│       ├── roundCompletion.ts # Round completion logic (handicap update, badges, activity)
+│       ├── roundState.ts    # Build full RoundState for WebSocket broadcast
 │       ├── weather.ts       # Open-Meteo weather + Nominatim geocoding
 │       ├── hub.ts           # WebSocket pub/sub hub
 │       ├── ws.ts            # WebSocket handler for live round updates
@@ -155,7 +159,7 @@ npm run lint           # ESLint check
 npm run lint:fix       # ESLint auto-fix
 npm run format:check   # Prettier check
 npm run format         # Prettier auto-format
-npm test               # Stableford scoring + handicap unit tests
+npm test               # All unit tests (scoring, handicap, calendar, validation, …)
 ```
 
 ### Deploying to Railway
