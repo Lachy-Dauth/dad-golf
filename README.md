@@ -59,8 +59,11 @@ A player with handicap _H_ receives strokes on the hardest holes first (by strok
 dad-golf/
 ├── client/                  # React + Vite frontend
 │   └── src/
-│       ├── pages/           # Route pages (Home, Round, Courses, Groups, Admin, …)
+│       ├── pages/           # Route pages (Home, Round, Courses, Groups, Stats, Admin, …)
+│       │   └── admin/       # Admin sub-tabs (Dashboard, Users, Courses, Rounds, Groups, Activity, Reports)
 │       ├── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Replay, Scorecard, Weather, Calendar)
+│       ├── hooks/           # Custom hooks (useAsync, useRoundSocket)
+│       ├── utils/           # Utility modules (dateFormat)
 │       ├── AuthContext.tsx   # Session & user state
 │       └── ThemeContext.tsx  # Dark / light mode
 ├── server/                  # Fastify backend
@@ -81,6 +84,7 @@ dad-golf/
 │       │   ├── calendarFeed.ts # Calendar feed token management
 │       │   ├── activity.ts  # Activity feed events, likes, comments
 │       │   ├── badges.ts    # User badge storage
+│       │   ├── stats.ts     # Personal stats, group stats, head-to-head queries
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
@@ -94,8 +98,10 @@ dad-golf/
 │       │   ├── calendarFeed.ts # /api/calendar-feed/* (iCal feed subscription)
 │       │   ├── activity.ts  # /api/activity/* (feed, likes, comments)
 │       │   ├── users.ts     # /api/users/:username/* (public profiles, badges)
+│       │   ├── stats.ts     # /api/stats/* (personal stats, group stats, head-to-head)
 │       │   └── admin.ts     # /api/admin/*
 │       ├── badgeEvaluator.ts # Server-side badge evaluation engine
+│       ├── roundCompletion.ts # Post-round processing (handicap update, badges, activity)
 │       ├── calendar.ts      # iCalendar (.ics) generation
 │       ├── calendarSync.ts  # Google Calendar sync logic (fire-and-forget)
 │       ├── googleCalendar.ts # Google Calendar API client (raw fetch)

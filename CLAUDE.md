@@ -47,9 +47,11 @@ Exports types, Stableford scoring logic, handicap calculation (GA/WHS), and room
 
 Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Each domain has a `db/*.ts` module (query functions) and a `routes/*.ts` module (HTTP endpoints).
 
-**Route registration pattern**: each file exports `registerXxxRoutes(app: FastifyInstance)`, all called from `routes/index.ts`. Routes use Fastify generics for typing: `app.post<{ Body: {...}; Params: {...} }>("/path", handler)`.
+**Route registration pattern**: each file exports `registerXxxRoutes(app: FastifyInstance)`, all called from `routes/index.ts`. Routes use Fastify generics for typing: `app.post<{ Body: {...}; Params: {...} }>("/path", handler)`. Stats and head-to-head endpoints live in `routes/stats.ts` with queries in `db/stats.ts`.
 
 **Auth**: scrypt password hashing, random hex session tokens stored in `sessions` table. Bearer token in `Authorization` header. Helpers in `routes/validation.ts`: `getViewerUser(req)` (optional), `requireUser(req, reply)`, `requireAdmin(req, reply)`.
+
+**Round completion**: `roundCompletion.ts` handles post-round processing — auto-updating handicaps (if enabled), evaluating achievement badges, and creating activity feed events.
 
 **Real-time updates**: WebSocket pub/sub via `hub.ts` (`Map<roomCode, Set<WebSocket>>`). Clients connect to `/ws/:code?token=...`. After any mutation (score, join, start), the route rebuilds full `RoundState` via `roundState.ts` and broadcasts to all sockets in the room. Client uses `useRoundSocket.ts` hook which auto-reconnects and updates React state.
 

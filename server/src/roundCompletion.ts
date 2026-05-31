@@ -135,11 +135,7 @@ async function autoAddHandicapRounds(
   }
 }
 
-function emitPlayerBadgeEvaluations(
-  state: RoundState,
-  round: Round,
-  log: FastifyBaseLogger,
-): void {
+function emitPlayerBadgeEvaluations(state: RoundState, round: Round, log: FastifyBaseLogger): void {
   for (const player of state.players) {
     if (!player.userId) continue;
     const userId = player.userId;

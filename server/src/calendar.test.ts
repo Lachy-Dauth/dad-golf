@@ -105,7 +105,9 @@ test("generateIcsEvent uses timed format for non-all-day", () => {
 });
 
 test("generateIcsEvent uses date-only format for all-day", () => {
-  const ics = generateIcsEvent(makeEventParams({ allDay: true, dtstart: "20250315", dtend: "20250316" }));
+  const ics = generateIcsEvent(
+    makeEventParams({ allDay: true, dtstart: "20250315", dtend: "20250316" }),
+  );
   assert.ok(ics.includes("DTSTART;VALUE=DATE:20250315"));
   assert.ok(ics.includes("DTEND;VALUE=DATE:20250316"));
 });
