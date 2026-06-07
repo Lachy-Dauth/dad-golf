@@ -59,13 +59,19 @@ A player with handicap _H_ receives strokes on the hardest holes first (by strok
 dad-golf/
 ├── client/                  # React + Vite frontend
 │   └── src/
-│       ├── pages/           # Route pages (Home, Round, Courses, Groups, Admin, …)
-│       ├── components/      # Round sub-views (Lobby, Scoring, Leaderboard, Replay, Scorecard, Weather, Calendar)
+│       ├── pages/           # Route pages (Home, Round, Courses, Groups, Stats, Admin, …)
+│       │   └── admin/       # Admin tab components (Dashboard, Users, Courses, etc.)
+│       ├── components/      # Reusable UI (Lobby, Scoring, Leaderboard, Replay, Weather, Calendar, …)
+│       ├── hooks/           # Custom hooks (useRoundSocket, useAsync)
+│       ├── api.ts           # Fetch wrapper for /api calls
 │       ├── AuthContext.tsx   # Session & user state
 │       └── ThemeContext.tsx  # Dark / light mode
 ├── server/                  # Fastify backend
 │   └── src/
 │       ├── db/              # Database layer (pool, schema, per-domain modules)
+│       │   ├── pool.ts      # PostgreSQL connection pool
+│       │   ├── schema.ts    # Auto-migration (CREATE IF NOT EXISTS)
+│       │   ├── helpers.ts   # Shared utilities (newId, now)
 │       │   ├── users.ts     # User CRUD, auth, sessions
 │       │   ├── courses.ts   # Course CRUD + favourites
 │       │   ├── courseReviews.ts # Course star ratings + review text
@@ -74,6 +80,7 @@ dad-golf/
 │       │   ├── rounds.ts    # Round lifecycle
 │       │   ├── players.ts   # Player management
 │       │   ├── scores.ts    # Score tracking
+│       │   ├── stats.ts     # Stats aggregation (personal, group, H2H)
 │       │   ├── competitions.ts # Hole competitions (CTP, longest drive)
 │       │   ├── handicapRounds.ts # Handicap round history
 │       │   ├── scheduledRounds.ts # Scheduled rounds + RSVPs
@@ -87,6 +94,7 @@ dad-golf/
 │       │   ├── courses.ts   # /api/courses/* (includes reviews + reports)
 │       │   ├── groups.ts    # /api/groups/*
 │       │   ├── rounds.ts    # /api/rounds/* (includes competitions)
+│       │   ├── stats.ts     # /api/stats/* (personal, group, H2H)
 │       │   ├── weather.ts   # /api/weather/*
 │       │   ├── handicap.ts  # /api/handicap/*
 │       │   ├── scheduledRounds.ts # /api/groups/:groupId/scheduled-rounds/*
@@ -95,7 +103,9 @@ dad-golf/
 │       │   ├── activity.ts  # /api/activity/* (feed, likes, comments)
 │       │   ├── users.ts     # /api/users/:username/* (public profiles, badges)
 │       │   └── admin.ts     # /api/admin/*
+│       ├── roundCompletion.ts # Post-round side effects (activity, handicap, badges)
 │       ├── badgeEvaluator.ts # Server-side badge evaluation engine
+│       ├── roundState.ts    # Builds full RoundState for WS broadcast
 │       ├── calendar.ts      # iCalendar (.ics) generation
 │       ├── calendarSync.ts  # Google Calendar sync logic (fire-and-forget)
 │       ├── googleCalendar.ts # Google Calendar API client (raw fetch)
@@ -103,7 +113,7 @@ dad-golf/
 │       ├── hub.ts           # WebSocket pub/sub hub
 │       ├── ws.ts            # WebSocket handler for live round updates
 │       └── seed.ts          # Sample data seeding
-├── shared/                  # Shared types, scoring logic, room codes
+├── shared/                  # Shared types, scoring logic, handicap, badges, room codes
 ├── tsconfig.base.json       # Shared TypeScript config (strict, noUnused*)
 ├── eslint.config.mjs        # ESLint 9 flat config
 └── prettier.config.mjs      # Prettier config
@@ -155,7 +165,7 @@ npm run lint           # ESLint check
 npm run lint:fix       # ESLint auto-fix
 npm run format:check   # Prettier check
 npm run format         # Prettier auto-format
-npm test               # Stableford scoring + handicap unit tests
+npm test               # All workspace unit tests (shared, server, client)
 ```
 
 ### Deploying to Railway

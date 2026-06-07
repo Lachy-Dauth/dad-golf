@@ -41,17 +41,21 @@ After `npm install`, the shared package is automatically built via `postinstall`
 
 ### Shared (`@dad-golf/shared`)
 
-Exports types, Stableford scoring logic, handicap calculation (GA/WHS), and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
+Exports types, Stableford scoring logic, handicap calculation (GA/WHS), badge definitions, and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
 
 ### Server (`@dad-golf/server`)
 
-Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Each domain has a `db/*.ts` module (query functions) and a `routes/*.ts` module (HTTP endpoints).
+Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Each domain has a `db/*.ts` module (query functions) and a `routes/*.ts` module (HTTP endpoints). Shared helpers in `db/helpers.ts` (UUID generation, timestamps) and connection pool in `db/pool.ts`.
 
 **Route registration pattern**: each file exports `registerXxxRoutes(app: FastifyInstance)`, all called from `routes/index.ts`. Routes use Fastify generics for typing: `app.post<{ Body: {...}; Params: {...} }>("/path", handler)`.
 
 **Auth**: scrypt password hashing, random hex session tokens stored in `sessions` table. Bearer token in `Authorization` header. Helpers in `routes/validation.ts`: `getViewerUser(req)` (optional), `requireUser(req, reply)`, `requireAdmin(req, reply)`.
 
-**Real-time updates**: WebSocket pub/sub via `hub.ts` (`Map<roomCode, Set<WebSocket>>`). Clients connect to `/ws/:code?token=...`. After any mutation (score, join, start), the route rebuilds full `RoundState` via `roundState.ts` and broadcasts to all sockets in the room. Client uses `useRoundSocket.ts` hook which auto-reconnects and updates React state.
+**Real-time updates**: WebSocket pub/sub via `hub.ts` (`Map<roomCode, Set<WebSocket>>`). Clients connect to `/ws/:code?token=...`. After any mutation (score, join, start), the route rebuilds full `RoundState` via `roundState.ts` and broadcasts to all sockets in the room. Client uses `hooks/useRoundSocket.ts` which auto-reconnects and updates React state.
+
+**Round completion**: `roundCompletion.ts` orchestrates post-round side effects — emitting activity events, auto-adding handicap rounds, and triggering badge evaluation.
+
+**Stats**: `db/stats.ts` provides server-side aggregation queries for personal stats, group stats, and head-to-head comparisons. Exposed via `routes/stats.ts`.
 
 **Calendar integration**: `calendar.ts` generates RFC 5545 `.ics` files, `calendarSync.ts` syncs RSVPs to Google Calendar (fire-and-forget), and `googleCalendar.ts` wraps the Google Calendar API. Calendar feed routes serve a subscribable iCal URL per user.
 
@@ -63,7 +67,7 @@ Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Ea
 
 React 18 + Vite + TypeScript. Mobile-first. Vite proxies `/api` → `http://localhost:3001` and `/ws` → `ws://localhost:3001` in dev.
 
-Auth state in `AuthContext.tsx` (token in localStorage key `"sf:token"`). Theme toggle in `ThemeContext.tsx`.
+Auth state in `AuthContext.tsx` (token in localStorage key `"sf:token"`). Theme toggle in `ThemeContext.tsx`. API helpers in `api.ts`. Custom hooks in `hooks/` (e.g. `useRoundSocket.ts`, `useAsync.ts`). Admin pages are split into tab components under `pages/admin/`.
 
 ### Database
 
