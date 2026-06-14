@@ -41,7 +41,7 @@ After `npm install`, the shared package is automatically built via `postinstall`
 
 ### Shared (`@dad-golf/shared`)
 
-Exports types, Stableford scoring logic, handicap calculation (GA/WHS), and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
+Exports types, Stableford scoring logic, handicap calculation (GA/WHS), badge definitions, and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
 
 ### Server (`@dad-golf/server`)
 

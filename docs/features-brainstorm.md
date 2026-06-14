@@ -114,7 +114,7 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 
 ## 4. Social & Sharing
 
-### 4a. Activity Feed — FREE
+### 4a. Activity Feed — FREE ✅
 
 - See recent rounds from your groups
 - Like/comment on rounds
@@ -130,7 +130,7 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 > Great viral growth mechanic. Relatively low effort — server-side image
 > generation with canvas or SVG.
 
-### 4c. Achievement Badges — FREE
+### 4c. Achievement Badges — FREE ✅
 
 - Milestone badges: first eagle, 100 rounds played, 5 different courses, etc.
 - Display on profile
@@ -368,4 +368,4 @@ Ideas for Dad Golf features. Organised by theme, with each feature categorised a
 | 10a | Club/Organisation Account      | **WON'T DO** |
 | 10b | Tournament Mode                | **WON'T DO** |
 
-**Totals: 24 FREE (17 shipped), 8 WON'T DO**
+**Totals: 22 FREE (15 shipped), 9 WON'T DO**

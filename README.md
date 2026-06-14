@@ -81,6 +81,7 @@ dad-golf/
 │       │   ├── calendarFeed.ts # Calendar feed token management
 │       │   ├── activity.ts  # Activity feed events, likes, comments
 │       │   ├── badges.ts    # User badge storage
+│       │   ├── stats.ts     # Player & group statistics aggregation
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
@@ -94,6 +95,7 @@ dad-golf/
 │       │   ├── calendarFeed.ts # /api/calendar-feed/* (iCal feed subscription)
 │       │   ├── activity.ts  # /api/activity/* (feed, likes, comments)
 │       │   ├── users.ts     # /api/users/:username/* (public profiles, badges)
+│       │   ├── stats.ts     # /api/stats/* (player & group stats, head-to-head)
 │       │   └── admin.ts     # /api/admin/*
 │       ├── badgeEvaluator.ts # Server-side badge evaluation engine
 │       ├── calendar.ts      # iCalendar (.ics) generation
@@ -155,7 +157,7 @@ npm run lint           # ESLint check
 npm run lint:fix       # ESLint auto-fix
 npm run format:check   # Prettier check
 npm run format         # Prettier auto-format
-npm test               # Stableford scoring + handicap unit tests
+npm test               # all workspace unit tests
 ```
 
 ### Deploying to Railway
