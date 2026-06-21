@@ -5,21 +5,9 @@ import type { GroupStats, GroupMemberStats } from "../api.js";
 import type { Group } from "@dad-golf/shared";
 import { useAuth } from "../AuthContext.js";
 import { formatDate } from "../utils/dateFormat.js";
+import { PALETTE, SCORING_COLORS, STROKES_COLORS } from "../chartColors.js";
 
 type StatsMode = "stableford" | "strokes";
-
-const CHART_COLORS = [
-  "#3bc16b",
-  "#5b9cf5",
-  "#f5a623",
-  "#e5484d",
-  "#c084fc",
-  "#38bdf8",
-  "#fb923c",
-  "#a3e635",
-  "#f472b6",
-  "#22d3ee",
-];
 
 function recordLabel(type: string): string {
   switch (type) {
@@ -82,7 +70,7 @@ function LeaderboardChart({ members, mode }: { members: GroupMemberStats[]; mode
                   className="group-lb-bar-fill"
                   style={{
                     width: `${pct}%`,
-                    background: CHART_COLORS[i % CHART_COLORS.length],
+                    background: PALETTE[i % PALETTE.length],
                   }}
                 />
               </div>
@@ -178,18 +166,18 @@ function MemberDetail({ member: m, mode }: { member: GroupMemberStats; mode: Sta
   const items =
     mode === "stableford"
       ? [
-          { label: "Eagle+", count: m.eagles, color: "#c084fc" },
-          { label: "Birdie", count: m.birdies, color: "#3bc16b" },
-          { label: "Par", count: m.pars, color: "#5b9cf5" },
-          { label: "Bogey", count: m.bogeys, color: "#f5a623" },
-          { label: "Dbl+", count: m.doublePlus, color: "#e5484d" },
+          { label: "Eagle+", count: m.eagles, color: SCORING_COLORS.eagle },
+          { label: "Birdie", count: m.birdies, color: SCORING_COLORS.birdie },
+          { label: "Par", count: m.pars, color: SCORING_COLORS.par },
+          { label: "Bogey", count: m.bogeys, color: SCORING_COLORS.bogey },
+          { label: "Dbl+", count: m.doublePlus, color: SCORING_COLORS.doublePlus },
         ]
       : [
-          { label: "Under", count: m.strokesUnderPar, color: "#3bc16b" },
-          { label: "At par", count: m.strokesAtPar, color: "#5b9cf5" },
-          { label: "Bogey", count: m.strokesOverOne, color: "#f5a623" },
-          { label: "Double", count: m.strokesOverTwo, color: "#fb923c" },
-          { label: "Triple+", count: m.strokesOverThreePlus, color: "#e5484d" },
+          { label: "Under", count: m.strokesUnderPar, color: STROKES_COLORS.underPar },
+          { label: "At par", count: m.strokesAtPar, color: STROKES_COLORS.atPar },
+          { label: "Bogey", count: m.strokesOverOne, color: STROKES_COLORS.overOne },
+          { label: "Double", count: m.strokesOverTwo, color: STROKES_COLORS.overTwo },
+          { label: "Triple+", count: m.strokesOverThreePlus, color: STROKES_COLORS.overThreePlus },
         ];
 
   const total = items.reduce((sum, i) => sum + i.count, 0);
@@ -242,7 +230,7 @@ export default function GroupStatsPage() {
     ])
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [id, user?.id]);
+  }, [id, user]);
 
   if (authLoading || loading) {
     return (

@@ -1,9 +1,9 @@
-import type { AdminStats, ActivityEvent } from "../../api.js";
+import type { AdminStats, AdminActivityEvent } from "../../api.js";
 import { formatDateTime } from "../../utils/dateFormat.js";
 
 export interface DashboardTabProps {
   stats: AdminStats | null;
-  events: ActivityEvent[];
+  events: AdminActivityEvent[];
   onSeed: () => void;
   seeding: boolean;
   seedResult: string | null;

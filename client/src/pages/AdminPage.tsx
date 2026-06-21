@@ -9,7 +9,7 @@ import {
   type AdminCourse,
   type AdminCourseReport,
   type AdminGroup,
-  type ActivityEvent,
+  type AdminActivityEvent,
 } from "../api.js";
 import { DashboardTab } from "./admin/DashboardTab.js";
 import { UsersTab } from "./admin/UsersTab.js";
@@ -33,7 +33,7 @@ export default function AdminPage() {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [groups, setGroups] = useState<AdminGroup[]>([]);
   const [reports, setReports] = useState<AdminCourseReport[]>([]);
-  const [events, setEvents] = useState<ActivityEvent[]>([]);
+  const [events, setEvents] = useState<AdminActivityEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState<string | null>(null);

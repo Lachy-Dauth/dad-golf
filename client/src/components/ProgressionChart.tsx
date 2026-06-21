@@ -1,21 +1,11 @@
 import { useMemo } from "react";
 import type { RoundState, PlayerHoleResult } from "@dad-golf/shared";
+import { PALETTE } from "../chartColors.js";
 
 interface Props {
   state: RoundState;
   playerHolesMap: Map<string, PlayerHoleResult[]>;
 }
-
-const COLORS = [
-  "#3bc16b",
-  "#5b9cf5",
-  "#f5a623",
-  "#e5484d",
-  "#c084fc",
-  "#38bdf8",
-  "#fb923c",
-  "#a3e635",
-];
 
 export default function ProgressionChart({ state, playerHolesMap }: Props) {
   const { course, players } = state;
@@ -29,7 +19,7 @@ export default function ProgressionChart({ state, playerHolesMap }: Props) {
         running += h.points;
         cumulative.push(running);
       }
-      return { name: p.name, cumulative, color: COLORS[i % COLORS.length] };
+      return { name: p.name, cumulative, color: PALETTE[i % PALETTE.length] };
     });
   }, [players, playerHolesMap]);
 

@@ -5,6 +5,7 @@ import type { UserStats } from "../api.js";
 import { useAuth } from "../AuthContext.js";
 import { useAsync } from "../hooks/useAsync.js";
 import { formatDate } from "../utils/dateFormat.js";
+import { TREND_COLORS, SCORING_COLORS, STROKES_COLORS } from "../chartColors.js";
 
 type StatsMode = "stableford" | "strokes";
 
@@ -15,13 +16,6 @@ function ordinal(n: number): string {
 }
 
 // ---------- SVG Trend Chart ----------
-
-const CHART_COLORS = {
-  line: "#3bc16b",
-  strokesLine: "#5b9cf5",
-  dot: "#3bc16b",
-  strokesDot: "#5b9cf5",
-};
 
 function TrendChart({ rounds, mode }: { rounds: UserStats["recentRounds"]; mode: StatsMode }) {
   const data = useMemo(() => {
@@ -59,8 +53,8 @@ function TrendChart({ rounds, mode }: { rounds: UserStats["recentRounds"]; mode:
     gridLines.push(v);
   }
 
-  const lineColor = mode === "stableford" ? CHART_COLORS.line : CHART_COLORS.strokesLine;
-  const dotColor = mode === "stableford" ? CHART_COLORS.dot : CHART_COLORS.strokesDot;
+  const lineColor = mode === "stableford" ? TREND_COLORS.points : TREND_COLORS.strokes;
+  const dotColor = mode === "stableford" ? TREND_COLORS.points : TREND_COLORS.strokes;
 
   const points = values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
 
@@ -137,18 +131,22 @@ function ScoringDistribution({ stats, mode }: { stats: UserStats; mode: StatsMod
   const items =
     mode === "stableford"
       ? [
-          { label: "Eagle+", count: stats.eagles, color: "#c084fc" },
-          { label: "Birdie", count: stats.birdies, color: "#3bc16b" },
-          { label: "Par", count: stats.pars, color: "#5b9cf5" },
-          { label: "Bogey", count: stats.bogeys, color: "#f5a623" },
-          { label: "Dbl+", count: stats.doublePlus, color: "#e5484d" },
+          { label: "Eagle+", count: stats.eagles, color: SCORING_COLORS.eagle },
+          { label: "Birdie", count: stats.birdies, color: SCORING_COLORS.birdie },
+          { label: "Par", count: stats.pars, color: SCORING_COLORS.par },
+          { label: "Bogey", count: stats.bogeys, color: SCORING_COLORS.bogey },
+          { label: "Dbl+", count: stats.doublePlus, color: SCORING_COLORS.doublePlus },
         ]
       : [
-          { label: "Under par", count: stats.strokesUnderPar, color: "#3bc16b" },
-          { label: "At par", count: stats.strokesAtPar, color: "#5b9cf5" },
-          { label: "Bogey", count: stats.strokesOverOne, color: "#f5a623" },
-          { label: "Double", count: stats.strokesOverTwo, color: "#fb923c" },
-          { label: "Triple+", count: stats.strokesOverThreePlus, color: "#e5484d" },
+          { label: "Under par", count: stats.strokesUnderPar, color: STROKES_COLORS.underPar },
+          { label: "At par", count: stats.strokesAtPar, color: STROKES_COLORS.atPar },
+          { label: "Bogey", count: stats.strokesOverOne, color: STROKES_COLORS.overOne },
+          { label: "Double", count: stats.strokesOverTwo, color: STROKES_COLORS.overTwo },
+          {
+            label: "Triple+",
+            count: stats.strokesOverThreePlus,
+            color: STROKES_COLORS.overThreePlus,
+          },
         ];
 
   const total = items.reduce((sum, i) => sum + i.count, 0);

@@ -1,8 +1,8 @@
-import type { ActivityEvent } from "../../api.js";
+import type { AdminActivityEvent } from "../../api.js";
 import { formatDateTime } from "../../utils/dateFormat.js";
 
 export interface ActivityTabProps {
-  events: ActivityEvent[];
+  events: AdminActivityEvent[];
 }
 
 export function ActivityTab({ events }: ActivityTabProps) {

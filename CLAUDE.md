@@ -41,7 +41,7 @@ After `npm install`, the shared package is automatically built via `postinstall`
 
 ### Shared (`@dad-golf/shared`)
 
-Exports types, Stableford scoring logic, handicap calculation (GA/WHS), and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
+Exports types (including admin, stats, and head-to-head types shared between server and client), Stableford scoring logic, handicap calculation (GA/WHS), badge definitions, and room code utilities. Both server and client depend on it. ESM-only, outputs `.d.ts` declarations. Must be built before server or client.
 
 ### Server (`@dad-golf/server`)
 
@@ -63,7 +63,7 @@ Fastify + `@fastify/websocket`. Raw SQL against PostgreSQL via `pg` (no ORM). Ea
 
 React 18 + Vite + TypeScript. Mobile-first. Vite proxies `/api` → `http://localhost:3001` and `/ws` → `ws://localhost:3001` in dev.
 
-Auth state in `AuthContext.tsx` (token in localStorage key `"sf:token"`). Theme toggle in `ThemeContext.tsx`.
+Auth state in `AuthContext.tsx` (token in localStorage key `"sf:token"`). Theme toggle in `ThemeContext.tsx`. Chart colors centralized in `chartColors.ts`.
 
 ### Database
 

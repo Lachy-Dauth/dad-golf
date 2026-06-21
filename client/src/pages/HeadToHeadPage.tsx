@@ -5,6 +5,7 @@ import type { HeadToHeadStats, H2HPlayerStats, Opponent } from "../api.js";
 import { useAuth } from "../AuthContext.js";
 import { useAsync } from "../hooks/useAsync.js";
 import { formatDate } from "../utils/dateFormat.js";
+import { SCORING_COLORS, STROKES_COLORS, TREND_COLORS } from "../chartColors.js";
 
 type StatsMode = "stableford" | "strokes";
 
@@ -79,22 +80,42 @@ function DistributionCompare({
   const items =
     mode === "stableford"
       ? [
-          { label: "Eagle+", c1: p1.eagles, c2: p2.eagles, color: "#c084fc" },
-          { label: "Birdie", c1: p1.birdies, c2: p2.birdies, color: "#3bc16b" },
-          { label: "Par", c1: p1.pars, c2: p2.pars, color: "#5b9cf5" },
-          { label: "Bogey", c1: p1.bogeys, c2: p2.bogeys, color: "#f5a623" },
-          { label: "Dbl+", c1: p1.doublePlus, c2: p2.doublePlus, color: "#e5484d" },
+          { label: "Eagle+", c1: p1.eagles, c2: p2.eagles, color: SCORING_COLORS.eagle },
+          { label: "Birdie", c1: p1.birdies, c2: p2.birdies, color: SCORING_COLORS.birdie },
+          { label: "Par", c1: p1.pars, c2: p2.pars, color: SCORING_COLORS.par },
+          { label: "Bogey", c1: p1.bogeys, c2: p2.bogeys, color: SCORING_COLORS.bogey },
+          { label: "Dbl+", c1: p1.doublePlus, c2: p2.doublePlus, color: SCORING_COLORS.doublePlus },
         ]
       : [
-          { label: "Under", c1: p1.strokesUnderPar, c2: p2.strokesUnderPar, color: "#3bc16b" },
-          { label: "At par", c1: p1.strokesAtPar, c2: p2.strokesAtPar, color: "#5b9cf5" },
-          { label: "Bogey", c1: p1.strokesOverOne, c2: p2.strokesOverOne, color: "#f5a623" },
-          { label: "Double", c1: p1.strokesOverTwo, c2: p2.strokesOverTwo, color: "#fb923c" },
+          {
+            label: "Under",
+            c1: p1.strokesUnderPar,
+            c2: p2.strokesUnderPar,
+            color: STROKES_COLORS.underPar,
+          },
+          {
+            label: "At par",
+            c1: p1.strokesAtPar,
+            c2: p2.strokesAtPar,
+            color: STROKES_COLORS.atPar,
+          },
+          {
+            label: "Bogey",
+            c1: p1.strokesOverOne,
+            c2: p2.strokesOverOne,
+            color: STROKES_COLORS.overOne,
+          },
+          {
+            label: "Double",
+            c1: p1.strokesOverTwo,
+            c2: p2.strokesOverTwo,
+            color: STROKES_COLORS.overTwo,
+          },
           {
             label: "Triple+",
             c1: p1.strokesOverThreePlus,
             c2: p2.strokesOverThreePlus,
-            color: "#e5484d",
+            color: STROKES_COLORS.overThreePlus,
           },
         ];
 
@@ -181,11 +202,11 @@ function H2HTrendChart({ stats, mode }: { stats: HeadToHeadStats; mode: StatsMod
       <h2>{mode === "stableford" ? "Points Trend" : "Strokes Trend"}</h2>
       <div className="h2h-legend">
         <span className="h2h-legend-item">
-          <span className="h2h-legend-dot" style={{ background: "#3bc16b" }} />
+          <span className="h2h-legend-dot" style={{ background: TREND_COLORS.points }} />
           {stats.player1.displayName}
         </span>
         <span className="h2h-legend-item">
-          <span className="h2h-legend-dot" style={{ background: "#5b9cf5" }} />
+          <span className="h2h-legend-dot" style={{ background: TREND_COLORS.strokes }} />
           {stats.player2.displayName}
         </span>
       </div>
@@ -230,26 +251,26 @@ function H2HTrendChart({ stats, mode }: { stats: HeadToHeadStats; mode: StatsMod
           {/* Player 1 line */}
           <polyline
             fill="none"
-            stroke="#3bc16b"
+            stroke={TREND_COLORS.points}
             strokeWidth="2.5"
             strokeLinejoin="round"
             strokeLinecap="round"
             points={p1Points}
           />
           {p1Values.map((v, i) => (
-            <circle key={`p1-${i}`} cx={x(i)} cy={y(v)} r="4" fill="#3bc16b" />
+            <circle key={`p1-${i}`} cx={x(i)} cy={y(v)} r="4" fill={TREND_COLORS.points} />
           ))}
           {/* Player 2 line */}
           <polyline
             fill="none"
-            stroke="#5b9cf5"
+            stroke={TREND_COLORS.strokes}
             strokeWidth="2.5"
             strokeLinejoin="round"
             strokeLinecap="round"
             points={p2Points}
           />
           {p2Values.map((v, i) => (
-            <circle key={`p2-${i}`} cx={x(i)} cy={y(v)} r="4" fill="#5b9cf5" />
+            <circle key={`p2-${i}`} cx={x(i)} cy={y(v)} r="4" fill={TREND_COLORS.strokes} />
           ))}
         </svg>
       </div>

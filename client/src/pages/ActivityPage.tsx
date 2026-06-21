@@ -55,10 +55,7 @@ function eventDescription(item: ActivityFeedItem): string {
 }
 
 function eventLink(item: ActivityFeedItem): string | null {
-  if (
-    (item.type === "round_completed" || item.type === "round_started") &&
-    item.roomCode
-  ) {
+  if ((item.type === "round_completed" || item.type === "round_started") && item.roomCode) {
     return `/r/${item.roomCode}`;
   }
   if (item.type === "member_joined" && item.groupId) {
