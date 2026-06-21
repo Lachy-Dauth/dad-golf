@@ -1,6 +1,8 @@
-import type { CourseReportReason } from "@dad-golf/shared";
+import type { AdminCourseReport, CourseReportReason } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
+
+export type { AdminCourseReport };
 
 export interface CourseReportRow {
   id: string;
@@ -11,14 +13,6 @@ export interface CourseReportRow {
   userName: string;
   reason: CourseReportReason;
   createdAt: string;
-}
-
-export interface AdminCourseReport {
-  courseId: string;
-  courseName: string;
-  courseLocation: string | null;
-  reportCount: number;
-  reasons: CourseReportReason[];
 }
 
 export async function createCourseReport(

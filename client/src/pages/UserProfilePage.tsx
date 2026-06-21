@@ -49,7 +49,7 @@ export default function UserProfilePage() {
             ? "You must be logged in to view profiles."
             : is403
               ? "You must share a group with this user to view their profile."
-              : error ?? "User not found"}
+              : (error ?? "User not found")}
         </div>
         {(is401 || is403) && (
           <p className="muted">

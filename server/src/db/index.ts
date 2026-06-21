@@ -109,12 +109,12 @@ export {
   listScheduledRoundsForFeed,
 } from "./scheduledRounds.js";
 export type {
+  AdminActivityEvent,
   AdminStats,
   AdminUser,
   AdminRound,
   AdminCourse,
   AdminGroup,
-  ActivityEvent,
 } from "./admin.js";
 export {
   getAdminStats,

@@ -1,67 +1,181 @@
-import type { Course, Gender } from "@dad-golf/shared";
+import type {
+  Course,
+  Gender,
+  GroupMemberStats,
+  GroupRecord,
+  GroupStats,
+  H2HPlayerStats,
+  HeadToHeadStats,
+  UserStats,
+} from "@dad-golf/shared";
 import { computePlayerHoles } from "@dad-golf/shared";
 import { pool } from "./pool.js";
 
-export interface UserStatsResult {
-  totalRounds: number;
-  wins: number;
-  totalHolesPlayed: number;
-  // Stableford scoring distribution (net-based points)
+// ================================================================
+// Internal helper types and functions to reduce duplication
+// ================================================================
+
+interface PlayerRecord {
+  id: string;
+  roundId: string;
+  userId: string | null;
+  name: string;
+  handicap: number;
+  gender: Gender;
+}
+
+interface ScoreRecord {
+  id: string;
+  roundId: string;
+  playerId: string;
+  holeNumber: number;
+  strokes: number;
+  createdAt: string;
+}
+
+function indexPlayersByRound(rows: Record<string, unknown>[]): Map<string, PlayerRecord[]> {
+  const map = new Map<string, PlayerRecord[]>();
+  for (const p of rows) {
+    const roundId = p.round_id as string;
+    const player: PlayerRecord = {
+      id: p.id as string,
+      roundId,
+      userId: p.user_id as string | null,
+      name: p.name as string,
+      handicap: Number(p.handicap),
+      gender: (p.gender === "F" ? "F" : "M") as Gender,
+    };
+    const list = map.get(roundId);
+    if (list) list.push(player);
+    else map.set(roundId, [player]);
+  }
+  return map;
+}
+
+function indexScoresByRound(rows: Record<string, unknown>[]): Map<string, ScoreRecord[]> {
+  const map = new Map<string, ScoreRecord[]>();
+  for (const s of rows) {
+    const roundId = s.round_id as string;
+    const score: ScoreRecord = {
+      id: s.id as string,
+      roundId,
+      playerId: s.player_id as string,
+      holeNumber: Number(s.hole_number),
+      strokes: Number(s.strokes),
+      createdAt: s.created_at as string,
+    };
+    const list = map.get(roundId);
+    if (list) list.push(score);
+    else map.set(roundId, [score]);
+  }
+  return map;
+}
+
+interface ScoreDistribution {
   eagles: number;
   birdies: number;
   pars: number;
   bogeys: number;
   doublePlus: number;
-  // Raw strokes distribution (gross vs par)
-  strokesUnderPar: number; // hole scored under par (gross)
+  strokesUnderPar: number;
   strokesAtPar: number;
-  strokesOverOne: number; // bogey (gross)
-  strokesOverTwo: number; // double bogey (gross)
-  strokesOverThreePlus: number; // triple+ (gross)
-  // Per-par-type averages (points + strokes)
-  par3AvgPoints: number | null;
-  par4AvgPoints: number | null;
-  par5AvgPoints: number | null;
-  par3AvgStrokes: number | null;
-  par4AvgStrokes: number | null;
-  par5AvgStrokes: number | null;
-  // Best round
-  bestRoundPoints: number | null;
-  bestRoundCourse: string | null;
-  bestRoundCode: string | null;
-  bestRoundStrokes: number | null;
-  bestStrokesRoundStrokes: number | null;
-  bestStrokesRoundCourse: string | null;
-  bestStrokesRoundCode: string | null;
-  // Averages
-  avgPointsPerRound: number | null;
-  avgStrokesPerRound: number | null;
-  // Per-course stats
-  courseStats: Array<{
-    courseId: string;
-    courseName: string;
-    courseLocation: string | null;
-    timesPlayed: number;
-    avgPoints: number;
-    bestPoints: number;
-    avgStrokes: number;
-    bestStrokes: number;
-    coursePar: number;
-  }>;
-  // Recent rounds for trend chart + table
-  recentRounds: Array<{
-    roomCode: string;
-    courseName: string;
-    completedAt: string;
-    totalPoints: number;
-    totalStrokes: number;
-    position: number;
-    playerCount: number;
-    coursePar: number;
-  }>;
+  strokesOverOne: number;
+  strokesOverTwo: number;
+  strokesOverThreePlus: number;
 }
 
-export async function getUserStats(userId: string): Promise<UserStatsResult> {
+interface ParTypeAccumulator {
+  par3Pts: number;
+  par3Strk: number;
+  par3Count: number;
+  par4Pts: number;
+  par4Strk: number;
+  par4Count: number;
+  par5Pts: number;
+  par5Strk: number;
+  par5Count: number;
+}
+
+function accumulateHoleStats(
+  played: Array<{ points: number; strokes: number | null; par: number }>,
+  dist: ScoreDistribution,
+  parAccum?: ParTypeAccumulator,
+): void {
+  for (const h of played) {
+    if (h.points >= 4) dist.eagles++;
+    else if (h.points === 3) dist.birdies++;
+    else if (h.points === 2) dist.pars++;
+    else if (h.points === 1) dist.bogeys++;
+    else dist.doublePlus++;
+
+    const grossDiff = (h.strokes ?? 0) - h.par;
+    if (grossDiff < 0) dist.strokesUnderPar++;
+    else if (grossDiff === 0) dist.strokesAtPar++;
+    else if (grossDiff === 1) dist.strokesOverOne++;
+    else if (grossDiff === 2) dist.strokesOverTwo++;
+    else dist.strokesOverThreePlus++;
+
+    if (parAccum) {
+      if (h.par === 3) {
+        parAccum.par3Pts += h.points;
+        parAccum.par3Strk += h.strokes ?? 0;
+        parAccum.par3Count++;
+      } else if (h.par === 4) {
+        parAccum.par4Pts += h.points;
+        parAccum.par4Strk += h.strokes ?? 0;
+        parAccum.par4Count++;
+      } else if (h.par >= 5) {
+        parAccum.par5Pts += h.points;
+        parAccum.par5Strk += h.strokes ?? 0;
+        parAccum.par5Count++;
+      }
+    }
+  }
+}
+
+function emptyScoreDistribution(): ScoreDistribution {
+  return {
+    eagles: 0,
+    birdies: 0,
+    pars: 0,
+    bogeys: 0,
+    doublePlus: 0,
+    strokesUnderPar: 0,
+    strokesAtPar: 0,
+    strokesOverOne: 0,
+    strokesOverTwo: 0,
+    strokesOverThreePlus: 0,
+  };
+}
+
+function emptyParAccumulator(): ParTypeAccumulator {
+  return {
+    par3Pts: 0,
+    par3Strk: 0,
+    par3Count: 0,
+    par4Pts: 0,
+    par4Strk: 0,
+    par4Count: 0,
+    par5Pts: 0,
+    par5Strk: 0,
+    par5Count: 0,
+  };
+}
+
+const round1 = (v: number) => Math.round(v * 10) / 10;
+
+function parAverages(a: ParTypeAccumulator) {
+  return {
+    par3AvgPoints: a.par3Count > 0 ? round1(a.par3Pts / a.par3Count) : null,
+    par4AvgPoints: a.par4Count > 0 ? round1(a.par4Pts / a.par4Count) : null,
+    par5AvgPoints: a.par5Count > 0 ? round1(a.par5Pts / a.par5Count) : null,
+    par3AvgStrokes: a.par3Count > 0 ? round1(a.par3Strk / a.par3Count) : null,
+    par4AvgStrokes: a.par4Count > 0 ? round1(a.par4Strk / a.par4Count) : null,
+    par5AvgStrokes: a.par5Count > 0 ? round1(a.par5Strk / a.par5Count) : null,
+  };
+}
+
+export async function getUserStats(userId: string): Promise<UserStats> {
   // Get all completed rounds this user participated in
   const { rows: roundRows } = await pool.query(
     `SELECT r.id AS round_id, r.room_code, r.course_id,
@@ -125,80 +239,14 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
   );
 
   // Index players and scores by round
-  const playersByRound = new Map<
-    string,
-    Array<{
-      id: string;
-      roundId: string;
-      userId: string | null;
-      name: string;
-      handicap: number;
-      gender: Gender;
-    }>
-  >();
-  for (const p of allPlayerRows as Record<string, unknown>[]) {
-    const roundId = p.round_id as string;
-    const player = {
-      id: p.id as string,
-      roundId,
-      userId: p.user_id as string | null,
-      name: p.name as string,
-      handicap: Number(p.handicap),
-      gender: (p.gender === "F" ? "F" : "M") as Gender,
-    };
-    const list = playersByRound.get(roundId);
-    if (list) list.push(player);
-    else playersByRound.set(roundId, [player]);
-  }
-
-  const scoresByRound = new Map<
-    string,
-    Array<{
-      id: string;
-      roundId: string;
-      playerId: string;
-      holeNumber: number;
-      strokes: number;
-      createdAt: string;
-    }>
-  >();
-  for (const s of allScoreRows as Record<string, unknown>[]) {
-    const roundId = s.round_id as string;
-    const score = {
-      id: s.id as string,
-      roundId,
-      playerId: s.player_id as string,
-      holeNumber: Number(s.hole_number),
-      strokes: Number(s.strokes),
-      createdAt: s.created_at as string,
-    };
-    const list = scoresByRound.get(roundId);
-    if (list) list.push(score);
-    else scoresByRound.set(roundId, [score]);
-  }
+  const playersByRound = indexPlayersByRound(allPlayerRows as Record<string, unknown>[]);
+  const scoresByRound = indexScoresByRound(allScoreRows as Record<string, unknown>[]);
 
   // Accumulate stats
   let wins = 0;
   let totalHolesPlayed = 0;
-  let eagles = 0;
-  let birdies = 0;
-  let pars = 0;
-  let bogeys = 0;
-  let doublePlus = 0;
-  let strokesUnderPar = 0;
-  let strokesAtPar = 0;
-  let strokesOverOne = 0;
-  let strokesOverTwo = 0;
-  let strokesOverThreePlus = 0;
-  let par3PointsTotal = 0;
-  let par3StrokesTotal = 0;
-  let par3Count = 0;
-  let par4PointsTotal = 0;
-  let par4StrokesTotal = 0;
-  let par4Count = 0;
-  let par5PointsTotal = 0;
-  let par5StrokesTotal = 0;
-  let par5Count = 0;
+  const dist = emptyScoreDistribution();
+  const parAccum = emptyParAccumulator();
   let bestRoundPoints: number | null = null;
   let bestRoundCourse: string | null = null;
   let bestRoundCode: string | null = null;
@@ -221,7 +269,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
     }
   >();
 
-  const recentRounds: UserStatsResult["recentRounds"] = [];
+  const recentRounds: UserStats["recentRounds"] = [];
 
   for (const row of roundRows as Record<string, unknown>[]) {
     const roundId = row.round_id as string;
@@ -286,37 +334,8 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
     totalStrokesAll += viewerStrokes;
     const coursePar = holes.reduce((sum, h) => sum + h.par, 0);
 
-    // Score distribution (Stableford points-based)
-    for (const h of played) {
-      if (h.points >= 4) eagles++;
-      else if (h.points === 3) birdies++;
-      else if (h.points === 2) pars++;
-      else if (h.points === 1) bogeys++;
-      else doublePlus++;
-
-      // Raw strokes vs par (gross)
-      const grossDiff = (h.strokes ?? 0) - h.par;
-      if (grossDiff < 0) strokesUnderPar++;
-      else if (grossDiff === 0) strokesAtPar++;
-      else if (grossDiff === 1) strokesOverOne++;
-      else if (grossDiff === 2) strokesOverTwo++;
-      else strokesOverThreePlus++;
-
-      // Per-par-type averages
-      if (h.par === 3) {
-        par3PointsTotal += h.points;
-        par3StrokesTotal += h.strokes ?? 0;
-        par3Count++;
-      } else if (h.par === 4) {
-        par4PointsTotal += h.points;
-        par4StrokesTotal += h.strokes ?? 0;
-        par4Count++;
-      } else if (h.par >= 5) {
-        par5PointsTotal += h.points;
-        par5StrokesTotal += h.strokes ?? 0;
-        par5Count++;
-      }
-    }
+    // Score distribution (Stableford + gross) and per-par-type averages
+    accumulateHoleStats(played, dist, parAccum);
 
     // Best round (by points)
     if (bestRoundPoints === null || viewerPoints > bestRoundPoints) {
@@ -385,22 +404,8 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
     totalRounds,
     wins,
     totalHolesPlayed,
-    eagles,
-    birdies,
-    pars,
-    bogeys,
-    doublePlus,
-    strokesUnderPar,
-    strokesAtPar,
-    strokesOverOne,
-    strokesOverTwo,
-    strokesOverThreePlus,
-    par3AvgPoints: par3Count > 0 ? Math.round((par3PointsTotal / par3Count) * 10) / 10 : null,
-    par4AvgPoints: par4Count > 0 ? Math.round((par4PointsTotal / par4Count) * 10) / 10 : null,
-    par5AvgPoints: par5Count > 0 ? Math.round((par5PointsTotal / par5Count) * 10) / 10 : null,
-    par3AvgStrokes: par3Count > 0 ? Math.round((par3StrokesTotal / par3Count) * 10) / 10 : null,
-    par4AvgStrokes: par4Count > 0 ? Math.round((par4StrokesTotal / par4Count) * 10) / 10 : null,
-    par5AvgStrokes: par5Count > 0 ? Math.round((par5StrokesTotal / par5Count) * 10) / 10 : null,
+    ...dist,
+    ...parAverages(parAccum),
     bestRoundPoints,
     bestRoundCourse,
     bestRoundCode,
@@ -408,10 +413,8 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
     bestStrokesRoundStrokes,
     bestStrokesRoundCourse,
     bestStrokesRoundCode,
-    avgPointsPerRound:
-      totalRounds > 0 ? Math.round((totalPointsAll / totalRounds) * 10) / 10 : null,
-    avgStrokesPerRound:
-      totalRounds > 0 ? Math.round((totalStrokesAll / totalRounds) * 10) / 10 : null,
+    avgPointsPerRound: totalRounds > 0 ? round1(totalPointsAll / totalRounds) : null,
+    avgStrokesPerRound: totalRounds > 0 ? round1(totalStrokesAll / totalRounds) : null,
     courseStats,
     recentRounds: recentRounds.slice(0, 20),
   };
@@ -421,65 +424,7 @@ export async function getUserStats(userId: string): Promise<UserStatsResult> {
 // Group Stats
 // ================================================================
 
-export interface GroupMemberStats {
-  playerId: string; // group_member id or player name key
-  playerName: string;
-  userId: string | null;
-  roundsPlayed: number;
-  wins: number;
-  totalPoints: number;
-  avgPoints: number;
-  bestPoints: number;
-  bestRoundCode: string | null;
-  totalStrokes: number;
-  avgStrokes: number;
-  bestStrokes: number;
-  bestStrokesRoundCode: string | null;
-  eagles: number;
-  birdies: number;
-  pars: number;
-  bogeys: number;
-  doublePlus: number;
-  strokesUnderPar: number;
-  strokesAtPar: number;
-  strokesOverOne: number;
-  strokesOverTwo: number;
-  strokesOverThreePlus: number;
-}
-
-export interface GroupRecord {
-  type: string;
-  value: number;
-  playerName: string;
-  courseName: string;
-  roomCode: string;
-  date: string;
-}
-
-export interface GroupStatsResult {
-  totalRounds: number;
-  totalHolesPlayed: number;
-  memberStats: GroupMemberStats[];
-  records: GroupRecord[];
-  courseStats: Array<{
-    courseId: string;
-    courseName: string;
-    timesPlayed: number;
-    avgPoints: number;
-    avgStrokes: number;
-  }>;
-  recentRounds: Array<{
-    roomCode: string;
-    courseName: string;
-    completedAt: string;
-    winnerName: string | null;
-    winnerPoints: number | null;
-    playerCount: number;
-    coursePar: number;
-  }>;
-}
-
-export async function getGroupStats(groupId: string): Promise<GroupStatsResult> {
+export async function getGroupStats(groupId: string): Promise<GroupStats> {
   // Get all completed rounds for this group
   const { rows: roundRows } = await pool.query(
     `SELECT r.id AS round_id, r.room_code,
@@ -518,57 +463,8 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
   );
 
   // Index by round
-  const playersByRound = new Map<
-    string,
-    Array<{
-      id: string;
-      roundId: string;
-      userId: string | null;
-      name: string;
-      handicap: number;
-      gender: Gender;
-    }>
-  >();
-  for (const p of allPlayerRows as Record<string, unknown>[]) {
-    const roundId = p.round_id as string;
-    const player = {
-      id: p.id as string,
-      roundId,
-      userId: p.user_id as string | null,
-      name: p.name as string,
-      handicap: Number(p.handicap),
-      gender: (p.gender === "F" ? "F" : "M") as Gender,
-    };
-    const list = playersByRound.get(roundId);
-    if (list) list.push(player);
-    else playersByRound.set(roundId, [player]);
-  }
-
-  const scoresByRound = new Map<
-    string,
-    Array<{
-      id: string;
-      roundId: string;
-      playerId: string;
-      holeNumber: number;
-      strokes: number;
-      createdAt: string;
-    }>
-  >();
-  for (const s of allScoreRows as Record<string, unknown>[]) {
-    const roundId = s.round_id as string;
-    const score = {
-      id: s.id as string,
-      roundId,
-      playerId: s.player_id as string,
-      holeNumber: Number(s.hole_number),
-      strokes: Number(s.strokes),
-      createdAt: s.created_at as string,
-    };
-    const list = scoresByRound.get(roundId);
-    if (list) list.push(score);
-    else scoresByRound.set(roundId, [score]);
-  }
+  const playersByRound = indexPlayersByRound(allPlayerRows as Record<string, unknown>[]);
+  const scoresByRound = indexScoresByRound(allScoreRows as Record<string, unknown>[]);
 
   // Accumulate per-member stats (keyed by userId for registered users, name for guests)
   const memberMap = new Map<
@@ -636,7 +532,7 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
     { courseId: string; courseName: string; points: number[]; strokes: number[] }
   >();
 
-  const recentRounds: GroupStatsResult["recentRounds"] = [];
+  const recentRounds: GroupStats["recentRounds"] = [];
   let totalHolesPlayed = 0;
 
   for (const row of roundRows as Record<string, unknown>[]) {
@@ -693,24 +589,10 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
         m.bestStrokesRoundCode = roomCode;
       }
 
-      // Score distribution (Stableford)
-      let roundEagles = 0;
-      for (const h of played) {
-        if (h.points >= 4) {
-          m.eagles++;
-          roundEagles++;
-        } else if (h.points === 3) m.birdies++;
-        else if (h.points === 2) m.pars++;
-        else if (h.points === 1) m.bogeys++;
-        else m.doublePlus++;
-
-        const grossDiff = (h.strokes ?? 0) - h.par;
-        if (grossDiff < 0) m.strokesUnderPar++;
-        else if (grossDiff === 0) m.strokesAtPar++;
-        else if (grossDiff === 1) m.strokesOverOne++;
-        else if (grossDiff === 2) m.strokesOverTwo++;
-        else m.strokesOverThreePlus++;
-      }
+      // Score distribution (Stableford + gross)
+      const eaglesBefore = m.eagles;
+      accumulateHoleStats(played, m);
+      const roundEagles = m.eagles - eaglesBefore;
 
       totalHolesPlayed += played.length;
 
@@ -849,59 +731,12 @@ export async function getGroupStats(groupId: string): Promise<GroupStatsResult> 
 // Head-to-Head Comparison
 // ================================================================
 
-interface H2HPlayerStats {
-  userId: string;
-  displayName: string;
-  wins: number;
-  totalPoints: number;
-  avgPoints: number;
-  bestPoints: number;
-  totalStrokes: number;
-  avgStrokes: number;
-  bestStrokes: number;
-  eagles: number;
-  birdies: number;
-  pars: number;
-  bogeys: number;
-  doublePlus: number;
-  strokesUnderPar: number;
-  strokesAtPar: number;
-  strokesOverOne: number;
-  strokesOverTwo: number;
-  strokesOverThreePlus: number;
-  par3AvgPoints: number | null;
-  par4AvgPoints: number | null;
-  par5AvgPoints: number | null;
-  par3AvgStrokes: number | null;
-  par4AvgStrokes: number | null;
-  par5AvgStrokes: number | null;
-}
-
-export interface HeadToHeadResult {
-  sharedRounds: number;
-  draws: number;
-  player1: H2HPlayerStats;
-  player2: H2HPlayerStats;
-  // Per-round history (most recent first)
-  rounds: Array<{
-    roomCode: string;
-    courseName: string;
-    completedAt: string;
-    coursePar: number;
-    p1Points: number;
-    p1Strokes: number;
-    p2Points: number;
-    p2Strokes: number;
-    winnerId: string | null; // null = draw
-  }>;
-}
-
 export async function getHeadToHead(
   userId1: string,
   displayName1: string,
   userId2: string,
   displayName2: string,
-): Promise<HeadToHeadResult> {
+): Promise<HeadToHeadStats> {
   // Find all completed rounds where both users participated
   const { rows: roundRows } = await pool.query(
     `SELECT r.id AS round_id, r.room_code,
@@ -968,83 +803,18 @@ export async function getHeadToHead(
   );
 
   // Index by round
-  const playersByRound = new Map<
-    string,
-    Array<{
-      id: string;
-      roundId: string;
-      userId: string | null;
-      name: string;
-      handicap: number;
-      gender: Gender;
-    }>
-  >();
-  for (const p of allPlayerRows as Record<string, unknown>[]) {
-    const roundId = p.round_id as string;
-    const player = {
-      id: p.id as string,
-      roundId,
-      userId: p.user_id as string | null,
-      name: p.name as string,
-      handicap: Number(p.handicap),
-      gender: (p.gender === "F" ? "F" : "M") as Gender,
-    };
-    const list = playersByRound.get(roundId);
-    if (list) list.push(player);
-    else playersByRound.set(roundId, [player]);
-  }
-
-  const scoresByRound = new Map<
-    string,
-    Array<{
-      id: string;
-      roundId: string;
-      playerId: string;
-      holeNumber: number;
-      strokes: number;
-      createdAt: string;
-    }>
-  >();
-  for (const s of allScoreRows as Record<string, unknown>[]) {
-    const roundId = s.round_id as string;
-    const score = {
-      id: s.id as string,
-      roundId,
-      playerId: s.player_id as string,
-      holeNumber: Number(s.hole_number),
-      strokes: Number(s.strokes),
-      createdAt: s.created_at as string,
-    };
-    const list = scoresByRound.get(roundId);
-    if (list) list.push(score);
-    else scoresByRound.set(roundId, [score]);
-  }
+  const playersByRound = indexPlayersByRound(allPlayerRows as Record<string, unknown>[]);
+  const scoresByRound = indexScoresByRound(allScoreRows as Record<string, unknown>[]);
 
   const p1 = emptyStats(userId1, displayName1);
   const p2 = emptyStats(userId2, displayName2);
   let draws = 0;
 
   // Per-par accumulators
-  let p1Par3Pts = 0,
-    p1Par3Strk = 0,
-    p1Par3Count = 0;
-  let p1Par4Pts = 0,
-    p1Par4Strk = 0,
-    p1Par4Count = 0;
-  let p1Par5Pts = 0,
-    p1Par5Strk = 0,
-    p1Par5Count = 0;
-  let p2Par3Pts = 0,
-    p2Par3Strk = 0,
-    p2Par3Count = 0;
-  let p2Par4Pts = 0,
-    p2Par4Strk = 0,
-    p2Par4Count = 0;
-  let p2Par5Pts = 0,
-    p2Par5Strk = 0,
-    p2Par5Count = 0;
+  const p1ParAccum = emptyParAccumulator();
+  const p2ParAccum = emptyParAccumulator();
 
-  const roundHistory: HeadToHeadResult["rounds"] = [];
+  const roundHistory: HeadToHeadStats["rounds"] = [];
 
   for (const row of roundRows as Record<string, unknown>[]) {
     const roundId = row.round_id as string;
@@ -1117,96 +887,9 @@ export async function getHeadToHead(
       p2.bestStrokes = p2Strk;
     }
 
-    // Scoring distribution for both
-    function accumulateHoleStats(
-      played: typeof p1Played,
-      stats: H2HPlayerStats,
-      parAccum: {
-        par3Pts: number;
-        par3Strk: number;
-        par3Count: number;
-        par4Pts: number;
-        par4Strk: number;
-        par4Count: number;
-        par5Pts: number;
-        par5Strk: number;
-        par5Count: number;
-      },
-    ) {
-      for (const h of played) {
-        if (h.points >= 4) stats.eagles++;
-        else if (h.points === 3) stats.birdies++;
-        else if (h.points === 2) stats.pars++;
-        else if (h.points === 1) stats.bogeys++;
-        else stats.doublePlus++;
-
-        const grossDiff = (h.strokes ?? 0) - h.par;
-        if (grossDiff < 0) stats.strokesUnderPar++;
-        else if (grossDiff === 0) stats.strokesAtPar++;
-        else if (grossDiff === 1) stats.strokesOverOne++;
-        else if (grossDiff === 2) stats.strokesOverTwo++;
-        else stats.strokesOverThreePlus++;
-
-        if (h.par === 3) {
-          parAccum.par3Pts += h.points;
-          parAccum.par3Strk += h.strokes ?? 0;
-          parAccum.par3Count++;
-        } else if (h.par === 4) {
-          parAccum.par4Pts += h.points;
-          parAccum.par4Strk += h.strokes ?? 0;
-          parAccum.par4Count++;
-        } else if (h.par >= 5) {
-          parAccum.par5Pts += h.points;
-          parAccum.par5Strk += h.strokes ?? 0;
-          parAccum.par5Count++;
-        }
-      }
-      return parAccum;
-    }
-
-    const p1Accum = {
-      par3Pts: 0,
-      par3Strk: 0,
-      par3Count: 0,
-      par4Pts: 0,
-      par4Strk: 0,
-      par4Count: 0,
-      par5Pts: 0,
-      par5Strk: 0,
-      par5Count: 0,
-    };
-    accumulateHoleStats(p1Played, p1, p1Accum);
-    p1Par3Pts += p1Accum.par3Pts;
-    p1Par3Strk += p1Accum.par3Strk;
-    p1Par3Count += p1Accum.par3Count;
-    p1Par4Pts += p1Accum.par4Pts;
-    p1Par4Strk += p1Accum.par4Strk;
-    p1Par4Count += p1Accum.par4Count;
-    p1Par5Pts += p1Accum.par5Pts;
-    p1Par5Strk += p1Accum.par5Strk;
-    p1Par5Count += p1Accum.par5Count;
-
-    const p2Accum = {
-      par3Pts: 0,
-      par3Strk: 0,
-      par3Count: 0,
-      par4Pts: 0,
-      par4Strk: 0,
-      par4Count: 0,
-      par5Pts: 0,
-      par5Strk: 0,
-      par5Count: 0,
-    };
-    accumulateHoleStats(p2Played, p2, p2Accum);
-    p2Par3Pts += p2Accum.par3Pts;
-    p2Par3Strk += p2Accum.par3Strk;
-    p2Par3Count += p2Accum.par3Count;
-    p2Par4Pts += p2Accum.par4Pts;
-    p2Par4Strk += p2Accum.par4Strk;
-    p2Par4Count += p2Accum.par4Count;
-    p2Par5Pts += p2Accum.par5Pts;
-    p2Par5Strk += p2Accum.par5Strk;
-    p2Par5Count += p2Accum.par5Count;
+    // Scoring distribution for both (accumulate into outer par accumulators)
+    accumulateHoleStats(p1Played, p1, p1ParAccum);
+    accumulateHoleStats(p2Played, p2, p2ParAccum);
 
     roundHistory.push({
       roomCode,
@@ -1222,25 +905,14 @@ export async function getHeadToHead(
   }
 
   const sharedRounds = roundHistory.length;
-  const round1 = (v: number) => Math.round(v * 10) / 10;
 
   p1.avgPoints = sharedRounds > 0 ? round1(p1.totalPoints / sharedRounds) : 0;
   p1.avgStrokes = sharedRounds > 0 ? round1(p1.totalStrokes / sharedRounds) : 0;
-  p1.par3AvgPoints = p1Par3Count > 0 ? round1(p1Par3Pts / p1Par3Count) : null;
-  p1.par4AvgPoints = p1Par4Count > 0 ? round1(p1Par4Pts / p1Par4Count) : null;
-  p1.par5AvgPoints = p1Par5Count > 0 ? round1(p1Par5Pts / p1Par5Count) : null;
-  p1.par3AvgStrokes = p1Par3Count > 0 ? round1(p1Par3Strk / p1Par3Count) : null;
-  p1.par4AvgStrokes = p1Par4Count > 0 ? round1(p1Par4Strk / p1Par4Count) : null;
-  p1.par5AvgStrokes = p1Par5Count > 0 ? round1(p1Par5Strk / p1Par5Count) : null;
+  Object.assign(p1, parAverages(p1ParAccum));
 
   p2.avgPoints = sharedRounds > 0 ? round1(p2.totalPoints / sharedRounds) : 0;
   p2.avgStrokes = sharedRounds > 0 ? round1(p2.totalStrokes / sharedRounds) : 0;
-  p2.par3AvgPoints = p2Par3Count > 0 ? round1(p2Par3Pts / p2Par3Count) : null;
-  p2.par4AvgPoints = p2Par4Count > 0 ? round1(p2Par4Pts / p2Par4Count) : null;
-  p2.par5AvgPoints = p2Par5Count > 0 ? round1(p2Par5Pts / p2Par5Count) : null;
-  p2.par3AvgStrokes = p2Par3Count > 0 ? round1(p2Par3Strk / p2Par3Count) : null;
-  p2.par4AvgStrokes = p2Par4Count > 0 ? round1(p2Par4Strk / p2Par4Count) : null;
-  p2.par5AvgStrokes = p2Par5Count > 0 ? round1(p2Par5Strk / p2Par5Count) : null;
+  Object.assign(p2, parAverages(p2ParAccum));
 
   return {
     sharedRounds,

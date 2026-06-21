@@ -1,16 +1,17 @@
-import type { Hole } from "@dad-golf/shared";
+import type {
+  AdminActivityEvent,
+  AdminCourse,
+  AdminGroup,
+  AdminRound,
+  AdminStats,
+  AdminUser,
+  Hole,
+} from "@dad-golf/shared";
 import { pool } from "./pool.js";
 import { now, newId } from "./helpers.js";
 import { getUserByUsername, hashPassword, type UserRow } from "./users.js";
 
-export interface AdminStats {
-  users: number;
-  courses: number;
-  groups: number;
-  rounds: { total: number; waiting: number; inProgress: number; complete: number };
-  scores: number;
-  sessions: number;
-}
+export type { AdminActivityEvent, AdminCourse, AdminGroup, AdminRound, AdminStats, AdminUser };
 
 export async function getAdminStats(): Promise<AdminStats> {
   const countQueries = {
@@ -49,17 +50,6 @@ export async function getAdminStats(): Promise<AdminStats> {
   };
 }
 
-export interface AdminUser {
-  id: string;
-  username: string;
-  displayName: string;
-  handicap: number;
-  isAdmin: boolean;
-  createdAt: string;
-  roundCount: number;
-  courseCount: number;
-}
-
 export async function listAllUsers(): Promise<AdminUser[]> {
   const { rows } = await pool.query(
     `SELECT u.*,
@@ -78,18 +68,6 @@ export async function listAllUsers(): Promise<AdminUser[]> {
     roundCount: Number(r.round_count),
     courseCount: Number(r.course_count),
   }));
-}
-
-export interface AdminRound {
-  id: string;
-  roomCode: string;
-  courseName: string;
-  leaderName: string | null;
-  playerCount: number;
-  status: string;
-  createdAt: string;
-  startedAt: string | null;
-  completedAt: string | null;
 }
 
 export async function listAllRounds(
@@ -138,17 +116,6 @@ export async function listAllRounds(
   };
 }
 
-export interface AdminCourse {
-  id: string;
-  name: string;
-  location: string | null;
-  holeCount: number;
-  createdByName: string | null;
-  favoriteCount: number;
-  roundCount: number;
-  createdAt: string;
-}
-
 export async function listAllCourses(): Promise<AdminCourse[]> {
   const { rows } = await pool.query(
     `SELECT c.id, c.name, c.location, c.holes_json, c.created_at,
@@ -182,14 +149,6 @@ export async function listAllCourses(): Promise<AdminCourse[]> {
   }));
 }
 
-export interface AdminGroup {
-  id: string;
-  name: string;
-  ownerName: string | null;
-  memberCount: number;
-  createdAt: string;
-}
-
 export async function listAllGroups(): Promise<AdminGroup[]> {
   const { rows } = await pool.query(
     `SELECT g.id, g.name, g.created_at,
@@ -216,13 +175,7 @@ export async function listAllGroups(): Promise<AdminGroup[]> {
   }));
 }
 
-export interface ActivityEvent {
-  type: string;
-  description: string;
-  timestamp: string;
-}
-
-export async function getActivityFeed(limit = 50): Promise<ActivityEvent[]> {
+export async function getActivityFeed(limit = 50): Promise<AdminActivityEvent[]> {
   const { rows } = await pool.query(
     `SELECT type, description, timestamp FROM (
        SELECT 'user_registered' AS type,
@@ -245,7 +198,7 @@ export async function getActivityFeed(limit = 50): Promise<ActivityEvent[]> {
      LIMIT $1`,
     [limit],
   );
-  return rows as ActivityEvent[];
+  return rows as AdminActivityEvent[];
 }
 
 export async function setUserAdmin(userId: string, isAdmin: boolean): Promise<void> {
