@@ -27,7 +27,7 @@ export default function CompetitionPanel({
     }
     const existing = competition.claims.find((c) => c.playerId === activePlayer.id);
     setClaimText(existing?.claim ?? "");
-  }, [activePlayer?.id, competition.claims]);
+  }, [activePlayer, competition.claims]);
 
   const label = competition.type === "ctp" ? "Closest to Pin" : "Longest Drive";
   const existingClaim = activePlayer

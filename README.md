@@ -81,6 +81,7 @@ dad-golf/
 │       │   ├── calendarFeed.ts # Calendar feed token management
 │       │   ├── activity.ts  # Activity feed events, likes, comments
 │       │   ├── badges.ts    # User badge storage
+│       │   ├── stats.ts     # User + group stats aggregation
 │       │   └── admin.ts     # Admin queries + stats
 │       ├── routes/          # REST API routes (per-domain modules)
 │       │   ├── auth.ts      # /api/auth/*
@@ -89,6 +90,7 @@ dad-golf/
 │       │   ├── rounds.ts    # /api/rounds/* (includes competitions)
 │       │   ├── weather.ts   # /api/weather/*
 │       │   ├── handicap.ts  # /api/handicap/*
+│       │   ├── stats.ts     # /api/stats/* (personal + group stats)
 │       │   ├── scheduledRounds.ts # /api/groups/:groupId/scheduled-rounds/*
 │       │   ├── googleCalendar.ts # /api/google-calendar/* (OAuth + sync settings)
 │       │   ├── calendarFeed.ts # /api/calendar-feed/* (iCal feed subscription)
@@ -96,6 +98,8 @@ dad-golf/
 │       │   ├── users.ts     # /api/users/:username/* (public profiles, badges)
 │       │   └── admin.ts     # /api/admin/*
 │       ├── badgeEvaluator.ts # Server-side badge evaluation engine
+│       ├── roundState.ts    # Builds full RoundState for WebSocket broadcasts
+│       ├── roundCompletion.ts # Round completion + badge evaluation
 │       ├── calendar.ts      # iCalendar (.ics) generation
 │       ├── calendarSync.ts  # Google Calendar sync logic (fire-and-forget)
 │       ├── googleCalendar.ts # Google Calendar API client (raw fetch)
@@ -155,7 +159,7 @@ npm run lint           # ESLint check
 npm run lint:fix       # ESLint auto-fix
 npm run format:check   # Prettier check
 npm run format         # Prettier auto-format
-npm test               # Stableford scoring + handicap unit tests
+npm test               # all unit tests (scoring, handicap, badges, validation, …)
 ```
 
 ### Deploying to Railway
